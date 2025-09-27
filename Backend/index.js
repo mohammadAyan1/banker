@@ -108,6 +108,12 @@ app.use("/api/assign", require("./Routes/assignmentRoutes"));
 app.use("/api/uploads", require("./Routes/upload"));
 app.use("/api/proxy", require("./Routes/proxyDownload"));
 
+
+app.get("/", (req, res) => {
+  res.send("Server is running!");
+});
+
+
 // ErrorHandling
 // app.use(ErrorHandler);
 
