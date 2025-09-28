@@ -108,9 +108,12 @@ app.use("/api/assign", require("./Routes/assignmentRoutes"));
 app.use("/api/uploads", require("./Routes/upload"));
 app.use("/api/proxy", require("./Routes/proxyDownload"));
 
+app.get("/", (req, res) => {
+  res.send("Server is running at Home!");
+});
 
 app.get("/api", (req, res) => {
-  res.send("Server is running!");
+  res.send("Server is running at api!");
 });
 
 
