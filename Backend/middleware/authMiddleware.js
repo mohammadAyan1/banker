@@ -4,6 +4,12 @@ const User = require("../model/auth/authModel");
 exports.protect = async (req, res, next) => {
   // let token = req.headers.authorization?.split(" ")[1] || req.cookies.token;
   let token = req.cookies.token;
+
+  
+  console.log(res?.cookies?.token);
+  
+
+
   if (!token) return res.status(401).json({ message: "No token provided" });
 
   try {
