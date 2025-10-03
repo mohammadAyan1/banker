@@ -45,7 +45,7 @@ app.use(
   "/uploads",
   express.static(path.join(__dirname, "uploads"), {
     setHeaders: (res, path) => {
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Origin");
     },
   })
 );
@@ -76,7 +76,6 @@ app.use("/api/notifications", require("./Routes/notifications"));
 app.use("/api/auth", authRoutes);
 
 app.use("/api/idfc", idfcRoute);
-
 
 app.use("/api/chola", cholaRoutes);
 app.use("/api/fedral", FedralRoute);
@@ -115,7 +114,6 @@ app.get("/", (req, res) => {
 app.get("/api", (req, res) => {
   res.send("Server is running at api!");
 });
-
 
 // ErrorHandling
 // app.use(ErrorHandler);
