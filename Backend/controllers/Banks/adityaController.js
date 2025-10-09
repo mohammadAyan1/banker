@@ -3,9 +3,14 @@ const adityaModel = require("../../model/Banks/adityaModel");
 // CREATE
 exports.createDetails = async (req, res) => {
   console.log("Received data:", req.body);
+
   try {
-    const newDetails = await adityaModel.create(req.body);
-    await newDetails.save();
+    const body = req.body;
+    if (body.previousValuation === "") delete body.previousValuation;
+    if (body.locality === "") delete body.locality;
+
+    const newDetails = await adityaModel.create(body);
+    // await newDetails.save();
     res.status(201).json(newDetails);
     console.log(newDetails);
   } catch (error) {

@@ -114,11 +114,11 @@ const Dashboard = () => {
   };
 
   return (
-    <div className='p-4'>
+    <div className="p-4">
       {/* Tab Navigation */}
-      <div className='custom-container mb-6 mt-14 border-b border-gray-300'>
-        <ul className='nav nav-tabs custom-tabs flex gap-2'>
-          <li className='nav-item'>
+      <div className="custom-container mb-6 mt-14 border-b border-gray-300">
+        <ul className="nav nav-tabs custom-tabs flex gap-2">
+          <li className="nav-item">
             <button
               className={`nav-link px-4 py-2 rounded-t-lg font-medium ${
                 activeTab === "dashboard"
@@ -130,7 +130,7 @@ const Dashboard = () => {
               Dashboard
             </button>
           </li>
-          <li className='nav-item'>
+          <li className="nav-item">
             <button
               className={`nav-link px-4 py-2 rounded-t-lg font-medium ${
                 activeTab === "myworklist"
@@ -147,16 +147,16 @@ const Dashboard = () => {
 
       {activeTab === "dashboard" && (
         <>
-          <div className='mb-6 mt-1 mr-3 p-6 border border-[#B5121B] rounded-2xl bg-white shadow-lg'>
-            <div className='flex justify-between items-center mb-6'>
-              <h5 className='text-xl font-semibold text-gray-800'>All Cases</h5>
+          <div className="mb-6 mt-1 mr-3 p-6 border border-[#B5121B] rounded-2xl bg-white shadow-lg">
+            <div className="flex justify-between items-center mb-6">
+              <h5 className="text-xl font-semibold text-gray-800">All Cases</h5>
               <Select
                 value={selectedAgent}
                 onChange={handleSelect}
                 suffixIcon={<DownOutlined />}
-                className='w-64'
+                className="w-64"
               >
-                <Option value='All Agents'>All Agents</Option>
+                <Option value="All Agents">All Agents</Option>
                 {fieldOfficers?.map((f) => (
                   <Option key={f._id} value={f.name}>
                     {f.name}
@@ -165,7 +165,7 @@ const Dashboard = () => {
               </Select>
             </div>
 
-            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6'>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
               {reports.map((report, key) => (
                 <div
                   key={key}
@@ -178,39 +178,39 @@ const Dashboard = () => {
                 >
                   <h6
                     style={{ fontSize: "0.8rem" }}
-                    className='uppercase text-center   relative  font-semibold text-gray-500 group-hover:text-[#B5121B] transition-colors'
+                    className="uppercase text-center   relative  font-semibold text-gray-500 group-hover:text-[#B5121B] transition-colors"
                   >
                     {report.title}
                   </h6>
-                  <h2 className='!text-4xl absolute bottom-6 font-semibold mt-2 border-[1px] border-gray-200   group-hover:text-[#B5121B] transition-colors px-4 p-2 rounded text-gray-800 tracking-tight'>
+                  <h2 className="!text-4xl absolute bottom-6 font-semibold mt-2 border-[1px] border-gray-200   group-hover:text-[#B5121B] transition-colors px-4 p-2 rounded text-gray-800 tracking-tight">
                     <CountUp
                       end={parseInt(report.total)}
                       duration={1.5}
-                      separator=','
+                      separator=","
                     />
                   </h2>
                 </div>
               ))}
             </div>
 
-            <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center'>
-              <h5 className='text-base font-medium text-gray-700'>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+              <h5 className="text-base font-medium text-gray-700">
                 Total cases:{" "}
-                <span className='font-semibold text-gray-900'>
-                  <CountUp end={2000} duration={1.5} separator=',' />
+                <span className="font-semibold text-gray-900">
+                  <CountUp end={2000} duration={1.5} separator="," />
                 </span>
               </h5>
-              <div className='flex flex-col sm:flex-row sm:space-x-8 mt-2 sm:mt-0'>
-                <h5 className='text-base font-medium text-gray-700'>
+              <div className="flex flex-col sm:flex-row sm:space-x-8 mt-2 sm:mt-0">
+                <h5 className="text-base font-medium text-gray-700">
                   Denied cases:{" "}
-                  <span className='font-semibold text-red-600'>
-                    <CountUp end={50} duration={1.5} separator=',' />
+                  <span className="font-semibold text-red-600">
+                    <CountUp end={50} duration={1.5} separator="," />
                   </span>
                 </h5>
-                <h5 className='text-base font-medium text-gray-700'>
+                <h5 className="text-base font-medium text-gray-700">
                   Token Back Requests:{" "}
-                  <span className='font-semibold text-green-600'>
-                    <CountUp end={0} duration={1.5} separator=',' />
+                  <span className="font-semibold text-green-600">
+                    <CountUp end={0} duration={1.5} separator="," />
                   </span>
                 </h5>
               </div>
@@ -230,8 +230,8 @@ const Dashboard = () => {
       )}
 
       {activeTab === "myworklist" && (
-        <div className='p-6 bg-white rounded-xl border border-gray-200 shadow-md'>
-          <h2 className='text-lg font-semibold text-gray-800 mb-4'>
+        <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-md">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
             My Worklist
           </h2>
           <MyWorklist />

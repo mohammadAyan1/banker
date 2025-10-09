@@ -465,7 +465,7 @@ const Pending = () => {
       render: (text, record) => (
         <Link
           to={`/bank/${record.route}/${record._id}`}
-          className='text-blue-600 hover:underline'
+          className="text-blue-600 hover:underline"
         >
           {text || "N/A"}
         </Link>
@@ -499,11 +499,11 @@ const Pending = () => {
         return (
           <div>
             {record.status === "Work in Progress" ? (
-              <div className='text-green-700 font-semibold'>
+              <div className="text-green-700 font-semibold">
                 Assigned to: {assignedFO?.name || "Unknown"}
               </div>
             ) : (
-              <Button type='primary' onClick={() => showModal(record)}>
+              <Button type="primary" onClick={() => showModal(record)}>
                 Assign
                 <Plus size={20} />
               </Button>
@@ -533,16 +533,16 @@ const Pending = () => {
       title: "Action",
       key: "action",
       render: (record) => (
-        <div className='flex gap-4 items-center'>
+        <div className="flex gap-4 items-center">
           <Link
             to={`/bank/${record.route}/edit/${record._id}`}
-            className='!text-green-600 hover:underline  border p-1'
+            className="!text-green-600 hover:underline  border p-1"
           >
             <Edit3 size={38} />
           </Link>
           <Button
             onClick={() => handleDelete({ id: record._id })}
-            className='!text-red-600 hover:underline'
+            className="!text-red-600 hover:underline"
           >
             <Trash2 size={18} />
           </Button>
@@ -573,7 +573,7 @@ const Pending = () => {
         if (!attachments || attachments.length === 0) return "No Attachments";
 
         return (
-          <div className='flex  gap-1'>
+          <div className="flex  gap-1">
             {attachments.map((url, index) => {
               const fileName = url.split("/").pop();
 
@@ -582,9 +582,9 @@ const Pending = () => {
                   key={index}
                   href={url}
                   download
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='text-blue-600 hover:underline !flex'
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline !flex"
                 >
                   📄 {fileName.slice(0, 3) || `Attachment ${index + 1}`}
                 </a>
@@ -598,24 +598,24 @@ const Pending = () => {
 
   if (overallLoading) {
     return (
-      <div className='fixed inset-0 flex items-center justify-center bg-white bg-opacity-50 z-50'>
-        <Spin size='large' />
+      <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-50 z-50">
+        <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div className='bg-gray-100 p-6 rounded-xl shadow-md min-h-screen'>
-      <div className='flex items-center gap-2 mb-4'>
+    <div className="bg-gray-100 p-6 rounded-xl shadow-md min-h-screen">
+      <div className="flex items-center gap-2 mb-4">
         <Select
           style={{ width: 200 }}
-          placeholder='Select Bank'
+          placeholder="Select Bank"
           value={selectedBank}
           onChange={setSelectedBank}
           options={bankOptions}
         />
         <AntSearch
-          placeholder='Search customer names, addresses...'
+          placeholder="Search customer names, addresses..."
           allowClear
           onChange={(e) => setSearch(e.target.value)}
           value={search}
@@ -623,9 +623,9 @@ const Pending = () => {
         />
       </div>
 
-      <div className='flex items-center justify-between mb-4'>
-        <h2 className='text-xl font-semibold'>All Bank Valuation Reports</h2>
-        <span className='text-sm text-gray-500'>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold">All Bank Valuation Reports</h2>
+        <span className="text-sm text-gray-500">
           Showing {filteredData.length} records (newest first)
         </span>
       </div>
@@ -633,26 +633,26 @@ const Pending = () => {
       <Table
         columns={columns}
         dataSource={filteredData}
-        rowKey='_id'
+        rowKey="_id"
         pagination={{ pageSize: 10 }}
         bordered
-        className='rounded-xl'
+        className="rounded-xl"
         scroll={{ x: true }}
       />
 
       <Modal
-        title='Assign Field Officer'
+        title="Assign Field Officer"
         visible={isModalVisible}
         onOk={assignToFieldOfficer}
         onCancel={handleModalCancel}
-        okText='Assign'
-        cancelText='Cancel'
+        okText="Assign"
+        cancelText="Cancel"
       >
-        <div className='mb-4'>
-          <p className='font-semibold'>
+        <div className="mb-4">
+          <p className="font-semibold">
             Case: {currentCase?.displayCustomerName || "N/A"}
           </p>
-          <p className='text-gray-600'>
+          <p className="text-gray-600">
             Bank: {currentCase?.bankName || "N/A"}
           </p>
         </div>
@@ -660,8 +660,8 @@ const Pending = () => {
         <Select
           showSearch
           style={{ width: "100%" }}
-          placeholder='Select Field Officer'
-          optionFilterProp='children'
+          placeholder="Select Field Officer"
+          optionFilterProp="children"
           onChange={(value) => setSelectedFO(value)}
           filterOption={(input, option) =>
             (option?.children ?? "").toLowerCase().includes(input.toLowerCase())
