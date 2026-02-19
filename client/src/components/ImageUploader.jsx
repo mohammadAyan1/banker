@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import toast from "react-hot-toast";
 import axiosInstance from "../config/axios";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { useParams } from "react-router-dom";
@@ -25,11 +25,12 @@ const ImageUploader = ({
   bankName,
   deleteId,
   fetchData,
-  uploadedImages
+  uploadedImages,
+  url
 }) => {
 
 
-  const [data, setData] = useState();
+  // const [data, setData] = useState();
 
 
 
@@ -62,6 +63,7 @@ const ImageUploader = ({
         body: JSON.stringify({
           filePath: fileUrl,  // ✅ send inside JSON
         }),
+        credentials: "include",   // ✅ correct for cookies/session
       });
 
       const data = await res.json();
@@ -82,11 +84,12 @@ const ImageUploader = ({
 
   const removeImage = async (id, imageUrl) => {
     try {
-      const res = await fetch(`${CPANEL}/api/first-bank/remove-image/${id}`, {
+      const res = await fetch(`${CPANEL}/api/${url ? url : "first-bank"}/remove-image/${id}`, {
         method: "PUT", // ✅ must match router.put
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",   // ✅ correct for cookies/session
         body: JSON.stringify({
           imageUrl: imageUrl,
         }),
@@ -107,7 +110,7 @@ const ImageUploader = ({
 
 
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const handleUploadToServer = async () => {
     const formData = new FormData();
@@ -131,6 +134,7 @@ const ImageUploader = ({
       const res = await fetch(`${CPANEL}/api/uploads`, {
         method: "POST",
         body: formData,
+        credentials: "include",   // ✅ correct for cookies/session
       });
 
       const result = await res.json();
@@ -186,6 +190,7 @@ const ImageUploader = ({
       const res = await fetch(`${CPANEL}/api/uploads`, {
         method: "POST",
         body: formData,
+        credentials: "include",   // ✅ correct for cookies/session
       });
 
       const result = await res.json();
@@ -406,6 +411,10 @@ const ImageUploader = ({
             console.log('====================================');
 
             const imageUrl = item?.replace(/^undefined\/?/, "");
+
+            console.log('====================================');
+            console.log(imageUrl);
+            console.log('====================================');
 
             const fileName = getFileName(item);
 

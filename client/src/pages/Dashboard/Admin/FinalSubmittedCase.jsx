@@ -37,6 +37,11 @@ const FinalSubmittedCases = () => {
       title: "Customer Name",
       dataIndex: "customerName",
       render: (text, record) => {
+
+        console.log('====================================');
+        console.log(record);
+        console.log('====================================');
+
         const displayName =
           record.customerName ||
           record.applicantName ||

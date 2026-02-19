@@ -63,6 +63,7 @@ const Dashboard = () => {
     dispatch(getCancelledCases());
     dispatch(fetchNotifications());
 
+
     //!
     dispatch(getOutOfTatCases()), fetchNotes();
   }, []);
@@ -120,11 +121,10 @@ const Dashboard = () => {
         <ul className="nav nav-tabs custom-tabs flex gap-2">
           <li className="nav-item">
             <button
-              className={`nav-link px-4 py-2 rounded-t-lg font-medium ${
-                activeTab === "dashboard"
-                  ? "bg-[#B5121B] text-white"
-                  : "bg-gray-100 text-gray-800"
-              }`}
+              className={`nav-link px-4 py-2 rounded-t-lg font-medium ${activeTab === "dashboard"
+                ? "bg-[#B5121B] text-white"
+                : "bg-gray-100 text-gray-800"
+                }`}
               onClick={() => setActiveTab("dashboard")}
             >
               Dashboard
@@ -132,11 +132,10 @@ const Dashboard = () => {
           </li>
           <li className="nav-item">
             <button
-              className={`nav-link px-4 py-2 rounded-t-lg font-medium ${
-                activeTab === "myworklist"
-                  ? "bg-[#B5121B] text-white"
-                  : "bg-gray-100 text-gray-800"
-              }`}
+              className={`nav-link px-4 py-2 rounded-t-lg font-medium ${activeTab === "myworklist"
+                ? "bg-[#B5121B] text-white"
+                : "bg-gray-100 text-gray-800"
+                }`}
               onClick={() => setActiveTab("myworklist")}
             >
               My Worklist
@@ -170,11 +169,10 @@ const Dashboard = () => {
                 <div
                   key={key}
                   onClick={() => setActiveComponent(report.component)}
-                  className={`group relative flex flex-col items-center  text-center p-4 h-40 rounded-xl cursor-pointer transition-all duration-300 border-1 shadow hover:shadow-lg focus:outline-none ${
-                    activeComponent === report.component
-                      ? "border-[#B5121B] bg-[#FFF4F4]"
-                      : "border-gray-400 bg-white"
-                  }`}
+                  className={`group relative flex flex-col items-center  text-center p-4 h-40 rounded-xl cursor-pointer transition-all duration-300 border-1 shadow hover:shadow-lg focus:outline-none ${activeComponent === report.component
+                    ? "border-[#B5121B] bg-[#FFF4F4]"
+                    : "border-gray-400 bg-white"
+                    }`}
                 >
                   <h6
                     style={{ fontSize: "0.8rem" }}

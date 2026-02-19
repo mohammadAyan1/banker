@@ -466,6 +466,11 @@ const FieldOfficerDashboard = () => {
     return 0;
   });
 
+
+  useEffect(() => {
+    console.log(sortedCases)
+  }, [sortedCases])
+
   const summaryCounts = {
     TOTAL_ASSIGNED: foCases?.length,
     PENDING_FOR_APPROVAL: foCases?.filter(
@@ -604,9 +609,8 @@ const FieldOfficerDashboard = () => {
             key={value}
             hoverable
             onClick={() => setSelectedStatus(value)}
-            className={`text-center cursor-pointer ${
-              selectedStatus === value ? "border-blue-600 shadow-lg" : ""
-            }`}
+            className={`text-center cursor-pointer ${selectedStatus === value ? "border-blue-600 shadow-lg" : ""
+              }`}
           >
             <div className='text-gray-500 text-sm'>{title}</div>
             <div className='text-xl font-bold'>{summaryCounts[value] || 0}</div>

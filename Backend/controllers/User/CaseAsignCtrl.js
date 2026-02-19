@@ -475,30 +475,46 @@ exports.deleteCase = async (req, res) => {
 exports.finalUpdate = async (req, res) => {
   const { bankName, updateData } = req.body;
   const { id } = req.params;
-
   if (!bankName || !id || !updateData) {
     return res.status(400).json({
       error: "bankName, caseId, and updateData are required.",
     });
   }
 
+
+  console.log(bankName, "zero")
+
   const modelKey = toPascalCase(bankName);
-  const Model = modelMap[modelKey];
+
+  console.log(modelKey, "first")
+
+  let Model = modelMap[modelKey];
+
+
+  console.log(Model, "second")
 
   if (!Model) {
-    return res.status(400).json({
-      error: `Model not found for bank: ${bankName}`,
-    });
+    Model = modelMap[bankName];
+    if (!Model) {
+      return res.status(400).json({
+        error: `Model not found for bank: ${bankName}`,
+      });
+    }
   }
 
   // Prevent timeline conflict
   const { timeline, ...sanitizedUpdateData } = updateData;
+
+  console.log('====================================');
+  console.log(updateData);
+  console.log('====================================');
 
   try {
     const updatedCase = await Model.findByIdAndUpdate(
       id,
       {
         ...sanitizedUpdateData,
+        isReportSubmitted: true,
         status: "FinalSubmitted", // lock status
         $push: {
           timeline: {

@@ -6,7 +6,6 @@ export const routesConfig = [
     path: "/bank-logo",
     element: lazy(() => import("../pages/1Bank-Home/BankHomePage")),
   },
-
   // Bank Forms & Details
   {
     path: "/bank/icici",
@@ -55,14 +54,13 @@ export const routesConfig = [
     element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
   },
   {
-    path: "/bank/home-first-trench/:id",
+    path: "/bank/homefirsttrench/:id",
     element: lazy(() => import("../pages/Bank-Details/HomeTrench")),
   },
   {
     path: "/bank/home-first-trench/edit/:id",
     element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
   },
-
   {
     path: "/bank/aditya",
     element: lazy(() => import("../pages/Bank-Form/Adtiya-Bank/AditiyaFrom")),

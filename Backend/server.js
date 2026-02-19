@@ -21,7 +21,7 @@ const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
-    // credentials: true,
+    credentials: true,
   },
 });
 
@@ -35,8 +35,9 @@ global.io = io;
 setupSocket(io);
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () =>{
-  
-connectDb();
-  
-  console.log(`Server running on ${PORT}`)});
+server.listen(PORT, () => {
+
+  connectDb();
+
+  console.log(`Server running on ${PORT}`)
+});

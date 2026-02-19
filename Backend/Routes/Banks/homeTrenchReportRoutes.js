@@ -17,4 +17,7 @@ router.put("/:id", homeTrenchReportController.updateHomeTrenchReport);
 // Delete a Home Trench Report by ID
 router.delete("/:id", homeTrenchReportController.deleteHomeTrenchReport);
 
+router.put("/remove-image/:id", homeTrenchReportController.deleteImageFromValuationReport);
+
+
 module.exports = router;

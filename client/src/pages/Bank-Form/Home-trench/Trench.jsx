@@ -72,6 +72,9 @@ const Trench = () => {
     sitePics: [],
   });
 
+  const [uploadedImages, setUploadedImagess] = useState([]);
+
+
   const { user } = useSelector((state) => state.auth);
   const [uploadedUrls, setUploadedUrls] = useState([]);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -108,6 +111,10 @@ const Trench = () => {
           setFormData(formattedData);
           form.setFieldsValue(formattedData);
 
+          console.log('====================================');
+          console.log(formattedData);
+          console.log('====================================');
+          setUploadedImagess(formattedData?.imageUrls)
           if (Array.isArray(response.imageUrls)) {
             const fileListFromServer = response.imageUrls.map((url, index) => ({
               uid: `server-${index}`,
@@ -226,7 +233,11 @@ const Trench = () => {
       ).unwrap();
 
       toast.success("Case submitted finally!");
-      navigate("/");
+      if (user.role === "Admin") {
+        navigate("/");
+      } else {
+        navigate("/field/dashboard");
+      }
     } catch (err) {
       console.error("Final submission failed", err);
       toast.error("Final submission failed");
@@ -288,7 +299,7 @@ const Trench = () => {
             <Form.Item
               label='DATE OF VISIT'
               name='dateOfVisit'
-              // rules={[{ required: true, message: "Please select visit date" }]}
+            // rules={[{ required: true, message: "Please select visit date" }]}
             >
               <DatePicker className='w-full' format='YYYY-MM-DD' />
             </Form.Item>
@@ -296,7 +307,7 @@ const Trench = () => {
             <Form.Item
               label='DATE OF REPORT'
               name='dateOfReport'
-              // rules={[{ required: true, message: "Please select report date" }]}
+            // rules={[{ required: true, message: "Please select report date" }]}
             >
               <DatePicker className='w-full' format='YYYY-MM-DD' />
             </Form.Item>
@@ -305,9 +316,9 @@ const Trench = () => {
           <Form.Item
             label='Address of Property (As per site)'
             name='propertyAddress'
-            // rules={[
-            //   { required: true, message: "Please enter property address" },
-            // ]}
+          // rules={[
+          //   { required: true, message: "Please enter property address" },
+          // ]}
           >
             <TextArea rows={3} />
           </Form.Item>
@@ -316,7 +327,7 @@ const Trench = () => {
             <Form.Item
               label='NAME OF THE PERSON WHO VISITED THE SITE'
               name='visitedPersonName'
-              // rules={[{ required: true, message: "Please enter visitor name" }]}
+            // rules={[{ required: true, message: "Please enter visitor name" }]}
             >
               <Input />
             </Form.Item>
@@ -324,13 +335,13 @@ const Trench = () => {
             <Form.Item
               label='CONTACT NUMBER'
               name='contactNumber'
-              // rules={[
-              //   { required: true, message: "Please enter contact number" },
-              //   {
-              //     pattern: /^[0-9]{10,15}$/,
-              //     message: "Please enter valid phone number",
-              //   },
-              // ]}
+            // rules={[
+            //   { required: true, message: "Please enter contact number" },
+            //   {
+            //     pattern: /^[0-9]{10,15}$/,
+            //     message: "Please enter valid phone number",
+            //   },
+            // ]}
             >
               <Input type='tel' />
             </Form.Item>
@@ -358,15 +369,15 @@ const Trench = () => {
             <Form.Item
               label='CONSTRUCTION (%)'
               name='constructionPercentage'
-              // rules={[
-              //   { required: true, message: "Please enter percentage" },
-              //   {
-              //     type: "number",
-              //     min: 0,
-              //     max: 100,
-              //     message: "Must be between 0-100",
-              //   },
-              // ]}
+            // rules={[
+            //   { required: true, message: "Please enter percentage" },
+            //   {
+            //     type: "number",
+            //     min: 0,
+            //     max: 100,
+            //     message: "Must be between 0-100",
+            //   },
+            // ]}
             >
               <InputNumber className='w-full' />
             </Form.Item>
@@ -374,7 +385,7 @@ const Trench = () => {
             <Form.Item
               label='CONSTRUCTION IS AS PER'
               name='constructionAsPer'
-              // rules={[{ required: true, message: "Please select an option" }]}
+            // rules={[{ required: true, message: "Please select an option" }]}
             >
               <Select>
                 <Option value='PROVIDED PLANS'>PROVIDED PLANS</Option>
@@ -393,7 +404,7 @@ const Trench = () => {
             <Form.Item
               label='TOTAL CONSIDERED ON SITE (IN SQ.FT)'
               name='total'
-              // rules={[{ required: true, message: "Please enter total" }]}
+            // rules={[{ required: true, message: "Please enter total" }]}
             >
               <InputNumber className='w-full' min={0} />
             </Form.Item>
@@ -414,7 +425,7 @@ const Trench = () => {
             <Form.Item
               label='OVERALL STATUS'
               name='overallStatus'
-              // rules={[{ required: true, message: "Please select status" }]}
+            // rules={[{ required: true, message: "Please select status" }]}
             >
               <Select>
                 <Option value='POSITIVE'>POSITIVE</Option>
@@ -425,12 +436,12 @@ const Trench = () => {
             <Form.Item
               label='IF NEGATIVE, PLEASE SPECIFY THE REASON'
               name='negativeReason'
-              // rules={[
-              //   {
-              //     required: formData.overallStatus === "NEGATIVE",
-              //     message: "Please specify reason for negative status",
-              //   },
-              // ]}
+            // rules={[
+            //   {
+            //     required: formData.overallStatus === "NEGATIVE",
+            //     message: "Please specify reason for negative status",
+            //   },
+            // ]}
             >
               <Input disabled={formData.overallStatus !== "NEGATIVE"} />
             </Form.Item>
@@ -500,7 +511,7 @@ const Trench = () => {
           <Form.Item
             label='Additional Declaration'
             name='declaration3'
-            // rules={[{ required: true, message: "Please enter declaration" }]}
+          // rules={[{ required: true, message: "Please enter declaration" }]}
           >
             <Input />
           </Form.Item>
@@ -510,7 +521,7 @@ const Trench = () => {
           <Form.Item
             label='LATITUDE'
             name='latitude'
-            // rules={[{ required: true, message: "Latitude is required" }]}
+          // rules={[{ required: true, message: "Latitude is required" }]}
           >
             <Input readOnly />
           </Form.Item>
@@ -518,7 +529,7 @@ const Trench = () => {
           <Form.Item
             label='LONGITUDE'
             name='longitude'
-            // rules={[{ required: true, message: "Longitude is required" }]}
+          // rules={[{ required: true, message: "Longitude is required" }]}
           >
             <Input readOnly />
           </Form.Item>
@@ -535,6 +546,8 @@ const Trench = () => {
             setImages={setImages}
             setUploadedUrls={setUploadedUrls}
             maxCount={10}
+            uploadedImages={uploadedImages}
+            url={"home-trench-reports"}
           />
         </div>
 

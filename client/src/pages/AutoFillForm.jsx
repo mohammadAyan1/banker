@@ -19,6 +19,7 @@ const AutoFillForm = ({ setFormData }) => {
         const res = await fetch("http://localhost:5000/api/upload", {
             method: "POST",
             body: form,
+            credentials: "include",   // ✅ correct for cookies/session
         });
 
         if (!res.ok) {

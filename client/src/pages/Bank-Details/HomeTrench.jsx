@@ -43,9 +43,12 @@ const dummyPics = [
   },
 ];
 
+
 const HomeTrench = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
+
+  const CPANEL = import.meta.env.VITE_API_URL
 
   const reportData = useSelector((state) => state?.homeTrenchReport?.report);
 
@@ -54,6 +57,11 @@ const HomeTrench = () => {
       dispatch(getHomeTrenchReportById(id));
     }
   }, [id, dispatch]);
+
+
+  function cleanPath(path) {
+    return path.replace(/^undefined\/?/, "");
+  }
 
   // console.log(reportData);
 
@@ -137,7 +145,7 @@ const HomeTrench = () => {
         <div className='flex items-center border-b pb-3'>
           <div className='w-full'>
             {/* <ExcelHeader /> */}
-        <img src='/assets/images/header1.jpg' alt='' />
+            <img src='/assets/images/header1.jpg' alt='' />
 
           </div>
         </div>
@@ -315,18 +323,21 @@ const HomeTrench = () => {
                   <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 py-2  '>
                     {/* <td className="boder">he</td> */}
                     {reportData?.imageUrls?.length > 0 ? (
-                      reportData.imageUrls.map((imageUrl, index) => (
-                        <div key={index} className='  overflow-hidden  '>
-                          <img
-                            src={imageUrl}
-                            alt={`Property Image ${index + 1}`}
-                            className='w-full h-96 object-cover'
-                          />
-                        </div>
-                      ))
-                    ) : (
-                      <p>No images available.</p>
-                    )}
+                      reportData.imageUrls.map((imageUrl, index) => {
+                        const imageUrls = cleanPath(imageUrl);
+                        return (
+                          <div key={index} className='  overflow-hidden  '>
+                            <img
+                              src={`${CPANEL}/${imageUrls}`}
+                              alt={`Property Image ${index + 1}`}
+                              className='w-full h-96 object-cover'
+                            />
+                          </div>
+                        )
+                      }))
+                      : (
+                        <p>No images available.</p>
+                      )}
                   </div>
                 </td>
               </tr>
