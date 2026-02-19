@@ -16,6 +16,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { finalUpdate } from "../../../redux/features/case/caseThunks";
 import toast from "react-hot-toast";
+import AutoFillForm from "../../AutoFillForm";
 
 const HomeFirstBank = () => {
   const dispatch = useDispatch();
@@ -26,6 +27,9 @@ const HomeFirstBank = () => {
   const [isEdit, setIsEdit] = useState({});
   const [collectedData, setCollectedData] = useState({});
   const { id } = useParams();
+
+  const [extractedData, setExtractedData] = useState({});
+  // const [formDatas, setFormData] = useState()
 
   const fetchEditData = async (id) => {
     try {
@@ -155,7 +159,7 @@ const HomeFirstBank = () => {
     {
       id: 1,
       label: "L & T ASSIGNMENT DETAILS",
-      component: <LNAssigment isEdit={isEdit} onNext={handleNext} />,
+      component: <LNAssigment isEdit={isEdit} onNext={handleNext} extractedData={extractedData} />,
     },
     {
       id: 2,
@@ -165,6 +169,7 @@ const HomeFirstBank = () => {
           isEdit={isEdit}
           onNext={handleNext}
           onBack={handleBack}
+          extractedData={extractedData}
         />
       ),
     },
@@ -176,6 +181,7 @@ const HomeFirstBank = () => {
           isEdit={isEdit}
           onNext={handleNext}
           onBack={handleBack}
+          extractedData={extractedData}
         />
       ),
     },
@@ -187,6 +193,7 @@ const HomeFirstBank = () => {
           isEdit={isEdit}
           onNext={handleNext}
           onBack={handleBack}
+          extractedData={extractedData}
         />
       ),
     },
@@ -198,6 +205,7 @@ const HomeFirstBank = () => {
           isEdit={isEdit}
           onNext={handleNext}
           onBack={handleBack}
+          extractedData={extractedData}
         />
       ),
     },
@@ -209,85 +217,12 @@ const HomeFirstBank = () => {
           isEdit={isEdit}
           onNext={handleNext}
           onBack={handleBack}
+          extractedData={extractedData}
         />
       ),
     },
   ].filter((tab) => !isFieldOfficer || tab.id === 1); // 👈 Only Step 1 for FieldOfficer
 
-  // const tabs = [
-  //   {
-  //     id: 1,
-  //     label: "L & T ASSIGNMENT DETAILS",
-  //     component: <LNAssigment isEdit={isEdit} onNext={handleNext} />,
-  //   },
-  //   {
-  //     id: 2,
-  //     label: "General & Document Details ",
-  //     component: (
-  //       <GeneralDetails
-  //         isEdit={isEdit}
-  //         onNext={handleNext}
-  //         onBack={handleBack}
-  //       />
-  //     ),
-  //   },
-
-  //   {
-  //     id: 3,
-  //     label: "Locality & NDMA Details",
-  //     component: (
-  //       <LocalityDetails
-  //         isEdit={isEdit}
-  //         onNext={handleNext}
-  //         onBack={handleBack}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: 4,
-  //     label: "Property & Strultural  Details",
-  //     component: (
-  //       <PropertyDetails
-  //         isEdit={isEdit}
-  //         onNext={handleNext}
-  //         onBack={handleBack}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: 5,
-  //     label: "Valuation Details",
-  //     component: (
-  //       <ValuationDetails
-  //         isEdit={isEdit}
-  //         onNext={handleNext}
-  //         onBack={handleBack}
-  //       />
-  //     ),
-  //   },
-  //   // {
-  //   //   id: 5,
-  //   //   label: "Document Details",
-  //   //   component: <DocomentDetails isEdit={isEdit} onNext={handleNext} onBack={handleBack} />
-  //   // },
-
-  //   // {
-  //   //   id: 6,
-  //   //   label: "NDMA Guidelines",
-  //   //   component: <NDMAGuidelines isEdit={isEdit} onNext={handleNext} onBack={handleBack} />
-  //   // },
-  //   {
-  //     id: 6,
-  //     label: "Violation Observed",
-  //     component: (
-  //       <ViolationObserved
-  //         isEdit={isEdit}
-  //         onNext={handleNext}
-  //         onBack={handleBack}
-  //       />
-  //     ),
-  //   },
-  // ];
 
   return (
     <div className='bg-gray-100 py-2 px-2  relative'>
@@ -297,16 +232,17 @@ const HomeFirstBank = () => {
           {/* <p className='text-gray-500'>Step {step} of 6</p> */}
         </div>
 
+        <AutoFillForm setFormData={setExtractedData} />
+
         {/* Unified Tabs Navigation */}
         <div className='flex  border-gray-200 gap-2 p-5  '>
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              className={`py-4 rounded-sm  px-4 font-medium border  text-sm focus:outline-none ${
-                step === tab.id
-                  ? "border-2 border-blue-600 text-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              className={`py-4 rounded-sm  px-4 font-medium border  text-sm focus:outline-none ${step === tab.id
+                ? "border-2 border-blue-600 text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+                }`}
               onClick={() => handleTabClick(tab.id)} // ✅ Tab change on click
             >
               {tab.label}

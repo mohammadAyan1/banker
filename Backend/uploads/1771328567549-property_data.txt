@@ -1,0 +1,10 @@
+customerName: Rahul Sharma
+sellerName: Amit Verma
+buyerName: Neha Gupta
+propertyAddress: 12 Green Park Colony, Indore, MP
+plotSize: 2400 sq ft
+saleAmount: ₹45,00,000
+agreementDate: 15-01-2026
+propertyType: Residential Plot
+latitude: 22.7196
+longitude: 75.8577

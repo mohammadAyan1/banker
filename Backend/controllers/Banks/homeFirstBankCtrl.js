@@ -208,6 +208,7 @@ exports.deleteImageFromValuationReport = async (req, res) => {
     res.status(200).json({
       message: "Image URL deleted successfully",
       updatedJob,
+      success: true
     });
   } catch (error) {
     res.status(500).json({

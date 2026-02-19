@@ -158,3 +158,45 @@ body {
     width: auto;
     height: auto;
 }
+
+
+
+@media print {
+
+  body {
+    background: white;
+  }
+
+  #reportTable {
+    width: 100%;
+    zoom: 90%;
+  }
+
+  table {
+    page-break-inside: avoid;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  .section-header {
+    background: #e8d9c7 !important;
+    color: #c00000 !important;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .report-table td,
+  .report-table th {
+    border: 1px solid #000 !important;
+    padding: 6px;
+    font-size: 12px;
+  }
+
+}
+
+
+/* ///////////////////////////////// */
+
+

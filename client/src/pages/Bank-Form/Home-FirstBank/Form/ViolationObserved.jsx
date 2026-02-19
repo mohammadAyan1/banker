@@ -1,22 +1,37 @@
 import React, { useEffect } from "react";
 import { Form, Input, Button, Select, Row, Col, Divider } from "antd";
 
-const ViolationObserved = ({ isEdit, onNext, onBack, initialValues }) => {
+const ViolationObserved = ({ isEdit, onNext, onBack, initialValues, extractedData }) => {
   const [form] = Form.useForm();
 
+  // useEffect(() => {
+  //   if (isEdit || initialValues) {
+  //     const values = isEdit || initialValues;
+  //     form.setFieldsValue({
+  //       deviationToPlan: values.deviationToPlan || "No",
+  //       deviationDetails: values.deviationDetails || "NA",
+  //       demolitionRisk: values.demolitionRisk || "No",
+  //       demolitionDetails: values.demolitionDetails || "NA",
+  //       encroachment: values.encroachment || "No",
+  //       encroachmentDetails: values.encroachmentDetails || "NA"
+  //     });
+  //   }
+  // }, [isEdit, initialValues, form]);
+
+
   useEffect(() => {
-    if (isEdit || initialValues) {
-      const values = isEdit || initialValues;
+    const merged = { ...extractedData, ...isEdit };
+    if (merged) {
       form.setFieldsValue({
-        deviationToPlan: values.deviationToPlan || "No",
-        deviationDetails: values.deviationDetails || "NA",
-        demolitionRisk: values.demolitionRisk || "No",
-        demolitionDetails: values.demolitionDetails || "NA",
-        encroachment: values.encroachment || "No",
-        encroachmentDetails: values.encroachmentDetails || "NA"
+        deviationToPlan: merged.deviationToPlan || "",
+        deviationDetails: merged.deviationDetails || "",
+        demolitionRisk: merged.violationDemolitionRisk || merged.demolitionRiskViolation || "",
+        demolitionDetails: merged.demolitionDetails || "",
+        encroachment: merged.encroachment || "",
+        encroachmentDetails: merged.encroachmentDetails || "",
       });
     }
-  }, [isEdit, initialValues, form]);
+  }, [isEdit, extractedData, form]);
 
   const handleSubmit = (values) => {
     onNext(values);

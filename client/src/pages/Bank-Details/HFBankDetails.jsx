@@ -7,6 +7,10 @@ import { fetchHFBankById } from "../../redux/features/Banks/HFBank/HFBankThunk";
 import { ReactSortable } from "react-sortablejs";
 
 const HFBankDetails = () => {
+
+  const CPANEL = import.meta.env.VITE_API_URL
+
+
   const { id } = useParams();
   const dispatch = useDispatch();
   const reportRef = useRef();
@@ -39,8 +43,8 @@ const HFBankDetails = () => {
   const userRemarks = Array.isArray(reportData?.valuationRemarks)
     ? reportData.valuationRemarks
     : reportData?.valuationRemarks
-    ? [reportData.valuationRemarks]
-    : [];
+      ? [reportData.valuationRemarks]
+      : [];
 
   // Merge and remove duplicates (optional)
   const observations = [...new Set([...userRemarks])];
@@ -98,7 +102,7 @@ const HFBankDetails = () => {
                       1
                     </th>
                     <td
-                      className="text-red-500   bg-[#FDE9D9] text-center border border-black font-bold  px-4 "
+                      className="text-red-500   bg-[#FDE9D9] text-start border border-black font-bold  px-4 "
                       colSpan="5"
                     >
                       L & T ASSIGNMENT DETAILS
@@ -113,8 +117,8 @@ const HFBankDetails = () => {
                     <td className="font-bold border px-4 whitespace-nowrap">
                       {reportData?.dateOfReport
                         ? moment(reportData.dateOfReport).format(
-                            "MM / DD / YYYY"
-                          )
+                          "MM / DD / YYYY"
+                        )
                         : ""}
                     </td>
                   </tr>
@@ -181,7 +185,7 @@ const HFBankDetails = () => {
                     <th
                       style={{ backgroundColor: "" }}
                       colSpan="5"
-                      className="text-red-500  bg-[#FDE9D9] text-center border border-black font-bold  px-4 "
+                      className="text-red-500  bg-[#FDE9D9] text-start border border-black font-bold  px-4 "
                     >
                       GENERAL DETAILS
                     </th>
@@ -309,7 +313,7 @@ const HFBankDetails = () => {
                     ></th>
                     <th
                       colSpan="5"
-                      className="text-red-500  bg-[#FDE9D9] text-center border border-black font-bold  px-4 "
+                      className="text-red-500  bg-[#FDE9D9] text-start border border-black font-bold  px-4 "
                     >
                       DOCUMENT DETAILS
                     </th>
@@ -397,7 +401,7 @@ const HFBankDetails = () => {
                     <th className="bg-[#F0F8FF]"></th>
                     <th
                       colSpan="6"
-                      className="text-red-500  bg-[#FDE9D9] text-center font-bold border border-black px-4 "
+                      className="text-red-500  bg-[#FDE9D9] text-start font-bold border border-black px-4 "
                     >
                       LOCALITY DETAILS
                     </th>
@@ -509,7 +513,7 @@ const HFBankDetails = () => {
                     <th className="bg-[#F0F8FF]"></th>
                     <th
                       colSpan="6"
-                      className="text-red-500  bg-[#FDE9D9] text-center border-black font-bold border px-4 "
+                      className="text-red-500  bg-[#FDE9D9] text-start border-black font-bold border px-4 "
                     >
                       NDMA GUIDELINE
                     </th>
@@ -577,7 +581,7 @@ const HFBankDetails = () => {
                     <th className="bg-[#F0F8FF]"></th>
                     <th
                       colSpan="6"
-                      className="text-red-500  bg-[#FDE9D9] text-center font-bold  border border-black px-4 "
+                      className="text-red-500  bg-[#FDE9D9] text-start font-bold  border border-black px-4 "
                     >
                       PROPERTY DETAILS
                     </th>
@@ -748,7 +752,7 @@ const HFBankDetails = () => {
                     <th className="bg-[#F0F8FF]"></th>
                     <th
                       colSpan="6"
-                      className="text-red-500  bg-[#FDE9D9] text-center font-bold  border-black border px-4 "
+                      className="text-red-500  bg-[#FDE9D9] text-start font-bold  border-black border px-4 "
                     >
                       STRUCTURAL DETAILS
                     </th>
@@ -862,7 +866,7 @@ const HFBankDetails = () => {
                     <th className="bg-[#F0F8FF]"></th>
                     <th
                       colSpan="8"
-                      className="text-red-500  bg-[#FDE9D9] text-center font-bold border border-black px-4 "
+                      className="text-red-500  bg-[#FDE9D9] text-start font-bold border border-black px-4 "
                     >
                       VIOLATION OBSERVED, IF ANY
                     </th>
@@ -913,166 +917,166 @@ const HFBankDetails = () => {
                     <th className="bg-[#F0F8FF]"></th>
                     <th
                       colSpan="9"
-                      className="text-red-500  bg-[#FDE9D9] text-center font-bold border border-black px-4 "
+                      className="text-red-500  bg-[#FDE9D9] text-start font-bold border border-black px-4 "
                     >
                       VALUATION
                     </th>
                   </tr>
                 </thead>
-                
-               <tbody>
-  <td
-    style={{ backgroundColor: "#F0F8FF" }}
-    rowSpan="19" // updated from 16 to 19 (3 rows added)
-    className="border-b text-center"
-  >
-    9
-  </td>
 
-  {/* Land area section */}
-  <tr>
-    <td rowSpan="3" className="border px-4 ">
-      Land area (Sq. ft)
-    </td>
-    <td className="border px-4 ">Document</td>
-    <td colSpan="3" className="border px-4 ">
-      {reportData?.document || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">Plan</td>
-    <td colSpan="3" className="border px-4 ">
-      {reportData?.landAreaPlan || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">Site</td>
-    <td colSpan="3" className="border px-4 ">
-      {reportData?.landAreaSite || ""}
-    </td>
-  </tr>
+                <tbody>
+                  <td
+                    style={{ backgroundColor: "#F0F8FF" }}
+                    rowSpan="19" // updated from 16 to 19 (3 rows added)
+                    className="border-b text-center"
+                  >
+                    9
+                  </td>
 
-  {/* Built Up Area (Proposed) */}
-  <tr>
-    <td rowSpan="3" className="border px-4 ">
-      Built Up Area (Proposed)
-    </td>
-    <td className="border px-4 ">GF</td>
-    <td colSpan="3" className="border px-4 ">
-      {reportData?.landAreaGF || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">FF</td>
-    <td colSpan="3" className="border px-4 ">
-      {reportData?.builtUpAreaFF || "0"}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">SF</td>
-    <td colSpan="3" className="border px-4 ">
-      {reportData?.builtUpAreaSF || "0"}
-    </td>
-  </tr>
+                  {/* Land area section */}
+                  <tr>
+                    <td rowSpan="3" className="border px-4 ">
+                      Land area (Sq. ft)
+                    </td>
+                    <td className="border px-4 ">Document</td>
+                    <td colSpan="3" className="border px-4 ">
+                      {reportData?.document || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">Plan</td>
+                    <td colSpan="3" className="border px-4 ">
+                      {reportData?.landAreaPlan || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">Site</td>
+                    <td colSpan="3" className="border px-4 ">
+                      {reportData?.landAreaSite || ""}
+                    </td>
+                  </tr>
 
-  {/* Built Up Area (Existing) */}
-  <tr>
-    <td rowSpan="3" className="border px-4 ">
-      Built Up Area (Existing)
-    </td>
-    <td className="border px-4 ">GF</td>
-    <td colSpan="3" className="border px-4 ">
-      {reportData?.existingBuiltUpGF || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">FF</td>
-    <td colSpan="3" className="border px-4 ">
-      {reportData?.existingBuiltUpFF || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">SF</td>
-    <td colSpan="3" className="border px-4 ">
-      {reportData?.existingBuiltUpSF || ""}
-    </td>
-  </tr>
+                  {/* Built Up Area (Proposed) */}
+                  <tr>
+                    <td rowSpan="3" className="border px-4 ">
+                      Built Up Area (Proposed)
+                    </td>
+                    <td className="border px-4 ">GF</td>
+                    <td colSpan="3" className="border px-4 ">
+                      {reportData?.landAreaGF || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">FF</td>
+                    <td colSpan="3" className="border px-4 ">
+                      {reportData?.builtUpAreaFF || "0"}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">SF</td>
+                    <td colSpan="3" className="border px-4 ">
+                      {reportData?.builtUpAreaSF || "0"}
+                    </td>
+                  </tr>
 
-  {/* Remaining rows as is */}
-  <tr>
-    <td className="border px-4 ">
-      Land Area considered for Valuation
-    </td>
-    <td colSpan="2" className="border px-4 ">
-      Deed / ATS
-    </td>
-    <td colSpan="2" className="border px-4 ">
-      {reportData?.deedArea || reportData?.siteArea ||  reportData?.planArea || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">
-      Land Rate considered per sq. Ft.
-    </td>
-    <td colSpan="4" className="border px-4 ">
-      {reportData?.landRate || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">Total Land Valuation</td>
-    <td colSpan="4" className="border px-4 ">
-      {reportData?.totalLandValuation || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">
-      Construction Area considered for Valuation
-    </td>
-    <td colSpan="2" className="border px-4 ">
-      Plan
-    </td>
-    <td colSpan="2" className="border px-4 ">
-      {reportData?.landAreaGF || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">
-      Construction Rate considered per sq. Ft
-    </td>
-    <td className="border px-4 ">BUA</td>
-    <td colSpan="3" className="border px-4 ">
-      {reportData?.constructionRate || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">Total Construction Valuation</td>
-    <td colSpan="4" className="border px-4 ">
-      {reportData?.totalConstructionValuation || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">
-      Fair Market Value / Total Value of the unit after completion
-    </td>
-    <td colSpan="4" className="border px-4 ">
-      {reportData?.fairMarketValue || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">Valuation at Present Stage</td>
-    <td colSpan="4" className="border px-4 ">
-      {reportData?.presentStageValuation || ""}
-    </td>
-  </tr>
-  <tr>
-    <td className="border px-4 ">
-      Valuation as per Govt. Guideline
-    </td>
-    <td colSpan="4" className="border px-4 ">
-      {reportData?.govtGuidelineValuation || ""}
-    </td>
-  </tr>
-</tbody>
+                  {/* Built Up Area (Existing) */}
+                  <tr>
+                    <td rowSpan="3" className="border px-4 ">
+                      Built Up Area (Existing)
+                    </td>
+                    <td className="border px-4 ">GF</td>
+                    <td colSpan="3" className="border px-4 ">
+                      {reportData?.existingBuiltUpGF || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">FF</td>
+                    <td colSpan="3" className="border px-4 ">
+                      {reportData?.existingBuiltUpFF || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">SF</td>
+                    <td colSpan="3" className="border px-4 ">
+                      {reportData?.existingBuiltUpSF || ""}
+                    </td>
+                  </tr>
+
+                  {/* Remaining rows as is */}
+                  <tr>
+                    <td className="border px-4 ">
+                      Land Area considered for Valuation
+                    </td>
+                    <td colSpan="2" className="border px-4 ">
+                      Deed / ATS
+                    </td>
+                    <td colSpan="2" className="border px-4 ">
+                      {reportData?.deedArea || reportData?.siteArea || reportData?.planArea || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">
+                      Land Rate considered per sq. Ft.
+                    </td>
+                    <td colSpan="4" className="border px-4 ">
+                      {reportData?.landRate || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">Total Land Valuation</td>
+                    <td colSpan="4" className="border px-4 ">
+                      {reportData?.totalLandValuation || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">
+                      Construction Area considered for Valuation
+                    </td>
+                    <td colSpan="2" className="border px-4 ">
+                      Plan
+                    </td>
+                    <td colSpan="2" className="border px-4 ">
+                      {reportData?.landAreaGF || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">
+                      Construction Rate considered per sq. Ft
+                    </td>
+                    <td className="border px-4 ">BUA</td>
+                    <td colSpan="3" className="border px-4 ">
+                      {reportData?.constructionRate || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">Total Construction Valuation</td>
+                    <td colSpan="4" className="border px-4 ">
+                      {reportData?.totalConstructionValuation || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">
+                      Fair Market Value / Total Value of the unit after completion
+                    </td>
+                    <td colSpan="4" className="border px-4 ">
+                      {reportData?.fairMarketValue || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">Valuation at Present Stage</td>
+                    <td colSpan="4" className="border px-4 ">
+                      {reportData?.presentStageValuation || ""}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border px-4 ">
+                      Valuation as per Govt. Guideline
+                    </td>
+                    <td colSpan="4" className="border px-4 ">
+                      {reportData?.govtGuidelineValuation || ""}
+                    </td>
+                  </tr>
+                </tbody>
 
 
                 {/* TABLE 10 */}
@@ -1082,7 +1086,7 @@ const HFBankDetails = () => {
                     <th className="bg-[#F0F8FF]"> </th>
                     <th
                       colSpan="6"
-                      className="text-red-500  bg-[#FDE9D9] text-center font-bold border border-black px-4 "
+                      className="text-red-500  bg-[#FDE9D9] text-start font-bold border border-black px-4 "
                     >
                       OBSERVATION AND REMARKS
                     </th>
@@ -1113,7 +1117,7 @@ const HFBankDetails = () => {
                 <tr>
                   <td className="bg-[#F0F8FF] "></td>
                   <td
-                    className="border border-black font-bold px-4 bg-[#FDE9D9] text-center text-red-500"
+                    className="border border-black font-bold px-4 bg-[#FDE9D9] text-start text-red-500"
                     colSpan="5"
                   >
                     SITE PHOTOGRAPHS
@@ -1126,13 +1130,13 @@ const HFBankDetails = () => {
                     className=" border border-black px-4 mt font-semibold"
                     colSpan="8"
                   >
-                    <p id="drag" className="text-sm text-gray-600 mb-2">
+                    {/* <p id="drag" className="text-sm text-gray-600 mb-2">
                       You can{" "}
                       <span className="font-medium text-blue-600">
                         drag and drop
                       </span>{" "}
                       the images below to reorder them.
-                    </p>
+                    </p> */}
                     {/* <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 py-2   '>
                       {reportData?.imageUrls?.length > 0 ? (
                         reportData.imageUrls.map((imageUrl, index) => (
@@ -1159,18 +1163,25 @@ const HFBankDetails = () => {
                         className="image-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 py-2 gap-2"
                         animation={200}
                       >
-                        {sortedImages.map((item, index) => (
-                          <div
-                            key={item.id}
-                            className="overflow-hidden border p-1"
-                          >
-                            <img
-                              src={item.url}
-                              alt={`Image ${index + 1}`}
-                              className="w-full h-80 object-cover object-bottom"
-                            />
-                          </div>
-                        ))}
+                        {sortedImages.map((item, index) => {
+                          console.log(item)
+
+                          const imageUrl = item?.url?.replace("undefined", "");
+                          console.log(imageUrl);
+
+                          return (
+                            <div
+                              key={item.id}
+                              className="overflow-hidden border p-1"
+                            >
+                              <img
+                                src={`${CPANEL}${imageUrl}`}
+                                alt={`Image ${index + 1}`}
+                                className="w-full h-80 object-cover object-bottom"
+                              />
+                            </div>
+                          )
+                        })}
                       </ReactSortable>
                     )}
 
@@ -1191,7 +1202,7 @@ const HFBankDetails = () => {
                 <tr>
                   <td className="bg-[#F0F8FF]"></td>
                   <td
-                    className="border text-center border-black font-bold px-4 bg-[#FDE9D9] text-red-500"
+                    className="border text-start border-black font-bold px-4 bg-[#FDE9D9] text-red-500"
                     colSpan="5"
                   >
                     LOCATION

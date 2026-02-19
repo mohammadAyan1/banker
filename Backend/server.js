@@ -13,7 +13,7 @@ const connectDb = require("./db/db");
 const server = http.createServer(app);
 
 const allowedOrigins = [
-  "http://localhost:5175", // Local frontend
+  "http://localhost:5173", // Local frontend
   "https://bank-one-phi.vercel.app", // Production frontend
 ];
 

@@ -21,15 +21,21 @@ import { useParams } from "react-router-dom";
 const { TextArea } = Input;
 const { Option } = Select;
 
-const LNTAssignmentDetails = ({ isEdit, onNext }) => {
+const LNTAssignmentDetails = ({ isEdit, onNext, extractedData }) => {
+
+
+
   const { user } = useSelector((state) => state.auth);
   const [form] = Form.useForm();
   const [images, setImages] = useState([]);
+  const [uploadedImages, setUploadedImagess] = useState([]);
 
   const { id } = useParams();
 
   const [uploadedUrls, setUploadedUrls] = useState([]);
   const [loading, setLoading] = useState(false);
+
+
 
   const initialValues = {
     customerName: "",
@@ -49,44 +55,80 @@ const LNTAssignmentDetails = ({ isEdit, onNext }) => {
 
   const CPANEL = import.meta.env.VITE_CPANEL_DOMAIN;
 
+  // useEffect(() => {
+  //   if (isEdit) {
+  //     // Try parsing date safely
+  //     const parsedDate = isEdit.dateOfReport
+  //       ? moment(isEdit.dateOfReport, moment.ISO_8601, true).isValid()
+  //         ? moment(isEdit.dateOfReport) // ISO format
+  //         : moment(isEdit.dateOfReport, "DD.MM.YYYY") // fallback format
+  //       : null;
+
+  //     form.setFieldsValue({
+  //       customerName: isEdit.customerName || "",
+  //       customerNo: isEdit.customerNo || "",
+  //       personMetDuringVisit: isEdit.personMetDuringVisit || "",
+  //       personContactNo: isEdit.personContactNo || "",
+  //       typeOfLoan: isEdit.typeOfLoan || "",
+  //       dateOfReport: parsedDate,
+  //       refNo: isEdit.refNo || "N/A",
+  //       evaluationType: isEdit.evaluationType || "",
+  //       unitType: isEdit.unitType || "",
+  //       documentsAvailable:
+  //         isEdit.documentsAvailable ||
+  //         "A.T.S, DRAFT SALE AGREEMENT, SALE DEED,  ENGG. MAP, KEY-PLAN",
+  //       latitude: isEdit.latitude || "",
+  //       longitude: isEdit.longitude || "",
+  //     });
+
+  //     if (isEdit.imageUrls && Array.isArray(isEdit.imageUrls)) {
+  //       const fileListFromServer = isEdit.imageUrls.map((url, index) => ({
+  //         uid: `server-${index}`,
+  //         name: url.split("/").pop(),
+  //         status: "done",
+  //         url,
+  //       }));
+  //       setImages(fileListFromServer);
+  //       setUploadedUrls(isEdit.imageUrls);
+  //     }
+  //   }
+  // }, [isEdit, form]);
+
+
   useEffect(() => {
-    if (isEdit) {
-      // Try parsing date safely
-      const parsedDate = isEdit.dateOfReport
-        ? moment(isEdit.dateOfReport, moment.ISO_8601, true).isValid()
-          ? moment(isEdit.dateOfReport) // ISO format
-          : moment(isEdit.dateOfReport, "DD.MM.YYYY") // fallback format
+    const merged = { ...extractedData, ...isEdit };
+
+    console.log(merged);
+
+
+    setUploadedImagess(merged?.imageUrls)
+
+
+    if (merged) {
+      const parsedDate = merged.dateOfReport
+        ? moment(merged.dateOfReport, moment.ISO_8601, true).isValid()
+          ? moment(merged.dateOfReport)
+          : moment(merged.dateOfReport, "DD.MM.YYYY")
         : null;
 
       form.setFieldsValue({
-        customerName: isEdit.customerName || "",
-        customerNo: isEdit.customerNo || "",
-        personMetDuringVisit: isEdit.personMetDuringVisit || "",
-        personContactNo: isEdit.personContactNo || "",
-        typeOfLoan: isEdit.typeOfLoan || "",
+        customerName: merged.customerName || "",
+        customerNo: merged.customerNo || "",
+        propertyName: merged.propertyName || "",
+        personMetDuringVisit: merged.personMetDuringVisit || "",
+        personContactNo: merged.personContactNo || "",
+        typeOfLoan: merged.typeOfLoan || "",
         dateOfReport: parsedDate,
-        refNo: isEdit.refNo || "N/A",
-        evaluationType: isEdit.evaluationType || "",
-        unitType: isEdit.unitType || "",
-        documentsAvailable:
-          isEdit.documentsAvailable ||
-          "A.T.S, DRAFT SALE AGREEMENT, SALE DEED,  ENGG. MAP, KEY-PLAN",
-        latitude: isEdit.latitude || "",
-        longitude: isEdit.longitude || "",
+        refNo: merged.refNo || "",
+        evaluationType: merged.evaluationType || "",
+        unitType: merged.unitType || "",
+        documentsAvailable: merged.documentsAvailable || "",
+        latitude: merged.latitude || "",
+        longitude: merged.longitude || "",
       });
-
-      if (isEdit.imageUrls && Array.isArray(isEdit.imageUrls)) {
-        const fileListFromServer = isEdit.imageUrls.map((url, index) => ({
-          uid: `server-${index}`,
-          name: url.split("/").pop(),
-          status: "done",
-          url,
-        }));
-        setImages(fileListFromServer);
-        setUploadedUrls(isEdit.imageUrls);
-      }
     }
-  }, [isEdit, form]);
+  }, [isEdit, extractedData, form]);
+
 
   const geoRef = useRef();
 
@@ -226,6 +268,8 @@ const LNTAssignmentDetails = ({ isEdit, onNext }) => {
             images={images}
             setImages={setImages}
             setUploadedUrls={setUploadedUrls}
+            uploadedImages={uploadedImages}
+
           />
         </div>
 
@@ -234,7 +278,7 @@ const LNTAssignmentDetails = ({ isEdit, onNext }) => {
             type='primary'
             htmlType='submit'
             className='mt-4'
-            // disabled={user.role === "FieldOfficer" && uploadedUrls.length === 0}
+          // disabled={user.role === "FieldOfficer" && uploadedUrls.length === 0}
           >
             {user.role === "FieldOfficer" ? "Submit" : "Next"}
           </Button>

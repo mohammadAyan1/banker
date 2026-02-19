@@ -43,9 +43,8 @@ const ProtectedLayout = () => {
 
         {/* Main content area */}
         <div
-          className={`flex-1 overflow-y-auto h-full transition-all duration-300 ${
-            isCollapsed ? "ml-[20px]" : "ml-6"
-          }`}
+          className={`flex-1 overflow-y-auto h-full transition-all duration-300 ${isCollapsed ? "ml-[20px]" : "ml-6"
+            }`}
         >
           <Outlet />
         </div>

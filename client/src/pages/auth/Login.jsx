@@ -18,7 +18,7 @@ const Login = () => {
     try {
       const resultAction = await dispatch(loginThunk({ email, password }));
       console.log(resultAction);
-      
+
       if (loginThunk.fulfilled.match(resultAction)) {
         const role = resultAction.payload.user.role;
         console.log(role);

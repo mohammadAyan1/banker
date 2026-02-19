@@ -27,7 +27,7 @@ const bajajRoutes = require("./Routes/Banks/bajajRoutes");
 const bajajAmeriyaRoutes = require("./Routes/Banks/BajajAmeriyaRoutes");
 const dmiFinanceReportRoutes = require("./Routes/Banks/DmiFinanceRoute");
 const homeTrenchReportRoutes = require("./Routes/Banks/homeTrenchReportRoutes");
-
+const uploadRoutes = require("./Routes/uploadOllama");
 const authRoutes = require("./Routes/auth/authRoutes");
 // const ErrorHandler  = require("./middleware/errorHandler");
 // const connectDb = require("./db/db");
@@ -39,16 +39,16 @@ const app = express();
 
 const PORT = process.env.PORT || 5000; // Hardcoded port
 
-// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "uploads"), {
-    setHeaders: (res, path) => {
-      res.setHeader("Access-Control-Allow-Origin");
-    },
-  })
-);
+// app.use(
+//   "/uploads",
+//   express.static(path.join(__dirname, "uploads"), {
+//     setHeaders: (res, path) => {
+//       res.setHeader("Access-Control-Allow-Origin");
+//     },
+//   })
+// );
 
 // Middleware
 app.use(
@@ -69,6 +69,8 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+app.use("/api", uploadRoutes);
 
 app.use("/api/image_kit", require("./Routes/uploadRoute"));
 // Routes
@@ -105,18 +107,12 @@ app.use("/api/notes", require("./Routes/noteRoutes"));
 app.use("/api/assign", require("./Routes/assignmentRoutes"));
 
 app.use("/api/uploads", require("./Routes/upload"));
+app.use("/api/remove", require("./Routes/removeRoutes"));
 app.use("/api/proxy", require("./Routes/proxyDownload"));
 
 app.get("/", (req, res) => {
   res.send("Server is running at Home!");
 });
-
-app.get("/api", (req, res) => {
-  res.send("Server is running at api!");
-});
-
-// ErrorHandling
-// app.use(ErrorHandler);
 
 app.use((req, res, next) => {
   const err = new Error(`Route not found: ${req.url}`);

@@ -2,13 +2,13 @@
 
 
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Form, Input, Button, Select, Row, Col } from "antd";
-import toast from "react-hot-toast";
+
 
 const { Option } = Select;
 
-const PropertyDetails = ({ isEdit, onNext, onBack }) => {
+const PropertyDetails = ({ isEdit, onNext, onBack, extractedData }) => {
   const [form] = Form.useForm();
 
   const initialValues = {
@@ -24,7 +24,7 @@ const PropertyDetails = ({ isEdit, onNext, onBack }) => {
     marketability: "",
     typeOfStructure: "N/A",
     qualityOfConstruction: "",
-    IfNoDetailRemak:"",
+    IfNoDetailRemak: "",
     propertyIsDemarcated: "",
     propertyEasilyIdentifiable: "",
     Dimension: "",
@@ -44,42 +44,95 @@ const PropertyDetails = ({ isEdit, onNext, onBack }) => {
     openPlot: "",
   };
 
+  // useEffect(() => {
+  //   if (isEdit) {
+  //     form.setFieldsValue({
+  //       directions: {
+  //         North: isEdit?.directions?.North || {},
+  //         South: isEdit?.directions?.South || {},
+  //         East: isEdit?.directions?.East || {},
+  //         West: isEdit?.directions?.West || {},
+  //       },
+  //       boundariesMatching: isEdit.boundariesMatching || "",
+  //       plotArea: isEdit.plotArea || "",
+  //       isPropertyWithinLimit: isEdit.isPropertyWithinLimit || "",
+  //       marketability: isEdit.marketability || "",
+  //       typeOfStructure: isEdit.typeOfStructure || "N/A",
+  //       qualityOfConstruction: isEdit.qualityOfConstruction || "AVG",
+  //       ifQualityPoor: isEdit.ifQualityPoor || "N/A",
+  //       unitFlatConfiguration: isEdit.unitFlatConfiguration || "",
+  //       noOfFloorsPermissible: isEdit.noOfFloorsPermissible || "N/A",
+  //       noOfUnitFlatOnEachFloor: isEdit.noOfUnitFlatOnEachFloor || "N/A",
+  //       internalComposition: isEdit.internalComposition || "N/A",
+  //       noOfFloorsActual: isEdit.noOfFloorsActual || "N/A",
+  //       approxAgeOfProperty: isEdit.approxAgeOfProperty || "0",
+  //       constructionAsPerPlan: isEdit.constructionAsPerPlan || "no", //!select
+  //       residualAge: isEdit.residualAge || "50",
+  //       constructionStatus: isEdit.constructionStatus || "0%",
+  //       liftAvailable: isEdit.liftAvailable || "NO", //SELECT
+  //       buildingHeight: isEdit.buildingHeight || "0",
+  //       constructionStage: isEdit.constructionStage || "OPEN PLOT", // MORE SELECT OPTIONS
+  //       openPlot: isEdit.openPlot || "N/A",
+  //        IfNoDetailRemak: isEdit.IfNoDetailRemak || "",
+  //       propertyIsDemarcated: isEdit.propertyIsDemarcated || "",
+  //       propertyEasilyIdentifiable: isEdit.propertyEasilyIdentifiable || "",
+  //       Dimension: isEdit.Dimension || "",
+  //     });
+  //   }
+  // }, [isEdit, form]);
+
   useEffect(() => {
-    if (isEdit) {
+    const merged = { ...extractedData, ...isEdit };
+    if (merged) {
       form.setFieldsValue({
         directions: {
-          North: isEdit?.directions?.North || {},
-          South: isEdit?.directions?.South || {},
-          East: isEdit?.directions?.East || {},
-          West: isEdit?.directions?.West || {},
+          North: {
+            document: merged.northDocument || "",
+            actual: merged.northActual || "",
+            plan: merged.northPlan || "",
+          },
+          South: {
+            document: merged.southDocument || "",
+            actual: merged.southActual || "",
+            plan: merged.southPlan || "",
+          },
+          East: {
+            document: merged.eastDocument || "",
+            actual: merged.eastActual || "",
+            plan: merged.eastPlan || "",
+          },
+          West: {
+            document: merged.westDocument || "",
+            actual: merged.westActual || "",
+            plan: merged.westPlan || "",
+          },
         },
-        boundariesMatching: isEdit.boundariesMatching || "",
-        plotArea: isEdit.plotArea || "",
-        isPropertyWithinLimit: isEdit.isPropertyWithinLimit || "",
-        marketability: isEdit.marketability || "",
-        typeOfStructure: isEdit.typeOfStructure || "N/A",
-        qualityOfConstruction: isEdit.qualityOfConstruction || "AVG",
-        ifQualityPoor: isEdit.ifQualityPoor || "N/A",
-        unitFlatConfiguration: isEdit.unitFlatConfiguration || "",
-        noOfFloorsPermissible: isEdit.noOfFloorsPermissible || "N/A",
-        noOfUnitFlatOnEachFloor: isEdit.noOfUnitFlatOnEachFloor || "N/A",
-        internalComposition: isEdit.internalComposition || "N/A",
-        noOfFloorsActual: isEdit.noOfFloorsActual || "N/A",
-        approxAgeOfProperty: isEdit.approxAgeOfProperty || "0",
-        constructionAsPerPlan: isEdit.constructionAsPerPlan || "no", //!select
-        residualAge: isEdit.residualAge || "50",
-        constructionStatus: isEdit.constructionStatus || "0%",
-        liftAvailable: isEdit.liftAvailable || "NO", //SELECT
-        buildingHeight: isEdit.buildingHeight || "0",
-        constructionStage: isEdit.constructionStage || "OPEN PLOT", // MORE SELECT OPTIONS
-        openPlot: isEdit.openPlot || "N/A",
-         IfNoDetailRemak: isEdit.IfNoDetailRemak || "",
-        propertyIsDemarcated: isEdit.propertyIsDemarcated || "",
-        propertyEasilyIdentifiable: isEdit.propertyEasilyIdentifiable || "",
-        Dimension: isEdit.Dimension || "",
+        boundariesMatching: merged.boundariesMatching || "",
+        plotArea: merged.plotArea || "",
+        isPropertyWithinLimit: merged.isPropertyWithinLimit || "",
+        marketability: merged.marketability || "",
+        typeOfStructure: merged.typeOfStructure || "",
+        qualityOfConstruction: merged.qualityOfConstruction || "",
+        ifQualityPoor: merged.ifQualityPoor || "",
+        unitFlatConfiguration: merged.unitFlatConfiguration || "",
+        noOfFloorsPermissible: merged.noOfFloorsPermissible || "",
+        noOfUnitFlatOnEachFloor: merged.noOfUnitFlatOnEachFloor || "",
+        internalComposition: merged.internalComposition || "",
+        noOfFloorsActual: merged.noOfFloorsActual || "",
+        approxAgeOfProperty: merged.approxAgeOfProperty || "",
+        constructionAsPerPlan: merged.constructionAsPerPlan || "",
+        residualAge: merged.residualAge || "",
+        constructionStatus: merged.constructionStatus || "",
+        liftAvailable: merged.liftAvailable || "",
+        buildingHeight: merged.buildingHeight || "",
+        constructionStage: merged.constructionStage || "",
+        IfNoDetailRemak: merged.IfNoDetailRemak || "",
+        propertyIsDemarcated: merged.propertyIsDemarcated || "",
+        propertyEasilyIdentifiable: merged.propertyEasilyIdentifiable || "",
+        Dimension: merged.Dimension || "",
       });
     }
-  }, [isEdit, form]);
+  }, [isEdit, extractedData, form]);
 
   const handleFinish = (values) => {
     onNext(values);
@@ -135,7 +188,7 @@ const PropertyDetails = ({ isEdit, onNext, onBack }) => {
           </div>
         ))}
 
-        
+
         <Form.Item label='Boundaries Matching' name='boundariesMatching'>
           <Select onChange={handleFieldChange}>
             <Option value='Yes'>Yes</Option>
@@ -170,21 +223,21 @@ const PropertyDetails = ({ isEdit, onNext, onBack }) => {
 
         {/*  */}
 
-          <Form.Item
+        <Form.Item
           label='If No - Detail Remak'
           name='IfNoDetailRemak'
         >
           <Input onChange={handleFieldChange} />
         </Form.Item>
 
-          <Form.Item
+        <Form.Item
           label='Property is Demarcated'
           name='propertyIsDemarcated'
         >
           <Input onChange={handleFieldChange} />
         </Form.Item>
 
-         <Form.Item
+        <Form.Item
           label='Property Easily Identifiable'
           name='propertyEasilyIdentifiable'
         >
@@ -193,21 +246,21 @@ const PropertyDetails = ({ isEdit, onNext, onBack }) => {
 
 
 
-          <Form.Item
+        <Form.Item
           label='Dimension:'
           name='Dimension'
         >
           <Input onChange={handleFieldChange} />
         </Form.Item>
 
-        
-        
-         
-        
 
 
 
-      <h2 className='text-2xl font-bold mb-6'>Structural Details</h2> <br />
+
+
+
+
+        <h2 className='text-2xl font-bold mb-6'>Structural Details</h2> <br />
 
         {/* Structure Info */}
         <Form.Item label='Type of Structure' name='typeOfStructure'>
@@ -223,8 +276,8 @@ const PropertyDetails = ({ isEdit, onNext, onBack }) => {
           </Select>
         </Form.Item>
 
-        <Form.Item 
-          label='If quality of construction is poor' 
+        <Form.Item
+          label='If quality of construction is poor'
           name='ifQualityPoor'
         >
           <Input onChange={handleFieldChange} />
@@ -296,8 +349,8 @@ const PropertyDetails = ({ isEdit, onNext, onBack }) => {
           </Select>
         </Form.Item>
 
-        <Form.Item 
-          label='Height of the building (Approx in Meters)' 
+        <Form.Item
+          label='Height of the building (Approx in Meters)'
           name='buildingHeight'
         >
           <Input type='number' onChange={handleFieldChange} />

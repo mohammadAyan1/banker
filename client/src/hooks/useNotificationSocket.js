@@ -8,19 +8,6 @@ const socket = io(import.meta.env.VITE_API_URL);
 const useNotificationSocket = () => {
   const dispatch = useDispatch();
 
-  // useEffect(() => {
-  //   socket.on("connect", () => {
-  //     console.log("Connected to socket");
-  //   });
-
-  //   socket.on("newNotification", () => {
-  //     dispatch(fetchNotifications());
-  //   });
-
-  //   return () => {
-  //     socket.disconnect();
-  //   };
-  // }, [dispatch]);
 
   useEffect(() => {
     // Create an audio object (make sure the path is correct)
