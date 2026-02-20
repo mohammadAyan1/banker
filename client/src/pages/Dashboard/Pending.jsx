@@ -143,6 +143,11 @@ const Pending = () => {
     fetchAllBankData();
   }, [fetchAllBankData]);
 
+
+  useEffect(() => {
+    console.log(aditya)
+  }, [aditya, dispatch])
+
   const handleDelete = async ({ id }) => {
     try {
       await dispatch(deletedCases(id)).unwrap();
@@ -327,7 +332,7 @@ const Pending = () => {
     );
     const hfWithBank = normalizeData(
       hfBanks,
-      "HFFC Bank",
+      "Home First Bank",
       "home-first",
       "customerName",
       "customerNo"
@@ -401,13 +406,18 @@ const Pending = () => {
 
   useEffect(() => {
     setReportData(memoizedReportData);
+    console.log('====================================');
+    console.log(memoizedReportData);
+    console.log('====================================');
   }, [memoizedReportData]);
+
+
+
 
   const filteredData = useMemo(() => {
     if (!reportData || reportData.length === 0) {
       return [];
     }
-
     // First filter by bank if selected
     let data = reportData;
     if (selectedBank !== "All") {
@@ -422,6 +432,14 @@ const Pending = () => {
       )
     );
   }, [search, reportData, selectedBank]);
+
+
+  useEffect(() => {
+    console.log('====================================');
+    console.log(filteredData);
+    console.log('====================================');
+  }, [filteredData])
+
 
   const bankOptions = [
     { value: "All", label: "All Banks" },

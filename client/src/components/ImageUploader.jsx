@@ -140,20 +140,22 @@ const ImageUploader = ({
       const result = await res.json();
 
       if (result?.urls?.length) {
-        const uploaded = result.urls.map((url, i) => ({
-          uid: `uploaded-${Date.now()}-${i}`,
-          name: url.split("/").pop(),
-          status: "done",
-          url,
-        }));
+        // const uploaded = result.urls.map((url, i) => ({
+        //   uid: `uploaded-${Date.now()}-${i}`,
+        //   name: url.split("/").pop(),
+        //   status: "done",
+        //   url,
+        // }));
 
-        const updatedImages = [
-          ...images.filter((img) => !img.originFileObj),
-          ...uploaded,
-        ];
+        // const updatedImages = [
+        //   ...images.filter((img) => !img.originFileObj),
+        //   ...uploaded,
+        // ];
 
-        setImages(updatedImages);
+        // setImages(updatedImages);
         setUploadedUrls((prev) => [...prev, ...result.urls]);
+        // ✅ clear small preview after upload
+        setImages(prev => prev.filter(img => !img.originFileObj));
         toast.success("Files uploaded successfully");
       } else {
         toast.error("Upload failed");
@@ -293,7 +295,8 @@ const ImageUploader = ({
             handleAutoUpload(file);
             return false;
           }}
-          fileList={images}
+          // fileList={images}
+          fileList={images.filter(img => img.originFileObj)}
           onRemove={(file) => {
             setImages((prev) => prev.filter((img) => img.uid !== file.uid));
           }}
@@ -324,7 +327,8 @@ const ImageUploader = ({
                   ]);
                   return false;
                 }}
-                fileList={images}
+                // fileList={images}
+                fileList={images.filter(img => img.originFileObj)}
                 onRemove={async (file) => {
                   const urlToDelete = file.url;
                   if (urlToDelete) {
@@ -404,7 +408,7 @@ const ImageUploader = ({
       )}
 
       {uploadedImages?.length > 0 && (
-        <div>
+        <div className="grid grid-cols-3 gap-1">
           {uploadedImages.map((item, index) => {
             console.log('====================================');
             console.log(item);
@@ -421,13 +425,17 @@ const ImageUploader = ({
 
             return (
               <>
-                <button type="button" onClick={() => handleRemoveImage(fileName, item)} className="flex z-50 relative top-6 left-1 hover:bg-red-500 hover:text-white px-2  hover:border ">X</button>
-                <img
-                  key={index}
-                  src={`${CPANEL}/${imageUrl}`}
-                  alt={`uploaded-${index}`}
-                  className="max mb-2"
-                />
+                <div>
+
+                  <button type="button" onClick={() => handleRemoveImage(fileName, item)} className="flex z-50 border relative top-6 left-1 hover:bg-red-500 hover:text-white px-2  hover:border ">X</button>
+                  <img
+                    key={index}
+                    src={`${CPANEL}/${imageUrl}`}
+                    alt={`uploaded-${index}`}
+                    className="max mb-2"
+                  />
+                </div>
+
               </>
             );
           })}

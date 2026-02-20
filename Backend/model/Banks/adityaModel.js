@@ -12,6 +12,22 @@ const adityaSchema = new mongoose.Schema(
     propertyOwners: { type: String },
     reportDate: { type: String },
 
+    status: {
+      type: String,
+      enum: [
+        "Pending",
+        "Assigned",
+        "Visited",
+        "Reported",
+        "Reviewed",
+        "Approved",
+        "Rejected",
+        "Work in Progress",
+        "FinalSubmitted",
+      ],
+      default: "Pending",
+    },
+
     // Location Details
     propertyAddressTRF: { type: String },
     propertyAddressVisit: { type: String },

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-
+import ImageUploader from "../../../../components/ImageUploader";
 const BoundaryDetails = ({ isEdit, onNext }) => {
   const [isOpen, setIsOpen] = useState(false);
+  // const [uploadedImages, setUploadedImagess] = useState([]);
 
   const [formData, setFormData] = useState({
     northAsPerDocs: "",
@@ -127,10 +128,10 @@ const BoundaryDetails = ({ isEdit, onNext }) => {
                         {section === "AsPerDocs"
                           ? "As per docs."
                           : section === "Actual"
-                          ? "As per Actual"
-                          : section === "BoundaryMatching"
-                          ? "Boundary Matching"
-                          : "Remarks:"}
+                            ? "As per Actual"
+                            : section === "BoundaryMatching"
+                              ? "Boundary Matching"
+                              : "Remarks:"}
                       </td>
                       {["north", "south", "east", "west"].map((dir) => (
                         <td className='border px-3 py-2' key={dir}>
@@ -186,6 +187,20 @@ const BoundaryDetails = ({ isEdit, onNext }) => {
                 onChange={handleChange}
               />
             </div>
+            {/* <div className='pb-6'>
+              <h2 className='bg-blue-100 p-3 font-bold mb-4 rounded-lg'>
+                7. SITE PHOTOS
+              </h2>
+              <ImageUploader
+                deleteId={id}
+                images={images}
+                setImages={setImages}
+                setUploadedUrls={setUploadedUrls}
+                maxCount={10}
+                uploadedImages={uploadedImages}
+                url={"home-trench-reports"}
+              />
+            </div> */}
             <div className=''>
               <button
                 onClick={handleNextClick}

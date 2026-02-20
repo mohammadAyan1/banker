@@ -32,7 +32,6 @@ export const routesConfig = [
     path: "/bank/piramal/edit/:id",
     element: lazy(() => import("../pages/Bank-Form/Pirmal-form/Primal")),
   },
-
   {
     path: "/bank/home-first",
     element: lazy(() =>
@@ -52,6 +51,10 @@ export const routesConfig = [
   {
     path: "/bank/home-first-trench",
     element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
+  },
+  {
+    path: "/bank/home-first-trench/:id",
+    element: lazy(() => import("../pages/Bank-Details/HomeTrench")),
   },
   {
     path: "/bank/homefirsttrench/:id",

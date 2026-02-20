@@ -74,7 +74,7 @@ const FinalSubmittedCases = () => {
         <>
           <div className='flex gap-4 items-center'>
             <Link
-              to={`/bank/home-first/edit/${record._id}`}
+              to={`/bank/home-first-trench/edit/${record._id}`}
               className='!text-green-600 hover:underline border p-1'
             >
               <Edit3 size={18} />
