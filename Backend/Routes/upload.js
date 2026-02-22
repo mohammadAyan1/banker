@@ -1,24 +1,53 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../middleware/upload");
+// const upload = require("../middleware/upload");
 const uploadDocuments = require("../middleware/uploderDocument.js");
-
+const imagekit = require("../config/imagekit");
 const modelMap = require("../controllers/modelMap.js");
-
 const Case = require("../model/Banks/homeFirstModel.js");
+const multer = require("multer");
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-router.post("/", upload.array("files"), (req, res) => {
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ error: "No files uploaded" });
+router.post("/", upload.array("files"), async (req, res) => {
+  try {
+    const uploadedFiles = [];
+
+    console.log(req?.files)
+
+    for (const file of req.files) {
+      const result = await imagekit.upload({
+        file: file.buffer,        // buffer
+        fileName: file.originalname,
+        folder: "/uploads",
+      });
+
+      uploadedFiles.push({
+        url: result.url,
+        fileId: result.fileId,   // ⭐ important
+        name: result.name,
+      });
+    }
+
+    res.json({ success: true, urls: uploadedFiles });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
   }
-
-  const fileUrls = req.files.map((file) => {
-    return `${process.env.UPLOAD_DOMAIN_URL}/uploads/${file.filename}`;
-  });
-  // console.log(fileUrls);
-
-  res.json({ urls: fileUrls });
 });
+
+// router.post("/", upload.array("files"), (req, res) => {
+//   if (!req.files || req.files.length === 0) {
+//     return res.status(400).json({ error: "No files uploaded" });
+//   }
+
+//   const fileUrls = req.files.map((file) => {
+//     return `${process.env.UPLOAD_DOMAIN_URL}/uploads/${file.filename}`;
+//   });
+//   // console.log(fileUrls);
+
+//   res.json({ urls: fileUrls });
+// });
 
 function toPascalCase(str) {
   return str

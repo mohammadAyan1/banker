@@ -65,7 +65,7 @@ const { Option } = Select;
 import { Edit3, Trash2, Plus } from "lucide-react";
 import DocumentAttach from "../../components/DocumentAttach";
 import ImageUploader from "../../components/ImageUploader";
-import { getOutOfTatCases } from "../../redux/features/assignedCase/assignedCasesThunk";
+// import { getOutOfTatCases } from "../../redux/features/assignedCase/assignedCasesThunk";
 
 const Pending = () => {
   const [search, setSearch] = useState("");
@@ -579,6 +579,7 @@ const Pending = () => {
           // bankName={hfBanks[0]?.bankName || "Bank"}
           bankName={record.bankName}
           fetchData={fetchAllBankData}
+          uploadedUrls={uploadedUrls}
         />
       ),
     },

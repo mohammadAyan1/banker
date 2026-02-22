@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import ImageUploader from "../../../../components/ImageUploader";
@@ -258,6 +258,7 @@ const BasicDetail = ({ isEdit, onNext }) => {
                   images={images}
                   setImages={setImages}
                   setUploadedUrls={setUploadedUrls}
+                  uploadedUrls={uploadedUrls}
                 />
               </div>
 

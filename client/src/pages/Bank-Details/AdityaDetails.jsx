@@ -8,155 +8,160 @@ import FileDownload from "../../components/FileDownload";
 const AdityaDetails = () => {
   const reportRef = useRef();
   const [loading, setLoading] = useState(true);
-  const [formSubmitted, setFormSubmitted] = useState(false);
   const { id } = useParams();
   const dispatch = useDispatch();
 
+  const CPANEL = import.meta.env.VITE_CPANEL_DOMAIN
+
   const reportData = useSelector((state) => state?.aditya.detail);
+
+  function cleanPath(path) {
+    return path.replace(/^undefined\/?/, "");
+  }
 
   // ! START
 
-  const handleStructureExport = () => {
-    const tableElement = document.getElementById("reportTable");
-    if (!tableElement) {
-      alert("Report Table Not Found");
-      return;
-    }
+  // const handleStructureExport = () => {
+  //   const tableElement = document.getElementById("reportTable");
+  //   if (!tableElement) {
+  //     alert("Report Table Not Found");
+  //     return;
+  //   }
 
-    const worksheet = XLSX.utils.table_to_sheet(tableElement, { raw: true });
-    const range = XLSX.utils.decode_range(worksheet["!ref"]);
+  //   const worksheet = XLSX.utils.table_to_sheet(tableElement, { raw: true });
+  //   const range = XLSX.utils.decode_range(worksheet["!ref"]);
 
-    // 🔁 Step 1: Apply default styles (border + alignment) to all cells
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-        if (!worksheet[cellAddress]) worksheet[cellAddress] = { t: "s", v: "" }; // Empty cell fix
+  //   // 🔁 Step 1: Apply default styles (border + alignment) to all cells
+  //   for (let R = range.s.r; R <= range.e.r; ++R) {
+  //     for (let C = range.s.c; C <= range.e.c; ++C) {
+  //       const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+  //       if (!worksheet[cellAddress]) worksheet[cellAddress] = { t: "s", v: "" }; // Empty cell fix
 
-        const cell = worksheet[cellAddress];
-        cell.s = cell.s || {};
-        cell.s.border = {
-          top: { style: "thin", color: { rgb: "000000" } },
-          bottom: { style: "thin", color: { rgb: "000000" } },
-          left: { style: "thin", color: { rgb: "000000" } },
-          right: { style: "thin", color: { rgb: "000000" } },
-        };
-        cell.s.alignment = {
-          vertical: "center",
-          horizontal: "center",
-          wrapText: true,
-        };
-      }
-    }
+  //       const cell = worksheet[cellAddress];
+  //       cell.s = cell.s || {};
+  //       cell.s.border = {
+  //         top: { style: "thin", color: { rgb: "000000" } },
+  //         bottom: { style: "thin", color: { rgb: "000000" } },
+  //         left: { style: "thin", color: { rgb: "000000" } },
+  //         right: { style: "thin", color: { rgb: "000000" } },
+  //       };
+  //       cell.s.alignment = {
+  //         vertical: "center",
+  //         horizontal: "center",
+  //         wrapText: true,
+  //       };
+  //     }
+  //   }
 
-    // 🟨 Step 2: Format A1 Title
-    const titleCell = worksheet["A1"];
-    if (titleCell) {
-      titleCell.s = {
-        font: { bold: true, sz: 18, color: { rgb: "000000" } },
-        fill: { fgColor: { rgb: "FFF9E79F" } },
-        alignment: { horizontal: "center", vertical: "center", wrapText: true },
-        border: {
-          top: { style: "medium", color: { rgb: "000000" } },
-          bottom: { style: "medium", color: { rgb: "000000" } },
-          left: { style: "medium", color: { rgb: "000000" } },
-          right: { style: "medium", color: { rgb: "000000" } },
-        },
-      };
-    }
+  //   // 🟨 Step 2: Format A1 Title
+  //   const titleCell = worksheet["A1"];
+  //   if (titleCell) {
+  //     titleCell.s = {
+  //       font: { bold: true, sz: 18, color: { rgb: "000000" } },
+  //       fill: { fgColor: { rgb: "FFF9E79F" } },
+  //       alignment: { horizontal: "center", vertical: "center", wrapText: true },
+  //       border: {
+  //         top: { style: "medium", color: { rgb: "000000" } },
+  //         bottom: { style: "medium", color: { rgb: "000000" } },
+  //         left: { style: "medium", color: { rgb: "000000" } },
+  //         right: { style: "medium", color: { rgb: "000000" } },
+  //       },
+  //     };
+  //   }
 
-    // 🟦 Step 3: Format Header Row (Row 2 = r=1)
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const headerRef = XLSX.utils.encode_cell({ r: 1, c: C });
-      const cell = worksheet[headerRef];
-      if (cell) {
-        cell.s = cell.s || {};
-        cell.s.font = { bold: true, sz: 12 };
-        cell.s.fill = { fgColor: { rgb: "FFD9E1F2" } };
-        cell.s.alignment = {
-          horizontal: "center",
-          vertical: "center",
-          wrapText: true,
-        };
-        cell.s.border = {
-          top: { style: "thin", color: { rgb: "000000" } },
-          bottom: { style: "thin", color: { rgb: "000000" } },
-          left: { style: "thin", color: { rgb: "000000" } },
-          right: { style: "thin", color: { rgb: "000000" } },
-        };
-      }
-    }
+  //   // 🟦 Step 3: Format Header Row (Row 2 = r=1)
+  //   for (let C = range.s.c; C <= range.e.c; ++C) {
+  //     const headerRef = XLSX.utils.encode_cell({ r: 1, c: C });
+  //     const cell = worksheet[headerRef];
+  //     if (cell) {
+  //       cell.s = cell.s || {};
+  //       cell.s.font = { bold: true, sz: 12 };
+  //       cell.s.fill = { fgColor: { rgb: "FFD9E1F2" } };
+  //       cell.s.alignment = {
+  //         horizontal: "center",
+  //         vertical: "center",
+  //         wrapText: true,
+  //       };
+  //       cell.s.border = {
+  //         top: { style: "thin", color: { rgb: "000000" } },
+  //         bottom: { style: "thin", color: { rgb: "000000" } },
+  //         left: { style: "thin", color: { rgb: "000000" } },
+  //         right: { style: "thin", color: { rgb: "000000" } },
+  //       };
+  //     }
+  //   }
 
-    // 📁 Step 4: Export the styled workbook
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "FormattedReport");
-    XLSX.writeFile(
-      workbook,
-      `AdityaBirla_Valuation_FormattedReport_${
-        reportData?.caseReferenceNumber || "details"
-      }.xlsx`
-    );
+  //   // 📁 Step 4: Export the styled workbook
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "FormattedReport");
+  //   XLSX.writeFile(
+  //     workbook,
+  //     `AdityaBirla_Valuation_FormattedReport_${reportData?.caseReferenceNumber || "details"
+  //     }.xlsx`
+  //   );
 
-    // ✅ Step 5: Handle merged cells and apply border
-    if (worksheet["!merges"]) {
-      worksheet["!merges"].forEach((merge) => {
-        for (let R = merge.s.r; R <= merge.e.r; ++R) {
-          for (let C = merge.s.c; C <= merge.e.c; ++C) {
-            const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-            if (!worksheet[cellAddress])
-              worksheet[cellAddress] = { t: "s", v: "" };
+  //   // ✅ Step 5: Handle merged cells and apply border
+  //   if (worksheet["!merges"]) {
+  //     worksheet["!merges"].forEach((merge) => {
+  //       for (let R = merge.s.r; R <= merge.e.r; ++R) {
+  //         for (let C = merge.s.c; C <= merge.e.c; ++C) {
+  //           const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+  //           if (!worksheet[cellAddress])
+  //             worksheet[cellAddress] = { t: "s", v: "" };
 
-            const cell = worksheet[cellAddress];
-            if (!cell.s) cell.s = {};
+  //           const cell = worksheet[cellAddress];
+  //           if (!cell.s) cell.s = {};
 
-            cell.s.border = {
-              top: { style: "thin", color: { rgb: "000000" } },
-              bottom: { style: "thin", color: { rgb: "000000" } },
-              left: { style: "thin", color: { rgb: "000000" } },
-              right: { style: "thin", color: { rgb: "000000" } },
-            };
-            cell.s.alignment = {
-              vertical: "center",
-              horizontal: "center",
-              wrapText: true,
-            };
-          }
-        }
-      });
-    }
-  };
+  //           cell.s.border = {
+  //             top: { style: "thin", color: { rgb: "000000" } },
+  //             bottom: { style: "thin", color: { rgb: "000000" } },
+  //             left: { style: "thin", color: { rgb: "000000" } },
+  //             right: { style: "thin", color: { rgb: "000000" } },
+  //           };
+  //           cell.s.alignment = {
+  //             vertical: "center",
+  //             horizontal: "center",
+  //             wrapText: true,
+  //           };
+  //         }
+  //       }
+  //     });
+  //   }
+  // };
 
-  const handleStructureExportCSV = () => {
-    const tableElement = document.getElementById("reportTable");
-    if (!tableElement) {
-      alert("Report Table Not Found");
-      return;
-    }
 
-    const worksheet = XLSX.utils.table_to_sheet(tableElement, { raw: true });
 
-    // 🔄 Convert worksheet to CSV format
-    const csv = XLSX.utils.sheet_to_csv(worksheet, {
-      FS: ",", // Field Separator
-      RS: "\n", // Row Separator
-      strip: true, // Trim trailing spaces
-    });
+  // const handleStructureExportCSV = () => {
+  //   const tableElement = document.getElementById("reportTable");
+  //   if (!tableElement) {
+  //     alert("Report Table Not Found");
+  //     return;
+  //   }
 
-    // 📁 Create downloadable file
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+  //   const worksheet = XLSX.utils.table_to_sheet(tableElement, { raw: true });
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute(
-      "download",
-      `AdityaBirla_Valuation_Report_${
-        reportData?.caseReferenceNumber || "data"
-      }.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  //   // 🔄 Convert worksheet to CSV format
+  //   const csv = XLSX.utils.sheet_to_csv(worksheet, {
+  //     FS: ",", // Field Separator
+  //     RS: "\n", // Row Separator
+  //     strip: true, // Trim trailing spaces
+  //   });
+
+  //   // 📁 Create downloadable file
+  //   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  //   const url = URL.createObjectURL(blob);
+
+  //   const link = document.createElement("a");
+  //   link.href = url;
+  //   link.setAttribute(
+  //     "download",
+  //     `AdityaBirla_Valuation_Report_${reportData?.caseReferenceNumber || "data"
+  //     }.csv`
+  //   );
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
 
   // ! END
 
@@ -177,6 +182,14 @@ const AdityaDetails = () => {
       setLoading(false);
     }
   }, [id, dispatch]);
+
+
+
+  useEffect(() => {
+    console.log(reportData);
+
+  }, [reportData])
+
 
   if (loading) return <div className='text-center py-8'>Loading...</div>;
   if (!reportData)
@@ -798,10 +811,22 @@ const AdityaDetails = () => {
                     Subject Property
                   </td>
                   <td colSpan='3' className='border p-3'>
-                    {/* Assuming reportData.photographs is a string / URL. 
-                      If it's an array of images, you'd map over them here. 
-                      For export, this might be a link or count. */}
-                    {reportData?.photographs}
+                    {reportData?.propertyPhotos?.length > 0 ? (
+                      reportData.propertyPhotos.map((item, index) => {
+                        const imageUrl = cleanPath(item);
+
+                        return (
+                          <img
+                            key={index}
+                            src={`${CPANEL}/${imageUrl}`}
+                            alt={`photo-${index}`}
+                            className="w-32 inline-block mr-2 mb-2"
+                          />
+                        );
+                      })
+                    ) : (
+                      <span>No Images</span>
+                    )}
                   </td>
                 </tr>
               </tbody>

@@ -57,12 +57,15 @@ const AditiyaFrom = () => {
       return { ...acc, ...curr };
     }, {});
 
+    console.log(finalData)
+
     try {
       if (id) {
         await dispatch(updateDetails({ id, data: finalData })).unwrap();
         toast.success("Data updated successfully!");
         navigate("/");
       } else {
+
         const response = await dispatch(createDetails(finalData)).unwrap();
         toast.success("✅ Form submitted!");
         navigate(`/bank/aditya/${response._id}`);

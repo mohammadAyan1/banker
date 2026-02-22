@@ -32,6 +32,9 @@ const authRoutes = require("./Routes/auth/authRoutes");
 // const ErrorHandler  = require("./middleware/errorHandler");
 // const connectDb = require("./db/db");
 
+const imagekit = require("./config/imagekit");
+
+
 const bodyParser = require("body-parser");
 // Routes
 
@@ -69,6 +72,13 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+
+
+
+
+
+
 
 app.use("/api", uploadRoutes);
 

@@ -146,7 +146,7 @@ const Trench = () => {
     }
   }, [user.role]);
 
-  const handleFormChange = (changedValues, allValues) => {
+  const handleFormChange = (changedValues) => {
     setFormData((prev) => ({ ...prev, ...changedValues }));
   };
 
@@ -548,6 +548,7 @@ const Trench = () => {
             maxCount={10}
             uploadedImages={uploadedImages}
             url={"home-trench-reports"}
+            uploadedUrls={uploadedUrls}
           />
         </div>
 

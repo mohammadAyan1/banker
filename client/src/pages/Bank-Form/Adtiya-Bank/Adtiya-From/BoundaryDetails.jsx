@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import ImageUploader from "../../../../components/ImageUploader";
+import { useNavigate, useParams } from "react-router-dom";
+
 const BoundaryDetails = ({ isEdit, onNext }) => {
   const [isOpen, setIsOpen] = useState(false);
-  // const [uploadedImages, setUploadedImagess] = useState([]);
+  const [uploadedImages, setUploadedImagess] = useState([]);
+  const [uploadedUrls, setUploadedUrls] = useState([]);
+  const [images, setImages] = useState([]);
+  const { id } = useParams();
 
   const [formData, setFormData] = useState({
     northAsPerDocs: "",
@@ -44,8 +49,13 @@ const BoundaryDetails = ({ isEdit, onNext }) => {
 
 12. BUILT-UP IS TAKEN ACTUAL AT SITE`,
     engineerName: "ER.ARBAZ",
-    propertyPhotos: "Subject Property",
+    propertyPhotos: [],
   });
+
+
+
+
+
 
   // Initialize formData when editing
   useEffect(() => {
@@ -71,6 +81,12 @@ const BoundaryDetails = ({ isEdit, onNext }) => {
         engineerName: isEdit.engineerName || "",
         propertyPhotos: isEdit.propertyPhotos || "",
       });
+
+      console.log('====================================');
+      console.log(isEdit);
+      console.log('====================================');
+
+      setUploadedImagess(isEdit?.propertyPhotos)
     }
   }, [isEdit]);
 
@@ -82,10 +98,38 @@ const BoundaryDetails = ({ isEdit, onNext }) => {
     }));
   };
 
+  // const handleNextClick = () => {
+  //   console.log(uploadedUrls)
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     propertyPhotos: uploadedUrls
+  //   }));
+
+
+  //   console.log(formData)
+
+  //   onNext(formData);
+  //   toast.success("Saved Successfully");
+  // };
+
+
+
   const handleNextClick = () => {
-    onNext(formData);
+
+    const updatedFormData = {
+      ...formData,
+      propertyPhotos: uploadedUrls
+    };
+
+    console.log("Uploaded URLs:", uploadedUrls);
+    console.log("Updated FormData:", updatedFormData);
+
+    setFormData(updatedFormData);   // update state
+    onNext(updatedFormData);        // send correct data
+
     toast.success("Saved Successfully");
   };
+
 
   return (
     <div className='mb-4 border border-gray-300 rounded'>
@@ -175,7 +219,7 @@ const BoundaryDetails = ({ isEdit, onNext }) => {
                 onChange={handleChange}
               />
             </div>
-            <div>
+            {/* <div>
               <label className='block mb-1 font-medium'>
                 PHOTOGRAPHS OF PROPERTY
               </label>
@@ -186,8 +230,8 @@ const BoundaryDetails = ({ isEdit, onNext }) => {
                 value={formData.propertyPhotos}
                 onChange={handleChange}
               />
-            </div>
-            {/* <div className='pb-6'>
+            </div> */}
+            <div className='pb-6'>
               <h2 className='bg-blue-100 p-3 font-bold mb-4 rounded-lg'>
                 7. SITE PHOTOS
               </h2>
@@ -198,9 +242,10 @@ const BoundaryDetails = ({ isEdit, onNext }) => {
                 setUploadedUrls={setUploadedUrls}
                 maxCount={10}
                 uploadedImages={uploadedImages}
-                url={"home-trench-reports"}
+                url={"aditya"}
+                uploadedUrls={uploadedUrls}
               />
-            </div> */}
+            </div>
             <div className=''>
               <button
                 onClick={handleNextClick}

@@ -30,12 +30,18 @@ function toPascalCaseSmart(str) {
 exports.assignCase = async (req, res) => {
   const { caseId, fieldOfficerId, route } = req.body;
 
+  console.log(caseId, "ZXCVBNM")
+  console.log(fieldOfficerId, "QWERTYUIOP")
+  console.log(route, "LKJHGFDSA")
+
   try {
     const bankName = route.split("/")[2]; // e.g., "home-first"
+
+    console.log(bankName, "this is the bank model name")
     // const modelKey = toPascalCase(bankName); // "HomeFirst"
     const modelKey = toPascalCaseSmart(bankName); // "HomeFirst"
     console.log(modelKey, "POPPPP");
-    const Model = modelMap[modelKey];
+    let Model = modelMap[modelKey];
 
     if (!Model) {
       return res
@@ -43,7 +49,7 @@ exports.assignCase = async (req, res) => {
         .json({ error: `Invalid route/model: ${modelKey}` });
     }
 
-    const updated = await Model.findByIdAndUpdate(
+    let updated = await Model.findByIdAndUpdate(
       caseId,
       {
         assignedTo: fieldOfficerId,
@@ -858,3 +864,42 @@ exports.deleteImageFromCase = async (req, res) => {
     });
   }
 };
+
+
+exports.changeAssign = async (req, res) => {
+  try {
+    const { caseId, officerId, bankName } = req.body
+
+    console.log(bankName, "WERTYUIOP")
+
+    // const bankName = route.split("/")[2]; // e.g., "home-first"
+    const modelKey = toPascalCaseSmart(bankName); // e.g., "HomeFirst"
+
+    console.log(modelKey, "DFGHJ")
+    const Model = modelMap[modelKey];
+
+    if (!Model) {
+      return res
+        .status(400)
+        .json({ message: `Invalid model for route: ${modelKey}` });
+    }
+
+    const updatedDoc = await Model.findByIdAndUpdate(
+      caseId,
+      { $set: { assignedTo: officerId } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Field officer change",
+      success: true
+    });
+
+  } catch (error) {
+    console.error(" error while Update field officer:", error);
+    res.status(500).json({
+      message: "Error while deleting image",
+      error: error.message,
+    });
+  }
+}

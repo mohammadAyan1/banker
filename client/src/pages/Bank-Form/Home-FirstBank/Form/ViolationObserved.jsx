@@ -80,7 +80,7 @@ const ViolationObserved = ({ isEdit, onNext, onBack, initialValues, extractedDat
                 <Form.Item
                   name="deviationToPlan"
                   label="Deviation to Plan"
-                  rules={[{ required: true }]}
+                // rules={[{ required: true }]}
                 >
                   <Select>
                     <Select.Option value="Yes">Yes</Select.Option>
@@ -111,7 +111,7 @@ const ViolationObserved = ({ isEdit, onNext, onBack, initialValues, extractedDat
                 <Form.Item
                   name="demolitionRisk"
                   label="Demolition Risk"
-                  rules={[{ required: true }]}
+                // rules={[{ required: true }]}
                 >
                   <Select>
                     <Select.Option value="Yes">Yes</Select.Option>
@@ -142,7 +142,7 @@ const ViolationObserved = ({ isEdit, onNext, onBack, initialValues, extractedDat
                 <Form.Item
                   name="encroachment"
                   label="Encroachment"
-                  rules={[{ required: true }]}
+                // rules={[{ required: true }]}
                 >
                   <Select>
                     <Select.Option value="Yes">Yes</Select.Option>
