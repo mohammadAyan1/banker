@@ -21,7 +21,7 @@ import { useParams } from "react-router-dom";
 const { TextArea } = Input;
 const { Option } = Select;
 
-const LNTAssignmentDetails = ({ isEdit, onNext, extractedData }) => {
+const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
 
 
 
@@ -34,7 +34,6 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData }) => {
 
   const [uploadedUrls, setUploadedUrls] = useState([]);
   const [loading, setLoading] = useState(false);
-
 
 
   const initialValues = {
@@ -135,12 +134,16 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData }) => {
   useEffect(() => {
     if (user.role === "FieldOfficer") {
       const timeout = setTimeout(() => {
+
+        console.log(geoRef?.current?.getLocation());
+
+
         geoRef.current?.getLocation();
       }, 100); // slight delay so ref can attach
 
       return () => clearTimeout(timeout);
     }
-  }, [user.role]);
+  }, [user.role, uploadedUrls]);
 
   const handleSubmit = async (values) => {
     if (user.role === "FieldOfficer" && uploadedUrls.length === 0) {
@@ -269,6 +272,8 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData }) => {
             setImages={setImages}
             setUploadedUrls={setUploadedUrls}
             uploadedImages={uploadedImages}
+            uploadedUrls={uploadedUrls}
+            fetchData={fetchData}
 
           />
         </div>

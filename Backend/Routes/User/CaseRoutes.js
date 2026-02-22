@@ -18,6 +18,7 @@ const {
   getOutOfTATCases,
   getSummaryData,
   deleteImageFromCase,
+  changeAssign
 } = require("../../controllers/User/CaseAsignCtrl");
 
 const { protect, restrictTo } = require("../../middleware/authMiddleware");
@@ -41,6 +42,7 @@ router.get("/", protect, getCasesByRole);
 
 //Get Assigned Case
 router.get("/assigned", protect, getAllAssignedCases);
+router.put("/change-assignment", protect, changeAssign);
 
 router.get("/pending", protect, getPendingCases);
 

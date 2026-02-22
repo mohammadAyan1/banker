@@ -159,7 +159,7 @@ const HomeFirstBank = () => {
     {
       id: 1,
       label: "L & T ASSIGNMENT DETAILS",
-      component: <LNAssigment isEdit={isEdit} onNext={handleNext} extractedData={extractedData} />,
+      component: <LNAssigment isEdit={isEdit} onNext={handleNext} extractedData={extractedData} fetchData={() => fetchEditData(id)} />,
     },
     {
       id: 2,

@@ -25,6 +25,11 @@ const HFBankDetails = () => {
     }
   }, [id, dispatch]);
 
+
+  useEffect(() => {
+    console.log(singleBank)
+  }, [singleBank])
+
   // const defaultObservations = [
   //   " GIVEN XEROX COPY CO-OWNERSHIP DEED IN FAVOUR OF MR.JEEVAN LAL S/O MR.GHISILAL AND SMT.MAMTA W/O MR.JEEVAN LAL",
   //   " DURING PROPERTY VISIT MR.PHOOL SINGH JI MET AT THE PROPERTY WHO IS CUSTOMER CONTACT NO. 9200182821. IT WAS CLEARLY EXPLAINED TO HIM THAT THE PROPERTY VISIT IS BEING DONE FOR VALUATION PURPOSE IN RELATION WITH LOAN PROPOSAL.",
@@ -1165,9 +1170,9 @@ const HFBankDetails = () => {
                       >
                         {sortedImages.map((item, index) => {
                           console.log(item)
-
+                          {/* 
                           const imageUrl = item?.url?.replace("undefined", "");
-                          console.log(imageUrl);
+                          console.log(imageUrl); */}
 
                           return (
                             <div
@@ -1175,7 +1180,7 @@ const HFBankDetails = () => {
                               className="overflow-hidden border p-1"
                             >
                               <img
-                                src={`${CPANEL}${imageUrl}`}
+                                src={`${item?.url?.url}`}
                                 alt={`Image ${index + 1}`}
                                 className="w-full h-80 object-cover object-bottom"
                               />

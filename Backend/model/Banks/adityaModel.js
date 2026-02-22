@@ -27,6 +27,21 @@ const adityaSchema = new mongoose.Schema(
       ],
       default: "Pending",
     },
+    AttachDocuments: { type: [String], default: [] },
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    timeline: [
+      {
+        status: { type: String },
+        updatedAt: { type: Date, default: Date.now },
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        note: { type: String },
+      },
+    ],
+    route: { type: String },
+    bankName: { type: String, default: "HomeFirst" },
+    approvalStatus: { type: String, default: "Pending" },
+    isReportSubmitted: { type: Boolean, default: false },
 
     // Location Details
     propertyAddressTRF: { type: String },
@@ -300,7 +315,7 @@ const adityaSchema = new mongoose.Schema(
     westRemarks: String,
     additionalRemarks: String,
     engineerName: String,
-    propertyPhotos: String,
+    propertyPhotos: [],
   },
   { timestamps: true }
 );

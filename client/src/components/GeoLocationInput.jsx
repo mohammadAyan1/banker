@@ -59,6 +59,8 @@ import React, { forwardRef, useImperativeHandle } from "react";
 import { Form, Input, Row, Col } from "antd";
 
 const GeoLocationInput = forwardRef((props, ref) => {
+  console.log(ref, "DFGHJ");
+
   const form = Form.useFormInstance();
 
   const getLocation = () => {

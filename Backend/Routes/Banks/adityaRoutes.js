@@ -17,4 +17,7 @@ router.put("/:id", adityaController.updateDetails);
 // Delete
 router.delete("/:id", adityaController.deleteDetails);
 
+router.put("/remove-image/:id", adityaController.deleteImageFromValuationReport);
+
+
 module.exports = router;

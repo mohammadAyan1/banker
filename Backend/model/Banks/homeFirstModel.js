@@ -185,7 +185,7 @@ const ValuationReportSchema = new mongoose.Schema({
   evaluationType: { type: String },
   unitType: { type: String },
   documentsAvailable: { type: String },
-  imageUrls: { type: [String], default: [] },
+  imageUrls: { type: [Object], default: [] },
   addressLegal: { type: String },
   addressSite: { type: String },
   nearbyLandmark: { type: String },
@@ -239,10 +239,10 @@ const ValuationReportSchema = new mongoose.Schema({
   crZone: { type: String },
   followsNDMAGuidelines: { type: String },
   demolitionRisk: { type: String },
-  ifQualityPoor: {type: String},
+  ifQualityPoor: { type: String },
   internalComposition: { type: String },
-  openPlot: { type: String,  },
-  constructionStatus:{type: String },
+  openPlot: { type: String, },
+  constructionStatus: { type: String },
   buildingHeight: { type: String, },
 
   directions: {

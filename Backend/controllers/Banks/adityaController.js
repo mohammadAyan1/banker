@@ -70,3 +70,36 @@ exports.deleteDetails = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+
+exports.deleteImageFromValuationReport = async (req, res) => {
+  try {
+    const { id } = req.params; // document ID
+    const { imageUrl } = req.body; // URL to remove
+
+    if (!imageUrl) {
+      return res.status(400).json({ message: "imageUrl is required" });
+    }
+
+    const updatedJob = await adityaModel.findByIdAndUpdate(
+      id,
+      { $pull: { propertyPhotos: imageUrl } },
+      { new: true }
+    );
+
+    if (!updatedJob) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    res.status(200).json({
+      message: "Image URL deleted successfully",
+      updatedJob,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error while deleting image",
+      error,
+    });
+  }
+};
