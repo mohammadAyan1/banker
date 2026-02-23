@@ -22,10 +22,10 @@ function toPascalCaseSmart(str) {
   return pascal.charAt(0) + pascal.slice(1).toLowerCase(); // only first letter capital
 }
 
-function toPascalCaseSmart(str) {
-  if (dictionaryFix[str.toLowerCase()]) return dictionaryFix[str.toLowerCase()];
-  return toPascalCase(str);
-}
+// function toPascalCaseSmart(str) {
+//   if (dictionaryFix[str.toLowerCase()]) return dictionaryFix[str.toLowerCase()];
+//   return toPascalCase(str);
+// }
 
 exports.assignCase = async (req, res) => {
   const { caseId, fieldOfficerId, route } = req.body;
@@ -874,7 +874,7 @@ exports.changeAssign = async (req, res) => {
 
     // const bankName = route.split("/")[2]; // e.g., "home-first"
     const modelKey = toPascalCaseSmart(bankName); // e.g., "HomeFirst"
-
+    // HomeFirstTrench
     console.log(modelKey, "DFGHJ")
     const Model = modelMap[modelKey];
 

@@ -33,7 +33,7 @@ const homeTrenchSchema = new mongoose.Schema({
 
   approvalStatus: { type: String, default: "Pending" },
   isReportSubmitted: { type: Boolean, default: false },
-  imageUrls: { type: [String], default: [] },
+  imageUrls: { type: [Object], default: [] },
 
   // Vendor Visit Details
   dateOfVisit: String,

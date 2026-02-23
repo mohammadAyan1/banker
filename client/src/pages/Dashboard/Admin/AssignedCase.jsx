@@ -381,6 +381,7 @@ const AssignedCase = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [selectedOfficer, setSelectedOfficer] = useState(null);
+  const [BankName, setBankName] = useState(null);
 
   // Fetch cases
   useEffect(() => {
@@ -417,8 +418,9 @@ const AssignedCase = () => {
   };
 
   // Open modal
-  const openAssignModal = (caseId) => {
+  const openAssignModal = (caseId, bankName) => {
     setSelectedCaseId(caseId);
+    setBankName(bankName)
     setIsModalOpen(true);
   };
 
@@ -433,7 +435,7 @@ const AssignedCase = () => {
       await axiosInstance.put("/case/change-assignment", {
         caseId: selectedCaseId,
         officerId: selectedOfficer,
-        bankName: "HomeFirst"
+        bankName: BankName
       });
 
       toast.success("Assignment updated");
@@ -450,6 +452,7 @@ const AssignedCase = () => {
       title: "Bank Name",
       dataIndex: "bankName",
       render: (bankName, record) => {
+        console.log(record)
         const color = getBankTagColor(bankName);
 
         let indicatorColor = "";
@@ -519,7 +522,7 @@ const AssignedCase = () => {
     {
       title: "Change Assign",
       render: (record) => (
-        <Button onClick={() => openAssignModal(record._id)}>
+        <Button onClick={() => openAssignModal(record._id, record?.bankName)}>
           Change Assign
         </Button>
       ),
