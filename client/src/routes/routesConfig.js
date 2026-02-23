@@ -43,6 +43,10 @@ export const routesConfig = [
     element: lazy(() => import("../pages/Bank-Details/HFBankDetails")),
   },
   {
+    path: "/bank/HomeFirst/:id",
+    element: lazy(() => import("../pages/Bank-Details/HFBankDetails")),
+  },
+  {
     path: "/bank/home-first/edit/:id",
     element: lazy(() =>
       import("../pages/Bank-Form/Home-FirstBank/HomeFirstBank")
