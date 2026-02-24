@@ -36,18 +36,6 @@ router.post("/", upload.array("files"), async (req, res) => {
   }
 });
 
-// router.post("/", upload.array("files"), (req, res) => {
-//   if (!req.files || req.files.length === 0) {
-//     return res.status(400).json({ error: "No files uploaded" });
-//   }
-
-//   const fileUrls = req.files.map((file) => {
-//     return `${process.env.UPLOAD_DOMAIN_URL}/uploads/${file.filename}`;
-//   });
-//   // console.log(fileUrls);
-
-//   res.json({ urls: fileUrls });
-// });
 
 function toPascalCase(str) {
   return str

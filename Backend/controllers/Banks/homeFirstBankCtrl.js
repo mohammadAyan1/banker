@@ -253,3 +253,37 @@ exports.unassignFieldOfficer = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: err.message });
   }
 };
+
+
+// Delete document from AttachDocuments array
+exports.deleteDocumentFromValuationReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { documentUrl } = req.body;
+
+    if (!documentUrl) {
+      return res.status(400).json({ message: "documentUrl is required" });
+    }
+
+    const updatedJob = await ValuationReport.findByIdAndUpdate(
+      id,
+      { $pull: { AttachDocuments: documentUrl } },
+      { new: true }
+    );
+
+    if (!updatedJob) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    res.status(200).json({
+      message: "Document URL deleted successfully",
+      updatedJob,
+      success: true
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error while deleting document",
+      error,
+    });
+  }
+};

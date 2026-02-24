@@ -13,6 +13,9 @@ router.put("/unassign/:id", homeFirstBank.unassignFieldOfficer);
 
 router.put("/remove-image/:id", homeFirstBank.deleteImageFromValuationReport);
 
+// ... existing routes
+router.put("/remove-document/:id", homeFirstBank.deleteDocumentFromValuationReport);
+
 // Get a single valuation report by ID
 router.get("/:id", homeFirstBank.getValuationReportById);
 

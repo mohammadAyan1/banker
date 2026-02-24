@@ -1,7 +1,7 @@
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({
-  apiKey: "", // or user .env from process.env.GOOGLE_API_KEY
+  apiKey: process.env.GEMINI_API_KEY, // or user .env from process.env.GOOGLE_API_KEY
 });
 
 const extractRegistryDetails = async (base64Pdf) => {

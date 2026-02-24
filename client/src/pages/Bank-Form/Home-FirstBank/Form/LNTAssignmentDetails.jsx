@@ -17,6 +17,7 @@ import ImageUploader from "../../../../components/ImageUploader";
 import { useSelector } from "react-redux";
 import moment from "moment";
 import { useParams } from "react-router-dom";
+import DocumentUploader from "../../../../components/DocumentUploader";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -34,6 +35,8 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
 
   const [uploadedUrls, setUploadedUrls] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const [docUrls, setDocUrls] = useState([]); // <-- new state for document URLs
 
 
   const initialValues = {
@@ -101,6 +104,7 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
 
 
     setUploadedImagess(merged?.imageUrls)
+    setDocUrls(merged?.AttachDocuments)
 
 
     if (merged) {
@@ -150,11 +154,16 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
       toast.error("Please upload images before submitting");
       return;
     }
+
     setLoading(true);
+
+    console.log(docUrls, "ASDFGHJKL")
+
     try {
       const fullData = {
         ...values,
         imageUrls: uploadedUrls,
+        AttachDocuments: docUrls, // <-- include document URLs
       };
 
       // if (user.role === "FieldOfficer") {
@@ -275,6 +284,16 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
             uploadedUrls={uploadedUrls}
             fetchData={fetchData}
 
+          />
+        </div>
+
+        <div className="col-span-2 mt-4">
+          <DocumentUploader
+            caseId={id}                // for server-side delete
+            bankName="first-bank"
+            docUrls={docUrls}
+            setDocUrls={setDocUrls}
+            fetchData={fetchData}
           />
         </div>
 
