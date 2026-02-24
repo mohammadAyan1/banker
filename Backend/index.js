@@ -6,8 +6,6 @@ const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 const path = require("path");
 const multer = require("multer");
-
-
 const idfcRoute = require("./Routes/Banks/idfcRoute");
 const cholaRoutes = require("./Routes/Banks/cholaRoute");
 const FedralRoute = require("./Routes/Banks/FedralRoute");
@@ -33,8 +31,6 @@ const uploadRoutes = require("./Routes/uploadOllama");
 const authRoutes = require("./Routes/auth/authRoutes");
 
 const aiService = require("./services/ai.service.js")
-// const ErrorHandler  = require("./middleware/errorHandler");
-// const connectDb = require("./db/db");
 
 const imagekit = require("./config/imagekit");
 
@@ -52,15 +48,6 @@ const app = express();
 const PORT = process.env.PORT || 5000; // Hardcoded port
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-// app.use(
-//   "/uploads",
-//   express.static(path.join(__dirname, "uploads"), {
-//     setHeaders: (res, path) => {
-//       res.setHeader("Access-Control-Allow-Origin");
-//     },
-//   })
-// );
 
 // Middleware
 app.use(
@@ -82,22 +69,12 @@ app.use((req, res, next) => {
   next();
 });
 
-
-
-
-
-
-
-
 app.use("/api", uploadRoutes);
-
 app.use("/api/image_kit", require("./Routes/uploadRoute"));
 // Routes
 app.use("/api/notifications", require("./Routes/notifications"));
 app.use("/api/auth", authRoutes);
-
 app.use("/api/idfc", idfcRoute);
-
 app.use("/api/chola", cholaRoutes);
 app.use("/api/fedral", FedralRoute);
 app.use("/api/aditya", adityaRoutes);
@@ -113,23 +90,16 @@ app.use("/api/icici-bank", iciciBankRoutes);
 app.use("/api/heroFinCorp", HeroFinCorpRoutes);
 app.use("/api/first-bank", homeFirstBankRoutes);
 app.use("/api/piramal-finance", piramalFinanceRoutes);
-
-// !
 app.use("/api/bajaj", bajajRoutes);
 app.use("/api/bajajA", bajajAmeriyaRoutes);
 app.use("/api/dmi-finance-reports", dmiFinanceReportRoutes);
 app.use("/api/home-trench-reports", homeTrenchReportRoutes);
-
 app.use("/api/case", require("./Routes/User/CaseRoutes"));
 app.use("/api/notes", require("./Routes/noteRoutes"));
-
 app.use("/api/assign", require("./Routes/assignmentRoutes"));
-
 app.use("/api/uploads", require("./Routes/upload"));
 app.use("/api/remove", require("./Routes/removeRoutes"));
 app.use("/api/proxy", require("./Routes/proxyDownload"));
-
-
 app.post("/api/pdf", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
@@ -158,7 +128,6 @@ app.post("/api/pdf", upload.single("file"), async (req, res) => {
     });
   }
 });
-
 
 app.get("/", (req, res) => {
   res.send("Server is running at Home!");
