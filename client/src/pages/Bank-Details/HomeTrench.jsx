@@ -59,9 +59,9 @@ const HomeTrench = () => {
   }, [id, dispatch]);
 
 
-  function cleanPath(path) {
-    return path.replace(/^undefined\/?/, "");
-  }
+  // function cleanPath(path) {
+  //   return path?.replace(/^undefined\/?/, "");
+  // }
 
   // console.log(reportData);
 
@@ -324,11 +324,13 @@ const HomeTrench = () => {
                     {/* <td className="boder">he</td> */}
                     {reportData?.imageUrls?.length > 0 ? (
                       reportData.imageUrls.map((imageUrl, index) => {
-                        const imageUrls = cleanPath(imageUrl);
+                        {/* const imageUrls = cleanPath(imageUrl); */ }
+                        console.log(reportData)
+                        console.log(reportData?.imageUrls?.[0]?.url)
                         return (
                           <div key={index} className='  overflow-hidden  '>
                             <img
-                              src={`${CPANEL}/${imageUrls}`}
+                              src={`${reportData?.imageUrls?.[index]?.url}`}
                               alt={`Property Image ${index + 1}`}
                               className='w-full h-96 object-cover'
                             />

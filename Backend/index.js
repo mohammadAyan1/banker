@@ -5,6 +5,8 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 const path = require("path");
+const multer = require("multer");
+
 
 const idfcRoute = require("./Routes/Banks/idfcRoute");
 const cholaRoutes = require("./Routes/Banks/cholaRoute");
@@ -29,11 +31,18 @@ const dmiFinanceReportRoutes = require("./Routes/Banks/DmiFinanceRoute");
 const homeTrenchReportRoutes = require("./Routes/Banks/homeTrenchReportRoutes");
 const uploadRoutes = require("./Routes/uploadOllama");
 const authRoutes = require("./Routes/auth/authRoutes");
+
+const aiService = require("./services/ai.service.js")
 // const ErrorHandler  = require("./middleware/errorHandler");
 // const connectDb = require("./db/db");
 
 const imagekit = require("./config/imagekit");
 
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
+});
 
 const bodyParser = require("body-parser");
 // Routes
@@ -119,6 +128,37 @@ app.use("/api/assign", require("./Routes/assignmentRoutes"));
 app.use("/api/uploads", require("./Routes/upload"));
 app.use("/api/remove", require("./Routes/removeRoutes"));
 app.use("/api/proxy", require("./Routes/proxyDownload"));
+
+
+app.post("/api/pdf", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "PDF file is required",
+      });
+    }
+
+    // Convert buffer to base64
+    const base64Pdf = req.file.buffer.toString("base64");
+
+    const result = await aiService.extractRegistryDetails(base64Pdf);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+
+  } catch (error) {
+    console.error("Extraction Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to extract registry details",
+      error: error.message,
+    });
+  }
+});
+
 
 app.get("/", (req, res) => {
   res.send("Server is running at Home!");

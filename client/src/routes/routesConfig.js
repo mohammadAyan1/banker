@@ -64,6 +64,7 @@ export const routesConfig = [
     path: "/bank/homefirsttrench/:id",
     element: lazy(() => import("../pages/Bank-Details/HomeTrench")),
   },
+
   {
     path: "/bank/home-first-trench/edit/:id",
     element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
