@@ -12,6 +12,11 @@ export const routesConfig = [
     element: lazy(() => import("../pages/Bank-Form/Icici-Bank/IciciBank")),
   },
   {
+    path: "/bank/bankform",
+    element: lazy(() => import("../components/BankForm/ValuationForm.jsx")),
+
+  },
+  {
     path: "/bank/icici/:id",
     element: lazy(() => import("../pages/Bank-Details/IciciBankDetails")),
   },

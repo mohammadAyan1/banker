@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import Login from "../pages/auth/Login";
 import ProtectedLayout from "./ProtectedLayout ";
 import { routesConfig } from "./routesConfig";
+import ValuationForm from "../components/BankForm/ValuationForm";
 
 const AppRoutes = () => {
   return (
@@ -11,6 +12,7 @@ const AppRoutes = () => {
       <Routes>
         {/* Public route */}
         <Route path='/login' element={<Login />} />
+        <Route path='/BANKfORM' element={<ValuationForm />} />
 
         {/* Protected layout */}
         <Route element={<ProtectedLayout />}>
@@ -18,6 +20,7 @@ const AppRoutes = () => {
             <Route key={index} path={path} element={<Element />} />
           ))}
         </Route>
+
       </Routes>
     </Suspense>
   );
