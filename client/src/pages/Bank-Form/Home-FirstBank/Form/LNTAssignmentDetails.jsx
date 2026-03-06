@@ -358,7 +358,7 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
     relationshipOfPersonMet: "SELF",
     propertyOwnerName: "",
     howFoundOwnerName: "SALE DEED",
-    typeOfLoan: "N/A",
+    typeOfLoan: "P+C",
     dateOfReport: null,
     refNo: "N/A",
     evaluationType: "N/A",
@@ -402,31 +402,31 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
         propertyName: merged.propertyName || "",
         personMetDuringVisit: merged.personMetDuringVisit || "",
         personContactNo: merged.personContactNo || "",
-        relationshipOfPersonMet: merged.relationshipOfPersonMet || "",
+        relationshipOfPersonMet: merged.relationshipOfPersonMet || "SELF",
         propertyOwnerName: merged.propertyOwnerName || "",
         howFoundOwnerName: merged.howFoundOwnerName || "",
-        typeOfLoan: merged.typeOfLoan || "",
+        typeOfLoan: merged.typeOfLoan || "P+C",
         dateOfReport: parsedDate,
         refNo: merged.refNo || "",
         evaluationType: merged.evaluationType || "",
-        unitType: merged.unitType || "",
-        propertyCategory: merged.propertyCategory || "",
+        unitType: merged.unitType || "OPEN PLOT",
+        propertyCategory: merged.propertyCategory || "INDIVIDUAL",
         propertyLocation: merged.propertyLocation || "",
-        populationCensus2011: merged.populationCensus2011 || "",
+        populationCensus2011: merged.populationCensus2011 || "Btw 10000 to 1.0 Lac",
         ruralUrban: merged.ruralUrban || "",
-        zone: merged.zone || "",
+        zone: merged.zone || "Residential",
         propertyAreaLimits: merged.propertyAreaLimits || "",
-        eraApplicable: merged.eraApplicable || "",
-        documentsAvailable: merged.documentsAvailable || "",
-        nameOnSocietyBoard: merged.nameOnSocietyBoard || "",
+        eraApplicable: merged.eraApplicable || "NA",
+        documentsAvailable: merged.documentsAvailable || "YES",
+        nameOnSocietyBoard: merged.nameOnSocietyBoard || "NA",
         addressLegal: merged.addressLegal || "",
         addressSite: merged.addressSite || "",
-        nameOnDoor: merged.nameOnDoor || "",
+        nameOnDoor: merged.nameOnDoor || "NA",
         nearbyLandmark: merged.nearbyLandmark || "",
         statusOfOccupancy: merged.statusOfOccupancy || "",
         occupiedBy: merged.occupiedBy || "",
-        usageOfProperty: merged.usageOfProperty || "",
-        propertyEasilyIdentifiable: merged.propertyEasilyIdentifiable || "",
+        usageOfProperty: merged.usageOfProperty || "Residential",
+        propertyEasilyIdentifiable: merged.propertyEasilyIdentifiable || "YES",
         latitude: merged.latitude || "",
         longitude: merged.longitude || "",
       });
@@ -648,7 +648,8 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
           <Input />
         </Form.Item>
 
-        <Form.Item name="usageOfProperty" label="Usage">
+        <Form.Item name="
+        " label="Usage">
           <Select allowClear className="w-full">
             <Option value="Residential">Residential</Option>
             <Option value="Commercial">Commercial</Option>

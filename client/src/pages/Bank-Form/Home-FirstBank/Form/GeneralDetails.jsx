@@ -468,6 +468,7 @@ const defaultDocumentData = [
     key: "1",
     type: "NA Converted",
     approvingAuthority: ["Yes", "No", "NA"],
+    selectedApprovingAuthority: "Yes", // default dropdown value
     approvalDate: "",
     approvalDetails: "",
   },
@@ -481,6 +482,8 @@ const defaultDocumentData = [
       "Licensed Surveyor Plan",
       "No",
     ],
+    selectedApprovingAuthority: "Licensed Surveyor Plan",
+    // default dropdown value
     approvalDate: "",
     approvalDetails: "",
   },
@@ -494,6 +497,7 @@ const defaultDocumentData = [
       "Licensed Surveyor Plan",
       "No",
     ],
+    selectedApprovingAuthority: "Licensed Surveyor Plan",
     approvalDate: "",
     approvalDetails: "",
   },
@@ -532,6 +536,7 @@ const defaultDocumentData = [
       "Licensed Surveyor Plan",
       "No",
     ],
+    selectedApprovingAuthority: "Licensed Surveyor Plan",
     approvalDate: "",
     approvalDetails: "",
   },
@@ -546,11 +551,11 @@ const GeneralDetails = ({ isEdit, onNext, onBack, extractedData }) => {
     const merged = { ...extractedData, ...isEdit };
     if (merged) {
       form.setFieldsValue({
-        nearestCityTown: merged.nearestCityTown || merged.cityCentreName || "",
-        locationCategory: merged.locationCategory || "",
-        electricityAvailability: merged.electricityAvailability || "",
-        waterAvailability: merged.waterAvailability || "",
-        drainageAvailability: merged.drainageAvailability || "",
+        nearestCityTown: merged.nearestCityTown || merged.cityCentreName || "Bhopal",
+        locationCategory: merged.locationCategory || "MC",
+        electricityAvailability: merged.electricityAvailability || "YES",
+        waterAvailability: merged.waterAvailability || "YES",
+        drainageAvailability: merged.drainageAvailability || "YES",
       });
 
       // Restore documents if saved

@@ -338,23 +338,23 @@ const LocalityDetails = ({ isEdit, onNext, onBack, extractedData }) => {
         // Section 4 – Locality
         localityDevelopment: merged.localityDevelopment || "",
         approachRoadType: merged.approachRoadType || "",
-        approachRoadWidth: merged.approachRoadWidth || "",
+        approachRoadWidth: merged.approachRoadWidth || "15ft",
         distanceFromCityCentre: merged.distanceFromCityCentre || "",
         distanceFromRailwayStation: merged.distanceFromRailwayStation || "",
         distanceFromBusStand: merged.distanceFromBusStand || "",
         distanceFromHospital: merged.distanceFromHospital || "",
         occupancyPercentage: merged.occupancyPercentage || "",
         habitationPercentage: merged.habitationPercentage || "",
-        nallahRiverHighTension: merged.nallahRiverHighTension || "",
+        nallahRiverHighTension: merged.nallahRiverHighTension || "NA",
         // Section 6 – NDMA
-        seismicZone: merged.seismicZone || "",
-        cycloneZone: merged.cycloneZone || "",
-        landslideProneZone: merged.landslideProneZone || "",
-        floodZone: merged.floodZone || "",
-        crZone: merged.crZone || "",
-        demolitionRisk: merged.localityDemolitionRisk || merged.demolitionRisk || "",
-        demolitionRiskDetails: merged.demolitionRiskDetails || "",
-        followsNDMAGuidelines: merged.followsNDMAGuidelines || "",
+        seismicZone: merged.seismicZone || "II",
+        cycloneZone: merged.cycloneZone || "NO",
+        landslideProneZone: merged.landslideProneZone || "No",
+        floodZone: merged.floodZone || "NO",
+        crZone: merged.crZone || "NO",
+        demolitionRisk: merged.localityDemolitionRisk || merged.demolitionRisk || "LOW",
+        demolitionRiskDetails: merged.demolitionRiskDetails || "NA",
+        followsNDMAGuidelines: merged.followsNDMAGuidelines || "YES",
       });
     }
   }, [isEdit, extractedData, form]);
