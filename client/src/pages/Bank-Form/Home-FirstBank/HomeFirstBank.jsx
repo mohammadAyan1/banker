@@ -58,7 +58,7 @@ const HomeFirstBank = () => {
 
     try {
       await dispatch(
-        finalUpdate({ id, bankName: "home-first", updateData: finalData })
+        finalUpdate({ id, bankName: "home-first", updateData: finalData }),
       ).unwrap();
       toast.success("Case submitted finally!");
       navigate("/");
@@ -109,7 +109,7 @@ const HomeFirstBank = () => {
 
       try {
         const response = await dispatch(
-          updateDetails({ id, ...finalData })
+          updateDetails({ id, ...finalData }),
         ).unwrap();
         toast.success("Form updated successfully");
 
@@ -159,7 +159,14 @@ const HomeFirstBank = () => {
     {
       id: 1,
       label: "L & T ASSIGNMENT DETAILS",
-      component: <LNAssigment isEdit={isEdit} onNext={handleNext} extractedData={extractedData} fetchData={() => fetchEditData(id)} />,
+      component: (
+        <LNAssigment
+          isEdit={isEdit}
+          onNext={handleNext}
+          extractedData={extractedData}
+          fetchData={() => fetchEditData(id)}
+        />
+      ),
     },
     {
       id: 2,
@@ -223,26 +230,26 @@ const HomeFirstBank = () => {
     },
   ].filter((tab) => !isFieldOfficer || tab.id === 1); // 👈 Only Step 1 for FieldOfficer
 
-
   return (
-    <div className='bg-gray-100 py-2 px-2  relative'>
-      <div className='max-w-6xl mx-auto bg-white shadow rounded p-6'>
-        <div className='mb-6'>
-          <h1 className='text-3xl font-bold'>Home First Bank Report Form</h1>
+    <div className="bg-gray-100 py-2 px-2  relative">
+      <div className="max-w-6xl mx-auto bg-white shadow rounded p-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Home First Bank Report Form</h1>
           {/* <p className='text-gray-500'>Step {step} of 6</p> */}
         </div>
 
-        <AutoFillForm setFormData={setExtractedData} />
+      
 
         {/* Unified Tabs Navigation */}
-        <div className='flex  border-gray-200 gap-2 p-5  '>
+        <div className="flex  border-gray-200 gap-2 p-5  ">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              className={`py-4 rounded-sm  px-4 font-medium border  text-sm focus:outline-none ${step === tab.id
-                ? "border-2 border-blue-600 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-                }`}
+              className={`py-4 rounded-sm  px-4 font-medium border  text-sm focus:outline-none ${
+                step === tab.id
+                  ? "border-2 border-blue-600 text-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
               onClick={() => handleTabClick(tab.id)} // ✅ Tab change on click
             >
               {tab.label}
@@ -250,23 +257,25 @@ const HomeFirstBank = () => {
           ))}
         </div>
         {/* Single Content Area */}
-        <div className='p-4'>
+        <div className="p-4">
           {tabs.find((tab) => tab.id === step)?.component}
         </div>
 
         {step === 6 && id && user?.role === "Admin" && (
-          <div className='mt-6 text-right'>
+          <div className="mt-6 text-right">
             <button
               onClick={lastUpdate}
-              className='ml-4 px-5 py-2 bg-red-600 text-white rounded hover:bg-red-700'
+              className="ml-4 px-5 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             >
               Final Submit
             </button>
           </div>
         )}
 
-        {loading && <p className='text-blue-600'>Submitting...</p>}
-        {error && <p className='text-red-600'>Error: {error}</p>}
+          <AutoFillForm setFormData={setExtractedData} />
+
+        {loading && <p className="text-blue-600">Submitting...</p>}
+        {error && <p className="text-red-600">Error: {error}</p>}
       </div>
     </div>
   );

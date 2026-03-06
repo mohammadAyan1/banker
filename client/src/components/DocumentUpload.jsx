@@ -8,22 +8,33 @@ const DocumentUpload = ({ onUpload }) => {
     };
 
     return (
-        <div className="border p-4 rounded bg-white shadow">
-            <label className="block font-semibold mb-2">
-                Upload Documents & Site Photos
-            </label>
+   <div className="border border-gray-200 rounded-lg bg-white shadow-sm p-4">
+  <label className="block text-sm font-semibold text-gray-700 mb-2">
+    Upload Documents & Site Photos
+  </label>
 
-            <input
-                type="file"
-                multiple
-                onChange={handleChange}
-                className="border p-2 rounded w-full"
-            />
+  <div className="flex items-center justify-between border border-dashed border-gray-300 rounded-md px-3 py-2 bg-gray-50">
+    
+    <span className="text-sm text-gray-500">
+      Choose files to upload
+    </span>
 
-            <p className="text-sm text-gray-500 mt-2">
-                Upload PDFs, Excel, ATS, Registry & site photos
-            </p>
-        </div>
+    <label className="cursor-pointer bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded hover:bg-blue-700 transition">
+      Browse
+      <input
+        type="file"
+        multiple
+        onChange={handleChange}
+        className="hidden"
+      />
+    </label>
+
+  </div>
+
+  <p className="text-xs text-gray-400 mt-2">
+    Upload PDFs, Excel, ATS, Registry & site photos
+  </p>
+</div>
     );
 };
 
