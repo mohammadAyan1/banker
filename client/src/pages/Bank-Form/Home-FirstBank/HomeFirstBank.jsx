@@ -158,7 +158,7 @@ const HomeFirstBank = () => {
   const tabs = [
     {
       id: 1,
-      label: "L & T ASSIGNMENT DETAILS",
+      label: "General Details",
       component: (
         <LNAssigment
           isEdit={isEdit}
@@ -168,21 +168,10 @@ const HomeFirstBank = () => {
         />
       ),
     },
+
     {
       id: 2,
-      label: "General & Document Details ",
-      component: (
-        <GeneralDetails
-          isEdit={isEdit}
-          onNext={handleNext}
-          onBack={handleBack}
-          extractedData={extractedData}
-        />
-      ),
-    },
-    {
-      id: 3,
-      label: "Locality & NDMA Details",
+      label: "LOCALITY & NDMA DETAILS",
       component: (
         <LocalityDetails
           isEdit={isEdit}
@@ -193,8 +182,21 @@ const HomeFirstBank = () => {
       ),
     },
     {
+      id: 3,
+      label: "Property Plan & Availability",
+      component: (
+        <GeneralDetails
+          isEdit={isEdit}
+          onNext={handleNext}
+          onBack={handleBack}
+          extractedData={extractedData}
+        />
+      ),
+    },
+
+    {
       id: 4,
-      label: "Property & Strultural  Details",
+      label: "Boundaries, Dimensions & Structural Details",
       component: (
         <PropertyDetails
           isEdit={isEdit}
@@ -238,18 +240,17 @@ const HomeFirstBank = () => {
           {/* <p className='text-gray-500'>Step {step} of 6</p> */}
         </div>
 
-      
+
 
         {/* Unified Tabs Navigation */}
         <div className="flex  border-gray-200 gap-2 p-5  ">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              className={`py-4 rounded-sm  px-4 font-medium border  text-sm focus:outline-none ${
-                step === tab.id
-                  ? "border-2 border-blue-600 text-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              className={`py-4 rounded-sm  px-4 font-medium border  text-sm focus:outline-none ${step === tab.id
+                ? "border-2 border-blue-600 text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+                }`}
               onClick={() => handleTabClick(tab.id)} // ✅ Tab change on click
             >
               {tab.label}
@@ -272,7 +273,7 @@ const HomeFirstBank = () => {
           </div>
         )}
 
-          <AutoFillForm setFormData={setExtractedData} />
+        <AutoFillForm setFormData={setExtractedData} />
 
         {loading && <p className="text-blue-600">Submitting...</p>}
         {error && <p className="text-red-600">Error: {error}</p>}
