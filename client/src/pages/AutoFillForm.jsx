@@ -1,132 +1,215 @@
-
 // import React, { useState } from "react";
 // import DocumentUpload from "../components/DocumentUpload";   // adjust path as needed
 // import PhotoPreview from "../components/PhotoPreview";       // adjust path as needed
 // import { Alert, Spin, message, Button } from "antd";
 
-// // Mapping function: converts the API response (the document JSON inside data.data)
-// // into the flat field structure expected by all six steps.
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Helper: safely read a nested path from an object
+// // ─────────────────────────────────────────────────────────────────────────────
+// const get = (obj, path, defaultValue = "") =>
+//     path
+//         .split(".")
+//         .reduce(
+//             (acc, part) =>
+//                 acc && acc[part] !== undefined ? acc[part] : defaultValue,
+//             obj
+//         );
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Parse a Hindi / English mixed string to extract a plain English value.
+// // Many API values look like "भूखण्ड (Plot)" — we return the text inside ()
+// // if present, otherwise return the full string.
+// // ─────────────────────────────────────────────────────────────────────────────
+// const extractEnglish = (str = "") => {
+//     if (!str) return "";
+//     const m = str.match(/\(([^)]+)\)/);
+//     return m ? m[1].trim() : str.trim();
+// };
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Map the raw API document object → flat field names expected by all 6 steps.
+// // We ALSO keep the original nested arrays (seller / buyer / property) so that
+// // ValuationDetails can build its remarks and analysis cards.
+// // ─────────────────────────────────────────────────────────────────────────────
 // const mapDocumentToFormData = (doc) => {
+//     if (!doc || typeof doc !== "object") return {};
+
 //     const data = {};
 
-//     // Helper to safely get nested values
-//     const get = (obj, path, defaultValue = "") => {
-//         return path.split('.').reduce((acc, part) => acc && acc[part] !== undefined ? acc[part] : defaultValue, obj);
-//     };
+//     // ── Keep raw nested data for ValuationDetails ──────────────────────────
+//     // buildDefaultRemarks() and buildAnalysis() read these keys directly.
+//     data.seller = doc.seller || [];
+//     data.buyer = doc.buyer || [];
+//     data.property = doc.property || {};
+//     data.document_type = doc.document_type || "";
+//     data.registration_number = doc.registration_number || "";
+//     data.registration_date = doc.registration_date || "";
 
-//     // ---------- Step 1: LNTAssignmentDetails ----------
-//     // customerName → from buyer[0].name
-//     const buyerName = get(doc, 'buyer.0.name');
-//     if (buyerName) data.customerName = buyerName;
+//     // ══════════════════════════════════════════════════════════════════════════
+//     // STEP 1 — LNTAssignmentDetails (General Details)
+//     // ══════════════════════════════════════════════════════════════════════════
 
-//     // propertyName → combine address parts or use plot area
-//     const plotNumber = get(doc, 'property.address.plot_number');
-//     const colonyArea = get(doc, 'property.address.colony_area');
-//     const district = get(doc, 'property.address.district');
-//     if (plotNumber || colonyArea || district) {
-//         data.propertyName = [plotNumber, colonyArea, district].filter(Boolean).join(', ');
+//     // customerName ← buyer[0].name (extract English part)
+//     const buyerRaw = get(doc, "buyer.0.name");
+//     if (buyerRaw) data.customerName = extractEnglish(buyerRaw) || buyerRaw;
+
+//     // propertyOwnerName ← seller[0].name
+//     const sellerRaw = get(doc, "seller.0.name");
+//     if (sellerRaw) data.propertyOwnerName = extractEnglish(sellerRaw) || sellerRaw;
+
+//     // propertyName ← plot_number + colony_area + district
+//     const addr = doc.property?.address || {};
+//     const plotNumber = addr.plot_number || "";
+//     const colonyArea = addr.colony_area || "";
+//     const districtRaw = addr.district || "";
+//     if (plotNumber || colonyArea || districtRaw) {
+//         data.propertyName = [plotNumber, colonyArea, extractEnglish(districtRaw) || districtRaw]
+//             .filter(Boolean)
+//             .join(", ");
 //     }
 
-//     // dateOfReport → registration_date
-//     if (doc.registration_date) data.dateOfReport = doc.registration_date; // format "23/05/2018" works with moment
+//     // dateOfReport ← registration_date  (format "DD/MM/YYYY" — moment parses it)
+//     if (doc.registration_date) data.dateOfReport = doc.registration_date;
 
-//     // refNo → registration_number
+//     // refNo ← registration_number
 //     if (doc.registration_number) data.refNo = doc.registration_number;
 
-//     // unitType → from property_type
-//     const propType = get(doc, 'property.property_type', '').toLowerCase();
-//     if (propType.includes('house') || propType.includes('मकान')) {
-//         data.unitType = 'Individual House';
-//     } else if (propType.includes('flat') || propType.includes('अपार्टमेंट')) {
-//         data.unitType = 'Flat';
+//     // unitType ← property_type  (map to Select option values)
+//     const propTypeRaw = get(doc, "property.property_type", "");
+//     const propTypeLower = propTypeRaw.toLowerCase();
+//     if (propTypeLower.includes("house") || propTypeLower.includes("मकान")) {
+//         data.unitType = "Individual House";
+//     } else if (propTypeLower.includes("flat") || propTypeLower.includes("अपार्टमेंट")) {
+//         data.unitType = "Flat";
+//     } else if (
+//         propTypeLower.includes("plot") ||
+//         propTypeLower.includes("भूखण्ड") ||
+//         propTypeLower.includes("भूखंड")
+//     ) {
+//         data.unitType = "OPEN PLOT";
+//     } else if (propTypeLower.includes("shop") || propTypeLower.includes("दुकान")) {
+//         data.unitType = "Shop";
+//     } else if (propTypeLower.includes("apartment") || propTypeLower.includes("अपार्टमेंट")) {
+//         data.unitType = "Apartment";
+//     } else if (propTypeLower.includes("row house")) {
+//         data.unitType = "Row House";
+//     } else if (propTypeLower.includes("office")) {
+//         data.unitType = "Office";
+//     } else if (propTypeLower.includes("industrial")) {
+//         data.unitType = "Industrial";
 //     } else {
-//         data.unitType = get(doc, 'property.property_type');
+//         data.unitType = propTypeRaw;   // fallback: raw value
 //     }
 
-//     // documentsAvailable → document_type
+//     // documentsAvailable ← document_type
 //     if (doc.document_type) data.documentsAvailable = doc.document_type;
 
-//     // ---------- Step 2: GeneralDetails ----------
-//     // addressLegal & addressSite → full address from property.address
-//     const addr = doc.property?.address;
-//     if (addr) {
+//     // typeOfStructure (used in Step 4 Structural Details)
+//     if (propTypeRaw) data.typeOfStructure = propTypeRaw;
+
+//     // ── Address fields (used in LNTAssignmentDetails AND Step 3) ────────────
+//     if (Object.keys(addr).length > 0) {
 //         const fullAddress = [
 //             addr.plot_number,
 //             addr.survey_number,
 //             addr.colony_area,
-//             addr.ward_number,
+//             addr.ward_number && `Ward ${addr.ward_number}`,
 //             addr.tehsil,
 //             addr.district,
 //             addr.state,
-//         ].filter(Boolean).join(', ');
+//         ]
+//             .filter(Boolean)
+//             .join(", ");
+
 //         data.addressLegal = fullAddress;
-//         data.addressSite = fullAddress; // same for site initially
-//         data.city = addr.district || addr.tehsil || '';
-//         data.projectPinCode = addr.pincode || '';
-//         data.projectState = addr.state || 'Madhya Pradesh';
+//         data.addressSite = fullAddress;
+
+//         data.city = extractEnglish(addr.district || addr.tehsil || "");
+//         data.projectPinCode = addr.pincode || "";
+//         data.projectState = extractEnglish(addr.state || "") || "Madhya Pradesh";
 //     }
 
-//     // zone & usageOfProperty → from property_use
-//     const propUse = get(doc, 'property.property_use', '').toUpperCase();
-//     if (propUse.includes('RESIDENTIAL') || propUse.includes('आवासीय')) {
-//         data.zone = 'RESIDENTIAL';
-//     } else if (propUse.includes('COMMERCIAL') || propUse.includes('वाणिज्यिक')) {
-//         data.zone = 'COMMERCIAL';
+//     // ── Zone / Usage ─────────────────────────────────────────────────────────
+//     const propUseRaw = get(doc, "property.property_use", "");
+//     if (propUseRaw) {
+//         const propUseUpper = propUseRaw.toUpperCase();
+//         if (propUseUpper.includes("RESIDENTIAL") || propUseRaw.includes("आवासीय")) {
+//             data.zone = "Residential";
+//         } else if (propUseUpper.includes("COMMERCIAL") || propUseRaw.includes("वाणिज्यिक")) {
+//             data.zone = "Commercial";
+//         } else if (propUseUpper.includes("AGRICULTURAL") || propUseRaw.includes("कृषि")) {
+//             data.zone = "Agricultural";
+//         } else {
+//             data.zone = propUseRaw;
+//         }
+//         data.usageOfProperty = propUseRaw;
 //     } else {
-//         data.zone = propUse;
+//         // Default: if property is a plot, assume residential
+//         if (data.unitType === "OPEN PLOT") {
+//             data.zone = "Residential";
+//             data.usageOfProperty = "Residential";
+//         }
 //     }
-//     data.usageOfProperty = get(doc, 'property.property_use');
 
-//     // ownershipType – default, not in document
-//     data.ownershipType = 'Freehold';
+//     // ownershipType — not in API; sensible default
+//     data.ownershipType = "Freehold";
 
-//     // numberAndDate → combine registration_number and date
+//     // numberAndDate
 //     if (doc.registration_number && doc.registration_date) {
 //         data.numberAndDate = `${doc.registration_number} / ${doc.registration_date}`;
 //     }
 
-//     // ---------- Step 3: LocalityDetails ----------
-//     // No direct mapping; leave empty (user can fill manually)
+//     // ══════════════════════════════════════════════════════════════════════════
+//     // STEP 4 — PropertyDetails  (Boundaries, Dimensions, Structural Details)
+//     // ══════════════════════════════════════════════════════════════════════════
+//     const bounds = doc.property?.boundaries || {};
 
-//     // ---------- Step 4: PropertyDetails ----------
-//     // boundaries
-//     const bounds = doc.property?.boundaries;
-//     if (bounds) {
-//         ['north', 'south', 'east', 'west'].forEach(dir => {
-//             const value = bounds[dir];
-//             if (value) {
-//                 data[`${dir}Document`] = value;
-//                 data[`${dir}Actual`] = value;
-//                 data[`${dir}Plan`] = value;
-//             }
-//         });
-//         if (bounds.north || bounds.south || bounds.east || bounds.west) {
-//             data.boundariesMatching = 'Yes';
+//     ["north", "south", "east", "west"].forEach((dir) => {
+//         const value = bounds[dir];
+//         if (value) {
+//             // Flat keys — PropertyDetails useEffect reads these as fallbacks
+//             data[`${dir}Document`] = value;
+//             data[`${dir}Actual`] = value;
+//             data[`${dir}Plan`] = value;
 //         }
+//     });
+
+//     if (bounds.north || bounds.south || bounds.east || bounds.west) {
+//         data.boundariesMatching = "Yes";
 //     }
 
-//     // plotArea
-//     if (doc.property?.plot_area) data.plotArea = doc.property.plot_area;
+//     // Plot area
+//     const plotAreaRaw = doc.property?.plot_area || "";
+//     if (plotAreaRaw) {
+//         // Extract numeric part for number fields; keep full string for display
+//         const numericArea = parseFloat(plotAreaRaw.replace(/[^\d.]/g, "")) || "";
 
-//     // Dimension (plot dimensions)
-//     if (doc.property?.plot_dimensions) data.Dimension = doc.property.plot_dimensions;
+//         data.plotArea = numericArea || plotAreaRaw;
+//         data.landArea = numericArea || plotAreaRaw;
 
-//     // typeOfStructure
-//     if (doc.property?.property_type) data.typeOfStructure = doc.property.property_type;
-
-//     // ---------- Step 5: ValuationDetails ----------
-//     if (doc.property?.plot_area) {
-//         data.document = doc.property.plot_area;            // "Document" field under Land area
-//         data.landAreaForValuation = 'site';                // assume site area
-//         data.siteArea = doc.property.plot_area;
+//         // Valuation step area fields
+//         data.landSiteArea = numericArea || plotAreaRaw;
+//         data.landDocumentArea = numericArea || plotAreaRaw;
+//         data.landPlanArea = numericArea || plotAreaRaw;
 //     }
 
-//     // ---------- Step 6: ViolationObserved ----------
-//     // No data; left empty.
+//     // Plot dimensions
+//     const plotDimensions = doc.property?.plot_dimensions || "";
+//     if (plotDimensions) {
+//         data.Dimension = plotDimensions;
+//         data.linearDimension = plotDimensions;
+//     }
+
+//     // ══════════════════════════════════════════════════════════════════════════
+//     // (Step 2 LocalityDetails & Step 3 GeneralDetails have no direct API mapping)
+//     // ══════════════════════════════════════════════════════════════════════════
 
 //     return data;
 // };
 
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Component
+// // ─────────────────────────────────────────────────────────────────────────────
 // const AutoFillForm = ({ setFormData }) => {
 //     const [loading, setLoading] = useState(false);
 //     const [photos, setPhotos] = useState({});
@@ -140,9 +223,7 @@
 
 //         setLoading(true);
 //         const form = new FormData();
-//         files.forEach((file) => {
-//             form.append("file", file);   // backend expects "file" field
-//         });
+//         files.forEach((file) => form.append("file", file));
 
 //         try {
 //             const res = await fetch(`${import.meta.env.VITE_API_URL}/api/pdf`, {
@@ -161,22 +242,17 @@
 //             const response = await res.json();
 //             console.log("API response:", response);
 
-//             // Check if the API returned success and has data
 //             if (response.success && response.data) {
 //                 const mapped = mapDocumentToFormData(response.data);
 //                 console.log("Mapped form data:", mapped);
 //                 setFormData(mapped);
-//                 message.success("Data extracted from documents successfully.");
+//                 message.success("Data extracted and form fields auto-filled successfully.");
 //             } else {
 //                 message.warning("No valid data found in response.");
 //             }
 
-//             // If the API returns photos, set them
-//             if (response.photos) {
-//                 setPhotos(response.photos);
-//             }
+//             if (response.photos) setPhotos(response.photos);
 
-//             // Store file name(s) for display
 //             setFileName(files.map((f) => f.name).join(", "));
 //         } catch (error) {
 //             console.error("API call error:", error);
@@ -196,8 +272,8 @@
 //     return (
 //         <div style={{ marginBottom: 24 }}>
 //             <Alert
-//                 message="Auto-fill from documents"
-//                 description="Upload property documents (PDF, images, etc.). Our AI will extract key information and pre-fill the form."
+//                 message="Auto-fill from Documents"
+//                 description="Upload property documents (PDF, images, etc.). Our AI will extract key information and pre-fill the form fields across all steps."
 //                 type="info"
 //                 showIcon
 //                 style={{ marginBottom: 16 }}
@@ -207,19 +283,15 @@
 
 //             {loading && (
 //                 <div style={{ marginTop: 16, textAlign: "center" }}>
-//                     <Spin tip="Processing documents..." />
+//                     <Spin tip="Processing documents and extracting data..." />
 //                 </div>
 //             )}
 
 //             {fileName && !loading && (
-//                 <div style={{ marginTop: 16 }}>
-//                     <span style={{ color: "green" }}>Uploaded: {fileName}</span>
-//                     <Button
-//                         type="link"
-//                         onClick={clearData}
-//                         style={{ marginLeft: 16 }}
-//                     >
-//                         Clear
+//                 <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 8 }}>
+//                     <span style={{ color: "green" }}>✅ Uploaded: {fileName}</span>
+//                     <Button type="link" onClick={clearData}>
+//                         Clear Auto-fill
 //                     </Button>
 //                 </div>
 //             )}
@@ -235,6 +307,8 @@
 // };
 
 // export default AutoFillForm;
+
+
 
 
 import React, { useState } from "react";
@@ -256,13 +330,81 @@ const get = (obj, path, defaultValue = "") =>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Parse a Hindi / English mixed string to extract a plain English value.
-// Many API values look like "भूखण्ड (Plot)" — we return the text inside ()
-// if present, otherwise return the full string.
+// After Hinglish AI change, most values will already be Roman script.
+// Still kept as fallback for older responses.
 // ─────────────────────────────────────────────────────────────────────────────
 const extractEnglish = (str = "") => {
     if (!str) return "";
     const m = str.match(/\(([^)]+)\)/);
     return m ? m[1].trim() : str.trim();
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Build a properly formatted address string from the address object.
+//
+// Format:
+//   Plot No. [plot_number], Khasra No. [khasra/survey], Patwari Halka No. [patwari_halka_number],
+//   Ward No. [ward_number], [village_name], [colony_area], [tehsil], [district], [state], [pincode]
+//
+// Only includes a part if its value is present.
+// ─────────────────────────────────────────────────────────────────────────────
+const buildAddressString = (addr = {}) => {
+    if (!addr || Object.keys(addr).length === 0) return "";
+
+    const parts = [];
+
+    // Plot No.
+    if (addr.plot_number) {
+        parts.push(`Plot No. ${addr.plot_number}`);
+    }
+
+    // Khasra No. — use khasra_number first, fallback to survey_number
+    const khasra = addr.khasra_number || addr.survey_number;
+    if (khasra) {
+        parts.push(`Khasra No. ${khasra}`);
+    }
+
+    // Patwari Halka No.
+    if (addr.patwari_halka_number) {
+        parts.push(`Patwari Halka No. ${addr.patwari_halka_number}`);
+    }
+
+    // Ward No.
+    if (addr.ward_number) {
+        parts.push(`Ward No. ${addr.ward_number}`);
+    }
+
+    // Village Name
+    if (addr.village_name) {
+        parts.push(addr.village_name);
+    }
+
+    // Colony / Area
+    if (addr.colony_area) {
+        parts.push(addr.colony_area);
+    }
+
+    // Tehsil
+    if (addr.tehsil) {
+        parts.push(addr.tehsil);
+    }
+
+    // District (only if different from tehsil to avoid repetition)
+    if (addr.district && addr.district !== addr.tehsil) {
+        parts.push(addr.district);
+    }
+
+    // State
+    if (addr.state) {
+        parts.push(addr.state);
+    }
+
+    // Pincode
+    if (addr.pincode) {
+        parts.push(addr.pincode);
+    }
+
+    return parts.join(", ");
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -276,7 +418,6 @@ const mapDocumentToFormData = (doc) => {
     const data = {};
 
     // ── Keep raw nested data for ValuationDetails ──────────────────────────
-    // buildDefaultRemarks() and buildAnalysis() read these keys directly.
     data.seller = doc.seller || [];
     data.buyer = doc.buyer || [];
     data.property = doc.property || {};
@@ -288,109 +429,150 @@ const mapDocumentToFormData = (doc) => {
     // STEP 1 — LNTAssignmentDetails (General Details)
     // ══════════════════════════════════════════════════════════════════════════
 
-    // customerName ← buyer[0].name (extract English part)
+    // customerName ← buyer[0].name (Hinglish, already Roman script)
     const buyerRaw = get(doc, "buyer.0.name");
-    if (buyerRaw) data.customerName = extractEnglish(buyerRaw) || buyerRaw;
+    if (buyerRaw) data.customerName = buyerRaw;
 
-    // propertyOwnerName ← seller[0].name
+    // propertyOwnerName ← seller[0].name (Hinglish)
     const sellerRaw = get(doc, "seller.0.name");
-    if (sellerRaw) data.propertyOwnerName = extractEnglish(sellerRaw) || sellerRaw;
+    if (sellerRaw) data.propertyOwnerName = sellerRaw;
 
-    // propertyName ← plot_number + colony_area + district
+    // ── Address object ────────────────────────────────────────────────────────
     const addr = doc.property?.address || {};
-    const plotNumber = addr.plot_number || "";
-    const colonyArea = addr.colony_area || "";
-    const districtRaw = addr.district || "";
-    if (plotNumber || colonyArea || districtRaw) {
-        data.propertyName = [plotNumber, colonyArea, extractEnglish(districtRaw) || districtRaw]
-            .filter(Boolean)
-            .join(", ");
+
+    // Build full formatted address for Legal and Site address fields
+    const formattedAddress = buildAddressString(addr);
+
+    if (formattedAddress) {
+        data.addressLegal = formattedAddress;
+        data.addressSite = formattedAddress;
     }
 
-    // dateOfReport ← registration_date  (format "DD/MM/YYYY" — moment parses it)
+    // city — prefer district, fallback to tehsil
+    if (addr.district) {
+        data.city = addr.district;
+    } else if (addr.tehsil) {
+        data.city = addr.tehsil;
+    }
+
+    // Pin code
+    if (addr.pincode) {
+        data.projectPinCode = addr.pincode;
+    }
+
+    // State
+    data.projectState = addr.state || "Madhya Pradesh";
+
+    // propertyName — shorter readable version for the property name field
+    const propertyNameParts = [
+        addr.plot_number && `Plot No. ${addr.plot_number}`,
+        addr.colony_area,
+        addr.village_name,
+        addr.tehsil,
+        addr.district,
+    ].filter(Boolean);
+
+    if (propertyNameParts.length > 0) {
+        data.propertyName = propertyNameParts.join(", ");
+    }
+
+    // dateOfReport ← registration_date
     if (doc.registration_date) data.dateOfReport = doc.registration_date;
 
     // refNo ← registration_number
     if (doc.registration_number) data.refNo = doc.registration_number;
 
-    // unitType ← property_type  (map to Select option values)
+    // ── unitType ← property_type ─────────────────────────────────────────────
     const propTypeRaw = get(doc, "property.property_type", "");
     const propTypeLower = propTypeRaw.toLowerCase();
-    if (propTypeLower.includes("house") || propTypeLower.includes("मकान")) {
+
+    if (
+        propTypeLower.includes("house") ||
+        propTypeLower.includes("makan") ||
+        propTypeLower.includes("awas") ||
+        propTypeLower.includes("makaan")
+    ) {
         data.unitType = "Individual House";
-    } else if (propTypeLower.includes("flat") || propTypeLower.includes("अपार्टमेंट")) {
+    } else if (
+        propTypeLower.includes("flat") ||
+        propTypeLower.includes("apartment") ||
+        propTypeLower.includes("aparment")
+    ) {
         data.unitType = "Flat";
     } else if (
         propTypeLower.includes("plot") ||
-        propTypeLower.includes("भूखण्ड") ||
-        propTypeLower.includes("भूखंड")
+        propTypeLower.includes("bhukhanda") ||
+        propTypeLower.includes("bhukhand") ||
+        propTypeLower.includes("bhu khand") ||
+        propTypeLower.includes("open plot") ||
+        propTypeLower.includes("bhu khanda") ||
+        propTypeLower.includes("plot land")
     ) {
         data.unitType = "OPEN PLOT";
-    } else if (propTypeLower.includes("shop") || propTypeLower.includes("दुकान")) {
+    } else if (
+        propTypeLower.includes("shop") ||
+        propTypeLower.includes("dukan") ||
+        propTypeLower.includes("dukaan")
+    ) {
         data.unitType = "Shop";
-    } else if (propTypeLower.includes("apartment") || propTypeLower.includes("अपार्टमेंट")) {
-        data.unitType = "Apartment";
     } else if (propTypeLower.includes("row house")) {
         data.unitType = "Row House";
     } else if (propTypeLower.includes("office")) {
         data.unitType = "Office";
     } else if (propTypeLower.includes("industrial")) {
         data.unitType = "Industrial";
-    } else {
-        data.unitType = propTypeRaw;   // fallback: raw value
+    } else if (propTypeRaw) {
+        data.unitType = propTypeRaw; // fallback: raw value
     }
 
     // documentsAvailable ← document_type
     if (doc.document_type) data.documentsAvailable = doc.document_type;
 
-    // typeOfStructure (used in Step 4 Structural Details)
+    // typeOfStructure (Step 4)
     if (propTypeRaw) data.typeOfStructure = propTypeRaw;
-
-    // ── Address fields (used in LNTAssignmentDetails AND Step 3) ────────────
-    if (Object.keys(addr).length > 0) {
-        const fullAddress = [
-            addr.plot_number,
-            addr.survey_number,
-            addr.colony_area,
-            addr.ward_number && `Ward ${addr.ward_number}`,
-            addr.tehsil,
-            addr.district,
-            addr.state,
-        ]
-            .filter(Boolean)
-            .join(", ");
-
-        data.addressLegal = fullAddress;
-        data.addressSite = fullAddress;
-
-        data.city = extractEnglish(addr.district || addr.tehsil || "");
-        data.projectPinCode = addr.pincode || "";
-        data.projectState = extractEnglish(addr.state || "") || "Madhya Pradesh";
-    }
 
     // ── Zone / Usage ─────────────────────────────────────────────────────────
     const propUseRaw = get(doc, "property.property_use", "");
     if (propUseRaw) {
-        const propUseUpper = propUseRaw.toUpperCase();
-        if (propUseUpper.includes("RESIDENTIAL") || propUseRaw.includes("आवासीय")) {
+        const propUseLower = propUseRaw.toLowerCase();
+        if (
+            propUseLower.includes("residential") ||
+            propUseLower.includes("aawasiya") ||
+            propUseLower.includes("awasiya") ||
+            propUseLower.includes("awas") ||
+            propUseLower.includes("rehayshi")
+        ) {
             data.zone = "Residential";
-        } else if (propUseUpper.includes("COMMERCIAL") || propUseRaw.includes("वाणिज्यिक")) {
+            data.usageOfProperty = "Residential";
+        } else if (
+            propUseLower.includes("commercial") ||
+            propUseLower.includes("vanijyik") ||
+            propUseLower.includes("vyavsayik") ||
+            propUseLower.includes("dukan")
+        ) {
             data.zone = "Commercial";
-        } else if (propUseUpper.includes("AGRICULTURAL") || propUseRaw.includes("कृषि")) {
+            data.usageOfProperty = "Commercial";
+        } else if (
+            propUseLower.includes("agricultural") ||
+            propUseLower.includes("krishi") ||
+            propUseLower.includes("khet") ||
+            propUseLower.includes("fasal")
+        ) {
             data.zone = "Agricultural";
+            data.usageOfProperty = "Agricultural";
         } else {
             data.zone = propUseRaw;
+            data.usageOfProperty = propUseRaw;
         }
-        data.usageOfProperty = propUseRaw;
     } else {
-        // Default: if property is a plot, assume residential
+        // Default for open plot
         if (data.unitType === "OPEN PLOT") {
             data.zone = "Residential";
             data.usageOfProperty = "Residential";
         }
     }
 
-    // ownershipType — not in API; sensible default
+    // ownershipType — sensible default
     data.ownershipType = "Freehold";
 
     // numberAndDate
@@ -399,14 +581,13 @@ const mapDocumentToFormData = (doc) => {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // STEP 4 — PropertyDetails  (Boundaries, Dimensions, Structural Details)
+    // STEP 4 — PropertyDetails (Boundaries, Dimensions, Structural Details)
     // ══════════════════════════════════════════════════════════════════════════
     const bounds = doc.property?.boundaries || {};
 
     ["north", "south", "east", "west"].forEach((dir) => {
         const value = bounds[dir];
         if (value) {
-            // Flat keys — PropertyDetails useEffect reads these as fallbacks
             data[`${dir}Document`] = value;
             data[`${dir}Actual`] = value;
             data[`${dir}Plan`] = value;
@@ -420,12 +601,9 @@ const mapDocumentToFormData = (doc) => {
     // Plot area
     const plotAreaRaw = doc.property?.plot_area || "";
     if (plotAreaRaw) {
-        // Extract numeric part for number fields; keep full string for display
         const numericArea = parseFloat(plotAreaRaw.replace(/[^\d.]/g, "")) || "";
-
         data.plotArea = numericArea || plotAreaRaw;
         data.landArea = numericArea || plotAreaRaw;
-
         // Valuation step area fields
         data.landSiteArea = numericArea || plotAreaRaw;
         data.landDocumentArea = numericArea || plotAreaRaw;
@@ -438,10 +616,6 @@ const mapDocumentToFormData = (doc) => {
         data.Dimension = plotDimensions;
         data.linearDimension = plotDimensions;
     }
-
-    // ══════════════════════════════════════════════════════════════════════════
-    // (Step 2 LocalityDetails & Step 3 GeneralDetails have no direct API mapping)
-    // ══════════════════════════════════════════════════════════════════════════
 
     return data;
 };
@@ -485,9 +659,11 @@ const AutoFillForm = ({ setFormData }) => {
                 const mapped = mapDocumentToFormData(response.data);
                 console.log("Mapped form data:", mapped);
                 setFormData(mapped);
-                message.success("Data extracted and form fields auto-filled successfully.");
+                message.success(
+                    "Data extract ho gaya! Form fields Hinglish mein auto-fill ho gaye."
+                );
             } else {
-                message.warning("No valid data found in response.");
+                message.warning("Response mein valid data nahi mila.");
             }
 
             if (response.photos) setPhotos(response.photos);
@@ -505,14 +681,14 @@ const AutoFillForm = ({ setFormData }) => {
         setFormData({});
         setPhotos({});
         setFileName("");
-        message.info("Auto-fill cleared");
+        message.info("Auto-fill clear ho gaya");
     };
 
     return (
         <div style={{ marginBottom: 24 }}>
             <Alert
                 message="Auto-fill from Documents"
-                description="Upload property documents (PDF, images, etc.). Our AI will extract key information and pre-fill the form fields across all steps."
+                description="Property documents upload karein (PDF, images, etc.). AI key information extract karke sabhi form fields mein Hinglish mein auto-fill kar dega."
                 type="info"
                 showIcon
                 style={{ marginBottom: 16 }}
@@ -522,12 +698,19 @@ const AutoFillForm = ({ setFormData }) => {
 
             {loading && (
                 <div style={{ marginTop: 16, textAlign: "center" }}>
-                    <Spin tip="Processing documents and extracting data..." />
+                    <Spin tip="Documents process ho rahe hain, data extract ho raha hai..." />
                 </div>
             )}
 
             {fileName && !loading && (
-                <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                    style={{
+                        marginTop: 16,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                    }}
+                >
                     <span style={{ color: "green" }}>✅ Uploaded: {fileName}</span>
                     <Button type="link" onClick={clearData}>
                         Clear Auto-fill
