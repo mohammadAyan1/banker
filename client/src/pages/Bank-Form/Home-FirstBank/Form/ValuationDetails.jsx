@@ -104,26 +104,28 @@ const InfoCard = ({ label, value, className = "" }) => (
     <span className="text-gray-800">{value}</span>
   </div>
 );
+// "#000000",
+// "#0000FF",
+//   "#008000",
+//   "#FFA500",
+//   "#800080",
+//   "#A52A2A",
+//   "#FFC0CB",
+//   "#808080",
+//   "#00FFFF",
+//   "#FF00FF",
+//   "#FFD700",
 
 const REMARK_COLORS = [
-  "#000000",
+
   "#FF0000",
-  "#0000FF",
-  "#008000",
-  "#FFA500",
-  "#800080",
-  "#A52A2A",
-  "#FFC0CB",
-  "#808080",
-  "#00FFFF",
-  "#FF00FF",
-  "#FFD700",
+
 ];
 
 const RemarkEditor = ({ index, value, onChange, onRemove, canRemove }) => {
   const editorRef = useRef(null);
   const rangeRef = useRef(null);
-  const [selectedColor, setSelectedColor] = useState("#000000");
+  const [selectedColor, setSelectedColor] = useState("#FF0000");
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -371,7 +373,7 @@ const ValuationDetails = ({ isEdit, onNext, onBack, extractedData }) => {
 
   return (
     <div className="max-w-5xl mx-auto p-4 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-6">Valuation Details</h2>
+      <h2 className="text-2xl font-bold mb-6 text-red-600">Valuation Details</h2>
 
       <Form
         layout="vertical"
@@ -485,7 +487,7 @@ const ValuationDetails = ({ isEdit, onNext, onBack, extractedData }) => {
         </div>
 
         <Divider orientation="left">
-          <span className="font-bold">Observations / Remarks — Section 11</span>
+          <span className="font-bold text-2xl  text-red-600">Observations / Remarks — Section 11</span>
         </Divider>
 
         {hasExtracted && (
@@ -571,15 +573,17 @@ const ValuationDetails = ({ isEdit, onNext, onBack, extractedData }) => {
           </>
         )}
 
-        <Form.Item className="text-right">
+        <Form.Item className="lg:col-span-2 text-end">
           {onBack && (
-            <Button type="default" onClick={onBack} className="mr-2">
+            <Button
+              type="default"
+              onClick={onBack}
+              className="mr-2 px-4 py-2 bg-gray-500 text-white rounded"
+            >
               Back
             </Button>
           )}
-          <Button type="primary" htmlType="submit">
-            Next
-          </Button>
+          <Button type="primary" htmlType="submit">Next</Button>
         </Form.Item>
       </Form>
     </div>

@@ -152,7 +152,7 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-6">GENERAL DETAILS</h2>
+      <h2 className="text-2xl font-bold mb-6 text-red-600">GENERAL DETAILS</h2>
 
       <Form
         layout="vertical"
@@ -180,7 +180,7 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
 
         {/* ── Section 2: Property Overview ── */}
         <div className="col-span-2 mt-2">
-          <h3 className="text-lg font-semibold text-blue-700 mb-2 border-b pb-1">Property Overview</h3>
+          <h3 className="  text-2xl font-bold  mb-2 border-b pb-1 text-red-600">Property Overview</h3>
         </div>
 
         <Form.Item name="propertyCategory" label="Property Category (Project / Individual)">
@@ -255,7 +255,7 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
 
         {/* ── Section 3: Visit Details ── */}
         <div className="col-span-2 mt-2">
-          <h3 className="text-lg font-semibold text-blue-700 mb-2 border-b pb-1">Visit Details</h3>
+          <h3 className="text-2xl font-bold text-red-600 mb-2 border-b pb-1">Visit Details</h3>
         </div>
 
         <Form.Item name="customerName" label="Applicant Name">

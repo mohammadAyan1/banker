@@ -158,6 +158,22 @@ const HomeTrench = () => {
                   1. VENDOR VISIT DETAILS
                 </td>
               </tr>
+
+              <tr>
+                <td className='p-2 border border-gray-300 font-bold'>
+                  LAI NO.-
+                </td>
+                <td className='p-2 border border-gray-300'>
+                  {reportData?.laiNo || "N/A"}
+                </td>
+                <td className='p-2 border border-gray-300 font-bold'>
+                  PROPERTY CODE-
+                </td>
+                <td className='p-2 border border-gray-300'>
+                  {reportData?.propertyCode || "N/A"}
+                </td>
+              </tr>
+
               <tr>
                 <td className='p-2 border border-gray-300 font-bold'>
                   DATE OF VISIT
@@ -307,14 +323,41 @@ const HomeTrench = () => {
                   {reportData?.gstPercentage || "N/A"}
                 </td>
               </tr>
-              <tr>
-                <td className='p-2 border border-gray-300 font-bold'>
-                  TOTAL :
-                </td>
-                <td className='p-2 border border-gray-300' colSpan={3}>
-                  {reportData?.totalAmount}
+
+
+              <tr className='bg-gray-100'>
+                <td className='bg-blue-100 p-2 font-bold' colSpan={4}>
+                  6. DECLARATION
                 </td>
               </tr>
+
+              <tr>
+                <td className='p-2 border border-gray-300 font-bold'>
+                  DECLARATION <br />
+                  (I HEREBY DECLARE THAT)
+                </td>
+                <td className="p-2 border border-gray-300" colSpan={3}>
+                  <ul className="list-disc pl-5">
+                    {reportData?.declaration1 && (
+                      <li>
+                        We have no direct or indirect interest in the property valued.
+                      </li>
+                    )}
+
+                    {reportData?.declaration2 && (
+                      <li>
+                        The property was inspected by our authorized representative and the information provided is true.
+                      </li>
+                    )}
+
+                    {reportData?.declaration3 && (
+                      <li>{reportData.declaration3}</li>
+                    )}
+                  </ul>
+                </td>
+              </tr>
+
+
               <tr>
                 <td
                   className=' border border-black px-4 mt font-semibold'

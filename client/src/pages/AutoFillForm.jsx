@@ -102,6 +102,217 @@ const buildAddressString = (addr = {}) => {
 // We ALSO keep the original nested arrays (seller / buyer / property) so that
 // ValuationDetails can build its remarks and analysis cards.
 // ─────────────────────────────────────────────────────────────────────────────
+// const mapDocumentToFormData = (doc) => {
+//     if (!doc || typeof doc !== "object") return {};
+
+//     const data = {};
+
+//     // ── Keep raw nested data for ValuationDetails ──────────────────────────
+//     data.seller = doc.seller || [];
+//     data.buyer = doc.buyer || [];
+//     data.property = doc.property || {};
+//     data.document_type = doc.document_type || "";
+//     data.registration_number = doc.registration_number || "";
+//     data.registration_date = doc.registration_date || "";
+
+//     // ══════════════════════════════════════════════════════════════════════════
+//     // STEP 1 — LNTAssignmentDetails (General Details)
+//     // ══════════════════════════════════════════════════════════════════════════
+
+//     // customerName ← buyer[0].name (Hinglish, already Roman script)
+//     const buyerRaw = get(doc, "buyer.0.name");
+//     if (buyerRaw) data.customerName = buyerRaw;
+
+//     // propertyOwnerName ← seller[0].name (Hinglish)
+//     const sellerRaw = get(doc, "seller.0.name");
+//     if (sellerRaw) data.propertyOwnerName = sellerRaw;
+
+//     // ── Address object ────────────────────────────────────────────────────────
+//     const addr = doc.property?.address || {};
+
+//     // Build full formatted address for Legal and Site address fields
+//     const formattedAddress = buildAddressString(addr);
+
+//     if (formattedAddress) {
+//         data.addressLegal = formattedAddress;
+//         data.addressSite = formattedAddress;
+//     }
+
+//     // city — prefer district, fallback to tehsil
+//     if (addr.district) {
+//         data.city = addr.district;
+//     } else if (addr.tehsil) {
+//         data.city = addr.tehsil;
+//     }
+
+//     // Pin code
+//     if (addr.pincode) {
+//         data.projectPinCode = addr.pincode;
+//     }
+
+//     // State
+//     data.projectState = addr.state || "Madhya Pradesh";
+
+//     // propertyName — shorter readable version for the property name field
+//     const propertyNameParts = [
+//         addr.plot_number && `Plot No. ${addr.plot_number}`,
+//         addr.colony_area,
+//         addr.village_name,
+//         addr.tehsil,
+//         addr.district,
+//     ].filter(Boolean);
+
+//     if (propertyNameParts.length > 0) {
+//         data.propertyName = propertyNameParts.join(", ");
+//     }
+
+//     // dateOfReport ← registration_date
+//     if (doc.registration_date) data.dateOfReport = doc.registration_date;
+
+//     // refNo ← registration_number
+//     if (doc.registration_number) data.refNo = doc.registration_number;
+
+//     // ── unitType ← property_type ─────────────────────────────────────────────
+//     const propTypeRaw = get(doc, "property.property_type", "");
+//     const propTypeLower = propTypeRaw.toLowerCase();
+
+//     if (
+//         propTypeLower.includes("house") ||
+//         propTypeLower.includes("makan") ||
+//         propTypeLower.includes("awas") ||
+//         propTypeLower.includes("makaan")
+//     ) {
+//         data.unitType = "Individual House";
+//     } else if (
+//         propTypeLower.includes("flat") ||
+//         propTypeLower.includes("apartment") ||
+//         propTypeLower.includes("aparment")
+//     ) {
+//         data.unitType = "Flat";
+//     } else if (
+//         propTypeLower.includes("plot") ||
+//         propTypeLower.includes("bhukhanda") ||
+//         propTypeLower.includes("bhukhand") ||
+//         propTypeLower.includes("bhu khand") ||
+//         propTypeLower.includes("open plot") ||
+//         propTypeLower.includes("bhu khanda") ||
+//         propTypeLower.includes("plot land")
+//     ) {
+//         data.unitType = "OPEN PLOT";
+//     } else if (
+//         propTypeLower.includes("shop") ||
+//         propTypeLower.includes("dukan") ||
+//         propTypeLower.includes("dukaan")
+//     ) {
+//         data.unitType = "Shop";
+//     } else if (propTypeLower.includes("row house")) {
+//         data.unitType = "Row House";
+//     } else if (propTypeLower.includes("office")) {
+//         data.unitType = "Office";
+//     } else if (propTypeLower.includes("industrial")) {
+//         data.unitType = "Industrial";
+//     } else if (propTypeRaw) {
+//         data.unitType = propTypeRaw; // fallback: raw value
+//     }
+
+//     // documentsAvailable ← document_type
+//     if (doc.document_type) data.documentsAvailable = doc.document_type;
+
+//     // typeOfStructure (Step 4)
+//     if (propTypeRaw) data.typeOfStructure = propTypeRaw;
+
+//     // ── Zone / Usage ─────────────────────────────────────────────────────────
+//     const propUseRaw = get(doc, "property.property_use", "");
+//     if (propUseRaw) {
+//         const propUseLower = propUseRaw.toLowerCase();
+//         if (
+//             propUseLower.includes("residential") ||
+//             propUseLower.includes("aawasiya") ||
+//             propUseLower.includes("awasiya") ||
+//             propUseLower.includes("awas") ||
+//             propUseLower.includes("rehayshi")
+//         ) {
+//             data.zone = "Residential";
+//             data.usageOfProperty = "Residential";
+//         } else if (
+//             propUseLower.includes("commercial") ||
+//             propUseLower.includes("vanijyik") ||
+//             propUseLower.includes("vyavsayik") ||
+//             propUseLower.includes("dukan")
+//         ) {
+//             data.zone = "Commercial";
+//             data.usageOfProperty = "Commercial";
+//         } else if (
+//             propUseLower.includes("agricultural") ||
+//             propUseLower.includes("krishi") ||
+//             propUseLower.includes("khet") ||
+//             propUseLower.includes("fasal")
+//         ) {
+//             data.zone = "Agricultural";
+//             data.usageOfProperty = "Agricultural";
+//         } else {
+//             data.zone = propUseRaw;
+//             data.usageOfProperty = propUseRaw;
+//         }
+//     } else {
+//         // Default for open plot
+//         if (data.unitType === "OPEN PLOT") {
+//             data.zone = "Residential";
+//             data.usageOfProperty = "Residential";
+//         }
+//     }
+
+//     // ownershipType — sensible default
+//     data.ownershipType = "Freehold";
+
+//     // numberAndDate
+//     if (doc.registration_number && doc.registration_date) {
+//         data.numberAndDate = `${doc.registration_number} / ${doc.registration_date}`;
+//     }
+
+//     // ══════════════════════════════════════════════════════════════════════════
+//     // STEP 4 — PropertyDetails (Boundaries, Dimensions, Structural Details)
+//     // ══════════════════════════════════════════════════════════════════════════
+//     const bounds = doc.property?.boundaries || {};
+
+//     ["north", "south", "east", "west"].forEach((dir) => {
+//         const value = bounds[dir];
+//         if (value) {
+//             data[`${dir}Document`] = value;
+//             data[`${dir}Actual`] = value;
+//             data[`${dir}Plan`] = value;
+//         }
+//     });
+
+//     if (bounds.north || bounds.south || bounds.east || bounds.west) {
+//         data.boundariesMatching = "Yes";
+//     }
+
+//     // Plot area
+//     const plotAreaRaw = doc.property?.plot_area || "";
+//     if (plotAreaRaw) {
+//         const numericArea = parseFloat(plotAreaRaw.replace(/[^\d.]/g, "")) || "";
+//         data.plotArea = numericArea || plotAreaRaw;
+//         data.landArea = numericArea || plotAreaRaw;
+//         // Valuation step area fields
+//         data.landSiteArea = numericArea || plotAreaRaw;
+//         data.landDocumentArea = numericArea || plotAreaRaw;
+//         data.landPlanArea = numericArea || plotAreaRaw;
+//     }
+
+//     // Plot dimensions
+//     const plotDimensions = doc.property?.plot_dimensions || "";
+//     if (plotDimensions) {
+//         data.Dimension = plotDimensions;
+//         data.linearDimension = plotDimensions;
+//     }
+
+//     return data;
+// };
+
+
+// ... (inside AutoFillForm.js, replace the mapDocumentToFormData function with this)
+
 const mapDocumentToFormData = (doc) => {
     if (!doc || typeof doc !== "object") return {};
 
@@ -119,11 +330,11 @@ const mapDocumentToFormData = (doc) => {
     // STEP 1 — LNTAssignmentDetails (General Details)
     // ══════════════════════════════════════════════════════════════════════════
 
-    // customerName ← buyer[0].name (Hinglish, already Roman script)
+    // customerName ← buyer[0].name
     const buyerRaw = get(doc, "buyer.0.name");
     if (buyerRaw) data.customerName = buyerRaw;
 
-    // propertyOwnerName ← seller[0].name (Hinglish)
+    // propertyOwnerName ← seller[0].name
     const sellerRaw = get(doc, "seller.0.name");
     if (sellerRaw) data.propertyOwnerName = sellerRaw;
 
@@ -167,8 +378,19 @@ const mapDocumentToFormData = (doc) => {
     }
 
     // dateOfReport ← registration_date
-    if (doc.registration_date) data.dateOfReport = doc.registration_date;
+    if (doc.registration_date) {
+        data.dateOfReport = doc.registration_date;
+    } else if (doc.property?.dateOfReport) {
+        data.dateOfReport = doc.property.dateOfReport;
+    }
 
+
+    if (doc?.LandArea) data.LandArea = doc?.LandArea
+
+    // ══════════════════════════════════════════════════════════════════════════
+    if (doc.property?.["Mobile No."]) {
+        data.contactNumber = doc.property["Mobile No."];
+    }
     // refNo ← registration_number
     if (doc.registration_number) data.refNo = doc.registration_number;
 
@@ -305,6 +527,16 @@ const mapDocumentToFormData = (doc) => {
     if (plotDimensions) {
         data.Dimension = plotDimensions;
         data.linearDimension = plotDimensions;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // LATITUDE & LONGITUDE (new)
+    // ══════════════════════════════════════════════════════════════════════════
+    if (doc.property?.latitude) {
+        data.latitude = doc.property.latitude;
+    }
+    if (doc.property?.longitude) {
+        data.longitude = doc.property.longitude;
     }
 
     return data;

@@ -123,7 +123,7 @@ const HFBankDetails = () => {
 
   const thStyle = { backgroundColor: "#EFF6FF" };
   const sectionHead =
-    "text-red-500 bg-[#FDE9D9] text-start border border-black font-bold px-2";
+    "text-black bg-[#FDE9D9] text-start border border-black font-bold px-2";
 
   return (
     <div className="container mx-auto p-4">
@@ -1430,7 +1430,7 @@ const HFBankDetails = () => {
                 ══════════════════════════════════════════ */}
                 <thead>
                   <tr>
-                    <th className="bg-[#F0F8FF]">11</th>
+                    {/* <th className="bg-[#F0F8FF]">11</th> */}
                     <th colSpan="5" className={sectionHead}>
                       Observations Remark:
                     </th>
@@ -1450,6 +1450,119 @@ const HFBankDetails = () => {
                           </li>
                         ))}
                       </ol>
+                    </td>
+                  </tr>
+                </tbody>
+
+                <thead>
+                  <th className="bg-[#F0F8FF]">11</th>
+
+                  <th colSpan="5" className={sectionHead}>
+                    Floor wise built-up area
+                  </th>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colSpan="2" className="border">
+                      Floor
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      As per plan
+                    </td>
+                    <td colSpan="2" className="border">
+                      As per site
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      Remarks
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan="2" className="border">
+                      GF
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.gfPlan)}
+                    </td>
+                    <td colSpan="2" className="border">
+                      {val(reportData?.gfSite)}
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.gfRemark)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan="2" className="border">
+                      FF
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.ffPlan)}
+                    </td>
+                    <td colSpan="2" className="border">
+                      {val(reportData?.ffSite)}
+
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.ffRemark)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan="2" className="border">
+                      SF
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.sfPlan)}
+                    </td>
+                    <td colSpan="2" className="border">
+                      {val(reportData?.sfSite)}
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.sfRemark)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan="2" className="border">
+                      TF
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.tfPlan)}
+                    </td>
+                    <td colSpan="2" className="border">
+                      {val(reportData?.tfSite)}
+
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.tfRemark)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan="2" className="border">
+                      FF
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.fifthPlan)}
+                    </td>
+                    <td colSpan="2" className="border">
+                      {val(reportData?.fifthSite)}
+
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.fifthRemark)}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td colSpan="2" className="border">
+                      Total BUA
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.totalPlan)}
+                    </td>
+                    <td colSpan="2" className="border">
+                      {val(reportData?.totalSite)}
+
+                    </td>
+                    <td colSpan="1" className="border text-center">
+                      {val(reportData?.totalRemark)}
                     </td>
                   </tr>
                 </tbody>

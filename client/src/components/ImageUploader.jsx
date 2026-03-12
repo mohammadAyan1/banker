@@ -33,11 +33,19 @@ const ImageUploader = ({
   const [uploading, setUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [previewVisible, setPreviewVisible] = useState(false);
+  const [showUploadImage, setShowUploadImage] = useState([]);
   const { id } = useParams();
 
   useEffect(() => {
     console.log(id);
   }, [id]);
+
+
+  useEffect(() => {
+
+    console.log(showUploadImage, "this is after upload");
+
+  }, [showUploadImage])
 
   // Location capture logic
   const handleCapture = async (file) => {
@@ -113,6 +121,7 @@ const ImageUploader = ({
       const result = await res.json();
       if (result?.urls?.length) {
         setUploadedUrls((prev) => [...prev, ...result.urls]);
+        setShowUploadImage((prev) => [...prev, ...result.urls])
         setImages((prev) => prev.filter((img) => !img.originFileObj));
         toast.success("Files uploaded successfully");
       } else {
@@ -343,6 +352,17 @@ const ImageUploader = ({
         </div>
       )}
 
+      {showUploadImage?.length > 0 && (
+        <div>
+          {showUploadImage?.map((imageData, index) => (
+
+            <img src={imageData?.url}
+              alt={`uploaded-${index}`}
+
+            />
+          ))}
+        </div>
+      )}
       {/* Display uploaded images (from server) */}
       {uploadedImages?.length > 0 && (
         <div className="mt-6">
@@ -350,35 +370,45 @@ const ImageUploader = ({
             Uploaded Images
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {uploadedImages.map((item, index) => (
-              <div
-                key={item.url || index}
-                className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <img
-                  src={item?.url}
-                  alt={`uploaded-${index}`}
-                  className="w-full h-32 object-cover"
-                />
-                {/* Overlay buttons on hover */}
-                <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <Button
-                    type="primary"
-                    shape="circle"
-                    icon={<EyeOutlined />}
-                    size="small"
-                    onClick={() => handlePreview({ url: item.url })}
+            {uploadedImages.map((item, index) => {
+
+
+              console.log('====================================');
+              console.log(index);
+              console.log('====================================');
+              (
+
+
+
+                <div
+                  key={item.url || index}
+                  className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <img
+                    src={item?.url}
+                    alt={`uploaded-${index}`}
+                    className="w-full h-32 object-cover"
                   />
-                  <Button
-                    danger
-                    shape="circle"
-                    icon={<DeleteOutlined />}
-                    size="small"
-                    onClick={() => handleRemoveImage(item?.fileId, item)}
-                  />
+                  {/* Overlay buttons on hover */}
+                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button
+                      type="primary"
+                      shape="circle"
+                      icon={<EyeOutlined />}
+                      size="small"
+                      onClick={() => handlePreview({ url: item.url })}
+                    />
+                    <Button
+                      danger
+                      shape="circle"
+                      icon={<DeleteOutlined />}
+                      size="small"
+                      onClick={() => handleRemoveImage(item?.fileId, item)}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

@@ -22,15 +22,26 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // HOME FIRST — TRENCH REPORT
 // ─────────────────────────────────────────────────────────────────────────────
+// export const TRENCH_MAPPING = {
+//     propertyAddress: ["addressSite", "addressLegal", "propertyName"],
+//     dateOfReport: "dateOfReport",
+//     visitedPersonName: "customerName",
+//     latitude: "property.latitude",      // new
+//     longitude: "property.longitude",    // new
+//     dateOfVisit: "dateOfReport",        // new – same source as dateOfReport
+// };
+
+
+// In Bankfieldmappings.js
 export const TRENCH_MAPPING = {
-    // Property address → site address (site wali prefer karo, legal fallback)
     propertyAddress: ["addressSite", "addressLegal", "propertyName"],
-
-    // Date of report directly mapped
     dateOfReport: "dateOfReport",
-
-    // Visited person name → buyer ka naam (jo property le raha hai)
     visitedPersonName: "customerName",
+    latitude: "property.latitude",
+    longitude: "property.longitude",
+    dateOfVisit: "dateOfReport",
+    contactNumber: "contactNumber",
+    LandArea: "property.LandArea",   // ✅ nested path
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

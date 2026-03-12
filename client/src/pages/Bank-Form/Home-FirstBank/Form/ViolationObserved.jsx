@@ -37,7 +37,7 @@ const ViolationObserved = ({ isEdit, onNext, onBack, extractedData }) => {
 
   return (
     <div className="max-w-5xl mx-auto p-4 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-6">VIOLATION OBSERVED, IF ANY</h2>
+      <h2 className="text-2xl font-bold mb-6 text-red-600">VIOLATION OBSERVED, IF ANY</h2>
 
       <Form
         form={form}
@@ -141,15 +141,17 @@ const ViolationObserved = ({ isEdit, onNext, onBack, extractedData }) => {
         </Row>
 
         {/* Actions */}
-        <Form.Item className="text-right">
+        <Form.Item className="lg:col-span-2 text-end">
           {onBack && (
-            <Button type="default" onClick={onBack} className="mr-2">
+            <Button
+              type="default"
+              onClick={onBack}
+              className="mr-2 px-4 py-2 bg-gray-500 text-white rounded"
+            >
               Back
             </Button>
           )}
-          <Button type="primary" htmlType="submit">
-            Submit
-          </Button>
+          <Button type="primary" htmlType="submit">Next</Button>
         </Form.Item>
       </Form>
     </div>

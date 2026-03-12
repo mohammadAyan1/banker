@@ -15,6 +15,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { finalUpdate } from "../../../redux/features/case/caseThunks";
 import toast from "react-hot-toast";
 import AutoFillForm from "../../AutoFillForm";
+import FLoorWise from "./Form/FLoorWise";
 
 const HomeFirstBank = () => {
   const dispatch = useDispatch();
@@ -143,7 +144,7 @@ const HomeFirstBank = () => {
   const tabs = [
     {
       id: 1,
-      label: "General Details",
+      label: "General Details & Property Overview & Visit Details",
       component: (
         <>
           <LNAssigment
@@ -161,7 +162,7 @@ const HomeFirstBank = () => {
     },
     {
       id: 2,
-      label: "LOCALITY & NDMA DETAILS",
+      label: "LOCALITY & Property Plan & NDMA DETAILS ",
       component: (
         <LocalityDetails
           isEdit={isEdit}
@@ -171,20 +172,20 @@ const HomeFirstBank = () => {
         />
       ),
     },
+    // {
+    //   id: 3,
+    //   label: "Property Plan & Availability",
+    //   component: (
+    //     <GeneralDetails
+    //       isEdit={isEdit}
+    //       onNext={handleNext}
+    //       onBack={handleBack}
+    //       extractedData={extractedData}
+    //     />
+    //   ),
+    // },
     {
       id: 3,
-      label: "Property Plan & Availability",
-      component: (
-        <GeneralDetails
-          isEdit={isEdit}
-          onNext={handleNext}
-          onBack={handleBack}
-          extractedData={extractedData}
-        />
-      ),
-    },
-    {
-      id: 4,
       label: "Boundaries, Dimensions & Structural Details",
       component: (
         <PropertyDetails
@@ -196,7 +197,7 @@ const HomeFirstBank = () => {
       ),
     },
     {
-      id: 5,
+      id: 4,
       label: "Violation Observed",
       component: (
         <ViolationObserved
@@ -208,10 +209,22 @@ const HomeFirstBank = () => {
       ),
     },
     {
-      id: 6,
+      id: 5,
       label: "Valuation Details",
       component: (
         <ValuationDetails
+          isEdit={isEdit}
+          onNext={handleNext}
+          onBack={handleBack}
+          extractedData={extractedData}
+        />
+      ),
+    },
+    {
+      id: 6,
+      label: "Floor wise built-up area",
+      component: (
+        <FLoorWise
           isEdit={isEdit}
           onNext={handleNext}
           onBack={handleBack}

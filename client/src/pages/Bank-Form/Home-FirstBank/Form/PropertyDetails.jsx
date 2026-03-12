@@ -83,7 +83,7 @@ const PropertyDetails = ({ isEdit, onNext, onBack, extractedData }) => {
 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-6">Boundaries, Dimensions & Structural Details</h2>
+      <h2 className="text-2xl font-bold mb-6 text-red-600">Boundaries and Dimensions </h2>
 
       <Form
         layout="vertical"
@@ -94,7 +94,7 @@ const PropertyDetails = ({ isEdit, onNext, onBack, extractedData }) => {
       >
         {/* ── Section 7: Boundaries ── */}
         <div className="lg:col-span-2">
-          <h3 className="text-xl font-semibold text-blue-700 mb-4 border-b pb-2">
+          <h3 className="text-xl font-semibold text-red-600 mb-4 border-b pb-2">
             7. Boundaries and Dimensions
           </h3>
         </div>
@@ -163,7 +163,7 @@ const PropertyDetails = ({ isEdit, onNext, onBack, extractedData }) => {
 
         {/* ── Section 8: Structural Details ── */}
         <div className="lg:col-span-2 mt-4">
-          <h3 className="text-xl font-semibold text-blue-700 mb-4 border-b pb-2">
+          <h3 className="text-xl font-semibold text-red-600 mb-4 border-b pb-2">
             8. Structural Details
           </h3>
         </div>
