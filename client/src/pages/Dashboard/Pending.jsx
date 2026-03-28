@@ -609,7 +609,10 @@ const Pending = () => {
         return (
           <div className="flex  gap-1">
             {attachments.map((url, index) => {
-              const fileName = url.split("/").pop();
+              console.log('====================================');
+              console.log(url);
+              console.log('====================================');
+              const fileName = url?.url?.split("/").pop();
 
               return (
                 <a
