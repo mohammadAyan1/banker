@@ -6,7 +6,8 @@ import ProtectedLayout from "./ProtectedLayout ";
 import { routesConfig } from "./routesConfig";
 import ValuationForm from "../components/BankForm/ValuationForm";
 
-const AppRoutes = () => {
+const 
+AppRoutes = () => {
   return (
     <Suspense fallback={<div className='p-4 text-center'>Loading...</div>}>
       <Routes>

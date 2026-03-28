@@ -4,13 +4,16 @@ const Piramal = require("../model/Banks/piramalModel");
 const HomeFirstTrench = require("../model/Banks/homeTrenchModel");
 const ICICI_BANK = require("../model/Banks/IciciBankModel");
 const Aditya = require("../model/Banks/AdityaBirlaModel")
+const Manappuram = require("../model/Banks/manappuramModel")
+
 const modelMap = {
   Homefirsttrench: HomeFirstTrench,
   Bajaj: Bajaj,
   Homefirst: HomeFirst,
   Piramal: Piramal,
   Icici: ICICI_BANK,
-  Aditya: Aditya
+  Aditya: Aditya,
+  Manappuram: Manappuram
 
 };
 

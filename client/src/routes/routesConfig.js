@@ -437,15 +437,15 @@ export const routesConfig = [
 
   {
     path: "/bank/manappuram",
-    element: lazy(() => import("../pages/Bank-Form/Manappuram/Manapuram")),
+    element: lazy(() => import("../pages/Bank-Details/Manapurram/Manapurram.jsx")),
   },
   {
     path: "/bank/manappuram/:id",
-    element: lazy(() => import("../pages/Bank-Details/ManapuramDetails")),
+    element: lazy(() => import("../pages/Bank-Details/Manapurram/Manapurram.jsx")),
   },
   {
     path: "/bank/manappuram/edit/:id",
-    element: lazy(() => import("../pages/Bank-Form/Manappuram/Manapuram")),
+    element: lazy(() => import("../pages/Bank-Details/Manapurram/Manapurram.jsx")),
   },
 
   {

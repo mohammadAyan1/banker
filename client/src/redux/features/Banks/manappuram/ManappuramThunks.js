@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../../../config/axios";
+
 // manappuram
 export const createDetails = createAsyncThunk(
   "manappuram/create",

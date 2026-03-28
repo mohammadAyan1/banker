@@ -27,7 +27,7 @@ const getAgriwiseLoading = (state) => state.agriwise.loading;
 const getHeroFinCorpRawData = (state) => state.HeroFinCorp.valuations;
 const getHeroFinCorpLoading = (state) => state.HeroFinCorp.loading;
 
-const getManappuramRawData = (state) => state.manappuram.details;
+const getManappuramRawData = (state) => state.manappuram.allReports;
 const getManappuramLoading = (state) => state.manappuram.loading;
 
 const getPiramalNPARawData = (state) => state.piramalNPA.records;

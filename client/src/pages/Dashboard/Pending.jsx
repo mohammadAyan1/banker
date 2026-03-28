@@ -53,7 +53,7 @@ import { getAllValuations } from "../../redux/features/Banks/HeroFinCorp/HeroFin
 import { getAllFedralBank } from "../../redux/features/Banks/FedralBankForm/FedralBankThunk";
 import { getAllIciciHFCBanks } from "../../redux/features/Banks/IciciHfCBank/IciciHFCBankThunk";
 import { fetchAllExtendedValuations } from "../../redux/features/Banks/sundaram/sundaramThunks";
-import { getAllManapuramDetails } from "../../redux/features/Banks/manappuram/ManappuramThunks";
+import { fetchAllManappuram } from "../../redux/features/Banks/ManappuramBank/Manappuramthunk.js";
 import { getAllDmiFinanceReports } from "../../redux/features/Banks/dmiFinance/dmiFinanceThunks";
 import { getAllSamstaflnBank } from "../../redux/features/Banks/SamstaflnBankForm/SamstaflnBankThunk";
 import { getAllHomeTrenchReports } from "../../redux/features/Banks/homeTrench/homeTrenchReportThunks";
@@ -125,7 +125,7 @@ const Pending = () => {
         dispatch(getAllValuations()).unwrap(),
         dispatch(fetchAllDetails()).unwrap(),
         dispatch(fetchValuations()).unwrap(),
-        dispatch(getAllManapuramDetails()).unwrap(),
+        dispatch(fetchAllManappuram()).unwrap(),
         dispatch(fetchPiramalFinanceRecords()).unwrap(),
         dispatch(getAllIciciHFCBanks()).unwrap(),
         dispatch(getAllSamstaflnBank()).unwrap(),

@@ -14,7 +14,7 @@ import ProfectusReducer from "./features/Banks/Profectus/profectusSlice";
 import protiumReducer from "./features/Banks/Protium/ProtiumBankSlice";
 import iciciBankReducer from "./features/Banks/IciciBank/iciciBankSlice";
 import FedralReducer from "./features/Banks/FedralBankForm/FedralBankSlice";
-import manappuramReducer from "./features/Banks/manappuram/ManappuramSlice";
+import manappuramReducer from "./features/Banks/ManappuramBank/Manappuramslice";
 import iciciHFCReducer from "./features/Banks/IciciHfCBank/iciciHFCBankSlice";
 import HeroFinCorpReducer from "./features/Banks/HeroFinCorp/HeroFinCorpSlice";
 import dmiFinanceReportReducer from "./features/Banks/dmiFinance/dmiFinanceSlice";
