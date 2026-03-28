@@ -245,6 +245,10 @@ app.use("/api/uploads", require("./Routes/upload"));
 app.use("/api/remove", require("./Routes/removeRoutes"));
 app.use("/api/proxy", require("./Routes/proxyDownload"));
 
+
+const adityaBirlaRoutes = require("./Routes/Banks/adityaBirlaRoutes");
+
+
 // ─────────────────────────────────────────────────────────────────────────────
 // File type detection helpers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -417,6 +421,9 @@ app.post(
     }
   }
 );
+
+app.use("/api/aditya-birla", adityaBirlaRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Server is running at Home!");

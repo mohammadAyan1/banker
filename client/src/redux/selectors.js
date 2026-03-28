@@ -8,7 +8,8 @@ const getIciciLoading = (state) => state.icici.loading;
 const getHfBanksRawData = (state) => state.hfBanks.allBanks;
 const getHfBanksLoading = (state) => state.hfBanks.loading;
 
-const getAdityaRawData = (state) => state.aditya.details;
+// const getAdityaRawData = (state) => state.aditya.details;
+const getAdityaRawData = (state) => state.aditya.allReports;
 const getAdityaLoading = (state) => state.aditya.loading;
 
 const getPrimalRawData = (state) => state.primal.details;
