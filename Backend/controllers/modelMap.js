@@ -3,7 +3,8 @@ const HomeFirst = require("../model/Banks/homeFirstModel");
 const Piramal = require("../model/Banks/piramalModel");
 const HomeFirstTrench = require("../model/Banks/homeTrenchModel");
 const ICICI_BANK = require("../model/Banks/IciciBankModel");
-const Aditya = require("../model/Banks/adityaModel")
+// const Aditya = require("../model/Banks/adityaModel")
+const Aditya = require("../model/Banks/AdityaBirlaModel")
 const modelMap = {
   Homefirsttrench: HomeFirstTrench,
   Bajaj: Bajaj,

@@ -6,28 +6,7 @@ const PropertyDetails = () => {
 
   const d = useSelector((state) => state.icici.singleData) || {};
 
-  // console.log(data, "ICICI DATAss");
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await fetch("http://localhost:5000/api/form-data");
-  //       const data = await response.json();
-  //       console.log(data); // Check structure
-  //       setPropertyData(data);
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
-
-  // if (!propertyData) {
-  //   return <div>Loading...</div>;
-  // }
-
-  // const d = propertyData.property;
+  
 
   return (
     <div className='mb-4 border border-gray-300 p-5 rounded-lg bg-gray-100'>

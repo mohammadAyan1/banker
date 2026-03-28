@@ -35,7 +35,13 @@ import {
 // --- Thunks for fetching bank data ---
 import { fetchAllHFBanks } from "../../redux/features/Banks/HFBank/HFBankThunk";
 import { getAllDetails } from "../../redux/features/Banks/Primal/piramalThunks";
-import { fetchDetails } from "../../redux/features/Banks/AdityaBank/adityaThunks";
+// import { fetchDetails } from "../../redux/features/Banks/AdityaBank/adityaThunks";
+
+/////!SECTION
+import { fetchAllAditya } from "../../redux/features/Banks/AdityaBirlaBank/AdityaBirlaThunk"
+
+////!SECTION
+
 import { fetchAllDetails } from "../../redux/features/Banks/CholaBank/CholaThunks";
 import { getAllIdfcDetails } from "../../redux/features/Banks/IDFCbank/idfclThunks";
 import { fetchValuations } from "../../redux/features/Banks/agriwise/agriwiseThunks";
@@ -114,7 +120,7 @@ const Pending = () => {
         dispatch(getAllIciciBanks()).unwrap(),
         dispatch(fetchAllHFBanks()).unwrap(),
         dispatch(getAllHomeTrenchReports()).unwrap(),
-        dispatch(fetchDetails()).unwrap(),
+        dispatch(fetchAllAditya()).unwrap(),
         dispatch(getAllDetails()).unwrap(),
         dispatch(fetchAllExtendedValuations()).unwrap(),
         dispatch(getAllValuations()).unwrap(),
@@ -160,10 +166,19 @@ const Pending = () => {
   };
 
   const assignToFieldOfficer = useCallback(async () => {
+
+
+    console.log(currentCase.route);
+    console.log(currentCase._id);
+
     if (!selectedFO) {
       toast.error("Please select a Field Officer.");
       return;
     }
+
+
+
+
 
     try {
       await dispatch(

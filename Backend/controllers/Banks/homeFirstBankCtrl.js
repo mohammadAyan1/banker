@@ -62,52 +62,6 @@ exports.getValuationReportById = async (req, res) => {
   }
 };
 
-// exports.updateValuationReportById = async (req, res) => {
-//   try {
-//     const { imageUrls, ...otherFields } = req.body;
-//     const caseId = req.params.id;
-
-//     const updateQuery = {};
-
-//     if (Object.keys(otherFields).length > 0) {
-//       updateQuery.$set = otherFields;
-//     }
-
-//     if (imageUrls && imageUrls.length > 0) {
-//       updateQuery.$addToSet = {
-//         imageUrls: { $each: imageUrls },
-//       };
-//     }
-
-//     const updatedJob = await ValuationReport.findByIdAndUpdate(
-//       caseId,
-//       updateQuery,
-//       { new: true }
-//     );
-
-//     if (!updatedJob) {
-//       return res.status(404).json({ message: "Job not found" });
-//     }
-
-//     await Notification.create({
-//       userId: req.user._id,
-//       caseId,
-//       message: "Update",
-//       bankName: "Home First",
-//     });
-
-//     res.status(200).json({
-//       message: "Updated successfully",
-//       updatedJob,
-//     });
-//   } catch (error) {
-//     console.log(error.message);
-//     res.status(500).json({
-//       message: "Error updating Job Assignment",
-//       error,
-//     });
-//   }
-// };
 
 exports.updateValuationReportById = async (req, res) => {
   try {
@@ -140,16 +94,7 @@ exports.updateValuationReportById = async (req, res) => {
       updateQuery.$set["isReportSubmitted"] = true;
     }
 
-    // if (req.user.role === "FieldOfficer") {
-    //   updateQuery.$push = {
-    //     timeline: {
-    //       status: "submitted-by-fo",
-    //       updatedAt: new Date(),
-    //       updatedBy: req.user._id,
-    //       note: "Updated by field officer",
-    //     },
-    //   };
-    // }
+    
 
     const updatedJob = await ValuationReport.findByIdAndUpdate(
       caseId,

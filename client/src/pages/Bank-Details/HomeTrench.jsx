@@ -65,36 +65,41 @@ const HomeTrench = () => {
 
   // console.log(reportData);
 
+  // const handleExportPDF = () => {
+  //   const input = document.getElementById("reportContent");
+  //   html2canvas(input, { scale: 2, useCORS: true }).then((canvas) => {
+  //     const imgData = canvas.toDataURL("image/png");
+  //     const pdf = new jsPDF("p", "mm", "a4");
+  //     const pageWidth = pdf.internal.pageSize.getWidth();
+  //     const pageHeight = pdf.internal.pageSize.getHeight();
+  //     const margin = 10;
+  //     const imgWidth = pageWidth - margin * 2;
+  //     const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  //     let position = margin;
+  //     let remainingHeight = imgHeight;
+
+  //     if (imgHeight > pageHeight - margin * 2) {
+  //       while (remainingHeight > 0) {
+  //         pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+  //         remainingHeight -= pageHeight - margin * 2;
+  //         if (remainingHeight > 0) {
+  //           pdf.addPage();
+  //           position = margin - (imgHeight - remainingHeight);
+  //         }
+  //       }
+  //     } else {
+  //       pdf.addImage(imgData, "PNG", margin, margin, imgWidth, imgHeight);
+  //     }
+
+  //     pdf.save("Baja_Ameriya_Report.pdf");
+  //   });
+  // };
+
+
   const handleExportPDF = () => {
-    const input = document.getElementById("reportContent");
-    html2canvas(input, { scale: 2, useCORS: true }).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      const imgWidth = pageWidth - margin * 2;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let position = margin;
-      let remainingHeight = imgHeight;
-
-      if (imgHeight > pageHeight - margin * 2) {
-        while (remainingHeight > 0) {
-          pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
-          remainingHeight -= pageHeight - margin * 2;
-          if (remainingHeight > 0) {
-            pdf.addPage();
-            position = margin - (imgHeight - remainingHeight);
-          }
-        }
-      } else {
-        pdf.addImage(imgData, "PNG", margin, margin, imgWidth, imgHeight);
-      }
-
-      pdf.save("Baja_Ameriya_Report.pdf");
-    });
-  };
+    window.print()
+  }
 
   const handleExportExcel = () => {
     const table = document.getElementById("reportTable");
@@ -116,9 +121,9 @@ const HomeTrench = () => {
   };
 
   return (
-    <div className='w-full border p-3'>
+    <div id="print-section" className='w-full border p-3'>
       {/* Wrapper for the entire content */}
-      <div className='mb-3'>
+      <div className='mb-3 no-print'>
         <div className='mb-2.5 text-right'>
           <button
             onClick={handleExportPDF}
@@ -140,7 +145,7 @@ const HomeTrench = () => {
           </button>
         </div>
       </div>
-      <div id='reportContent'>
+      <div id=''>
         {/* Header Section */}
         <div className='flex items-center border-b pb-3'>
           <div className='w-full'>
@@ -364,7 +369,7 @@ const HomeTrench = () => {
           </p>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

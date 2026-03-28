@@ -30,6 +30,10 @@ const homeTrenchReportRoutes = require("./Routes/Banks/homeTrenchReportRoutes");
 const uploadRoutes = require("./Routes/uploadOllama");
 const authRoutes = require("./Routes/auth/authRoutes");
 
+const adityaBirlaRoutes = require("./Routes/Banks/adityaBirlaRoutes");
+
+
+
 const aiService = require("./services/ai.service.js")
 
 const imagekit = require("./config/imagekit");
@@ -78,6 +82,8 @@ app.use("/api/idfc", idfcRoute);
 app.use("/api/chola", cholaRoutes);
 app.use("/api/fedral", FedralRoute);
 app.use("/api/aditya", adityaRoutes);
+
+
 app.use("/api/protium", ProtiumRoute);
 app.use("/api/icichfc", icichfcRoutes);
 app.use("/api/manappuram", manappuram);
@@ -128,6 +134,12 @@ app.post("/api/pdf", upload.single("file"), async (req, res) => {
     });
   }
 });
+
+
+
+// aditya birla
+app.use("/api/aditya-birla", adityaBirlaRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Server is running at Home!");

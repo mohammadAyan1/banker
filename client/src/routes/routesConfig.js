@@ -74,17 +74,33 @@ export const routesConfig = [
     path: "/bank/home-first-trench/edit/:id",
     element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
   },
+
   {
     path: "/bank/aditya",
-    element: lazy(() => import("../pages/Bank-Form/Adtiya-Bank/AditiyaFrom")),
+    element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx"))
   },
+
+  {
+    path: "/bank/aditya-birla/:id",
+    element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx"))
+  },
+  // {
+  //   path: "/bank/aditya/:id",
+  //   element: lazy(() => import("../pages/Bank-Details/AdityaDetails")),
+  // },
+
   {
     path: "/bank/aditya/:id",
-    element: lazy(() => import("../pages/Bank-Details/AdityaDetails")),
+    element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx")),
   },
+  // {
+  //   path: "/bank/aditya/edit/:id",
+  //   element: lazy(() => import("../pages/Bank-Form/Adtiya-Bank/AditiyaFrom")),
+  // },
+
   {
     path: "/bank/aditya/edit/:id",
-    element: lazy(() => import("../pages/Bank-Form/Adtiya-Bank/AditiyaFrom")),
+    element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx")),
   },
 
   {

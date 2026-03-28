@@ -1,23 +1,22 @@
 @import "tailwindcss";
 
 * {
-
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 html,
 body {
-    height: 100%;
-    width: 100%;
+  height: 100%;
+  width: 100%;
 }
 
 @media print {
-    .image-grid {
+  .image-grid {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 10px !important;
   }
-   .image-grid > div {
+  .image-grid > div {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -27,142 +26,132 @@ body {
     height: auto !important;
   }
 
+  body * {
+    visibility: hidden;
+  }
 
+  #print-section,
+  #print-section * {
+    visibility: visible;
+  }
 
-    body * {
-        visibility: hidden;
-    }
+  #print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 100%;
+    padding-bottom: 10%;
+    /* leave space for footer */
+    box-sizing: border-box;
+  }
 
-    #print-section,
-    #print-section * {
-        visibility: visible;
-    }
+  #drag {
+    display: none;
+  }
 
-    #print-section {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        max-width: 100%;
-        padding-bottom: 10%;
-        /* leave space for footer */
-        box-sizing: border-box;
-    }
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
 
-    #drag {
-        display: none;
-    }
+  th,
+  td {
+    border: 1px solid #000 !important;
+    padding: 4px !important;
+    font-size: 12px !important;
+  }
 
-
-    table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-    }
-
-    th,
-    td {
-        border: 1px solid #000 !important;
-        padding: 4px !important;
-        font-size: 12px !important;
-    }
-
-
-    @page {
-        size: A4 portrait;
-        margin: 1mm;
-    }
-
-
-    header,
-    footer,
-    nav,
+  @media print {
     .no-print {
-        display: none !important;
+      display: none !important;
     }
+  }
 
-    .print-footer {
-        visibility: visible;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 10mm;
-        text-align: center;
-        font-size: 12px;
-        border-top: 1px solid #000;
-        padding-top: 4px;
-        background: white;
-        opacity: 100%;
-    }
+  @page {
+    size: A4 portrait;
+    margin: 1mm;
+  }
 
+  header,
+  footer,
+  nav,
+  .no-print {
+    display: none !important;
+  }
 
-    body {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
+  .print-footer {
+    visibility: visible;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 10mm;
+    text-align: center;
+    font-size: 12px;
+    border-top: 1px solid #000;
+    padding-top: 4px;
+    background: white;
+    opacity: 100%;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
-
-
-
 
 /* 🆕 Custom Modal Close Button Styling */
 .custom-preview-modal .ant-modal-close {
-    top: 10px !important;
-    right: 10px !important;
-    background-color: #fff !important;
-    border: 1px solid #d9d9d9 !important;
-    border-radius: 50% !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    width: 32px;
-    height: 32px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1050;
+  top: 10px !important;
+  right: 10px !important;
+  background-color: #fff !important;
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
 }
 
 .custom-preview-modal .ant-modal-close:hover {
-    background-color: #f0f0f0 !important;
+  background-color: #f0f0f0 !important;
 }
-
 
 .ant-upload-drag {
-    background: #fafafa;
-    border: 1px dashed #d9d9d9;
-    border-radius: 4px;
-    padding: 20px;
+  background: #fafafa;
+  border: 1px dashed #d9d9d9;
+  border-radius: 4px;
+  padding: 20px;
 }
-
 
 /* Only targets the list inside the Upload component */
 .custom-upload-list-row .ant-upload-list-picture {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .custom-upload-list-row .ant-upload-list-item {
-    width: 200px;
-    height: 100px;
-    object-fit: cover;
-    margin: 0;
+  width: 200px;
+  height: 100px;
+  object-fit: cover;
+  margin: 0;
 }
-
-
 
 .custom-upload .ant-upload {
-    border: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    width: auto;
-    height: auto;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  width: auto;
+  height: auto;
 }
 
-
-
 @media print {
-
   body {
     background: white;
   }
@@ -193,10 +182,10 @@ body {
     padding: 6px;
     font-size: 12px;
   }
-
 }
 
-
-/* ///////////////////////////////// */
-
-
+@media print {
+  .print\:hidden {
+    display: none !important;
+  }
+}
