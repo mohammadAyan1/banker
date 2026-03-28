@@ -14,6 +14,8 @@ exports.createReport = async (req, res) => {
   try {
     const body = { ...req.body };
 
+    console.log(body)
+
     // Clean images before save (remove any base64 that slipped through)
     if (body.imageUrls) {
       body.imageUrls = sanitizeImages(body.imageUrls).map((url) => ({ url }));
