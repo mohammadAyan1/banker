@@ -1,149 +1,3 @@
-// require("dotenv").config();
-
-// const cors = require("cors");
-// const express = require("express");
-// const cookieParser = require("cookie-parser");
-// const morgan = require("morgan");
-// const path = require("path");
-// const multer = require("multer");
-// const idfcRoute = require("./Routes/Banks/idfcRoute");
-// const cholaRoutes = require("./Routes/Banks/cholaRoute");
-// const FedralRoute = require("./Routes/Banks/FedralRoute");
-// const ProtiumRoute = require("./Routes/Banks/ProtiumRoute");
-// const adityaRoutes = require("./Routes/Banks/adityaRoutes");
-// const piramalRoutes = require("./Routes/Banks/piramalRoute");
-// const manappuram = require("./Routes/Banks/manappuramRoute");
-// const icichfcRoutes = require("./Routes/Banks/iciciHFCRoute");
-// const agriwiseRoutes = require("./Routes/Banks/agriwiseRoutes");
-// const SamstaflnRoute = require("./Routes/Banks/SamstaflnRoute");
-// const sundaramRoutes = require("./Routes/Banks/sundaram.routes");
-// const iciciBankRoutes = require("./Routes/Banks/iciciBankRoutes");
-// const profectusRoutes = require("./Routes/Banks/profectusRoutes");
-// const HeroFinCorpRoutes = require("./Routes/Banks/heroFinCopRoutes");
-// const homeFirstBankRoutes = require("./Routes/Banks/homeFirstBankRoutes");
-// const piramalFinanceRoutes = require("./Routes/Banks/PriamalFinanceRoutes");
-
-// const bajajRoutes = require("./Routes/Banks/bajajRoutes");
-// const bajajAmeriyaRoutes = require("./Routes/Banks/BajajAmeriyaRoutes");
-// const dmiFinanceReportRoutes = require("./Routes/Banks/DmiFinanceRoute");
-// const homeTrenchReportRoutes = require("./Routes/Banks/homeTrenchReportRoutes");
-// const uploadRoutes = require("./Routes/uploadOllama");
-// const authRoutes = require("./Routes/auth/authRoutes");
-
-// const aiService = require("./services/ai.service.js")
-
-// const imagekit = require("./config/imagekit");
-
-
-// const upload = multer({
-//   storage: multer.memoryStorage(),
-//   limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
-// });
-
-// const bodyParser = require("body-parser");
-// // Routes
-
-// const app = express();
-
-// const PORT = process.env.PORT || 5000; // Hardcoded port
-
-// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-// // Middleware
-// app.use(
-//   cors({
-//     origin: process.env.FRONTEND_URL,
-//     credentials: true,
-//   })
-// );
-
-// app.use(morgan("tiny"));
-// app.use(cookieParser());
-// app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
-
-// app.use((req, res, next) => {
-//   if (global.io) {
-//     req.io = global.io; // use global if needed
-//   }
-//   next();
-// });
-
-// app.use("/api", uploadRoutes);
-// app.use("/api/image_kit", require("./Routes/uploadRoute"));
-// // Routes
-// app.use("/api/notifications", require("./Routes/notifications"));
-// app.use("/api/auth", authRoutes);
-// app.use("/api/idfc", idfcRoute);
-// app.use("/api/chola", cholaRoutes);
-// app.use("/api/fedral", FedralRoute);
-// app.use("/api/aditya", adityaRoutes);
-// app.use("/api/protium", ProtiumRoute);
-// app.use("/api/icichfc", icichfcRoutes);
-// app.use("/api/manappuram", manappuram);
-// app.use("/api/piramal", piramalRoutes);
-// app.use("/api/agriwise", agriwiseRoutes);
-// app.use("/api/sundaram", sundaramRoutes);
-// app.use("/api/samstafln", SamstaflnRoute);
-// app.use("/api/profectus", profectusRoutes);
-// app.use("/api/icici-bank", iciciBankRoutes);
-// app.use("/api/heroFinCorp", HeroFinCorpRoutes);
-// app.use("/api/first-bank", homeFirstBankRoutes);
-// app.use("/api/piramal-finance", piramalFinanceRoutes);
-// app.use("/api/bajaj", bajajRoutes);
-// app.use("/api/bajajA", bajajAmeriyaRoutes);
-// app.use("/api/dmi-finance-reports", dmiFinanceReportRoutes);
-// app.use("/api/home-trench-reports", homeTrenchReportRoutes);
-// app.use("/api/case", require("./Routes/User/CaseRoutes"));
-// app.use("/api/notes", require("./Routes/noteRoutes"));
-// app.use("/api/assign", require("./Routes/assignmentRoutes"));
-// app.use("/api/uploads", require("./Routes/upload"));
-// app.use("/api/remove", require("./Routes/removeRoutes"));
-// app.use("/api/proxy", require("./Routes/proxyDownload"));
-// app.post("/api/pdf", upload.single("file"), async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "PDF file is required",
-//       });
-//     }
-
-//     // Convert buffer to base64
-//     const base64Pdf = req.file.buffer.toString("base64");
-
-//     const result = await aiService.extractRegistryDetails(base64Pdf);
-
-//     res.status(200).json({
-//       success: true,
-//       data: result,
-//     });
-
-//   } catch (error) {
-//     console.error("Extraction Error:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to extract registry details",
-//       error: error.message,
-//     });
-//   }
-// });
-
-// app.get("/", (req, res) => {
-//   res.send("Server is running at Home!");
-// });
-
-// app.use((req, res, next) => {
-//   const err = new Error(`Route not found: ${req.url}`);
-//   err.status = 404;
-//   next(err);
-// });
-
-// module.exports = app;
-
-
-
-
 
 require("dotenv").config();
 
@@ -176,7 +30,7 @@ const dmiFinanceReportRoutes = require("./Routes/Banks/DmiFinanceRoute");
 const homeTrenchReportRoutes = require("./Routes/Banks/homeTrenchReportRoutes");
 const uploadRoutes = require("./Routes/uploadOllama");
 const authRoutes = require("./Routes/auth/authRoutes");
-
+const adityaBirlaRoutes = require("./Routes/Banks/adityaBirlaRoutes.js")
 const aiService = require("./services/ai.service.js");
 const imagekit = require("./config/imagekit");
 
@@ -417,6 +271,13 @@ app.post(
     }
   }
 );
+
+
+
+// aditya birla
+app.use("/api/aditya-birla", adityaBirlaRoutes);
+
+
 
 app.get("/", (req, res) => {
   res.send("Server is running at Home!");
