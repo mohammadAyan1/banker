@@ -7,13 +7,11 @@ import { Link } from "react-router-dom";
 import Spinner from "../../../components/Spinner";
 // import { fetchOutOfTATCases } from "../../../redux/features/assignedCase/assignedCasesThunk";
 import getBankTagColor from "../getBankTagColor";
-
-const getBankRoute = (bankName) => {
-  if (!bankName) return "";
-  const lower = bankName.toLowerCase();
-  if (lower === "homefirst" || lower === "home first") return "home-first";
-  return lower.replace(/\s+/g, "-");
-};
+import {
+  getBankRoute,
+  getDisplayAddress,
+  getDisplayCustomerName,
+} from "../../../utils/dashboardRecord";
 
 const OutOfTATCase = () => {
   const dispatch = useDispatch();
@@ -45,9 +43,8 @@ const OutOfTATCase = () => {
       title: "Customer Name",
       dataIndex: "customerName",
       render: (text, record) => {
-        const displayName =
-          record.customerName || record.applicantName || "N/A";
-        const bankRoute = getBankRoute(record.bank);
+        const displayName = getDisplayCustomerName(record);
+        const bankRoute = getBankRoute(record);
         return (
           <Link
             to={`/bank/${bankRoute}/${record._id}`}
@@ -61,7 +58,7 @@ const OutOfTATCase = () => {
     {
       title: "Address as per Legal Document",
       dataIndex: "addressLegal",
-      render: (text, record) => record.addressLegal || record.address || "N/A",
+      render: (text, record) => getDisplayAddress(record),
     },
     {
       title: "Created At",

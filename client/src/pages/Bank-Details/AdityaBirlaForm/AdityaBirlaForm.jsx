@@ -854,7 +854,7 @@
 
 
 import React, { useState, useRef, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
     createAditya,
     fetchAdityaById,
@@ -864,6 +864,19 @@ import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import axiosInstance from "../../../config/axios";
 import JSZip from "jszip"; // npm install jszip
+import AutoFillForm from "../../AutoFillForm";
+import {
+    ADITYA_MAPPING,
+} from "../../../config/Bankfieldmappings";
+import {
+    applyMappedFields,
+    createAutoFillAdapter,
+} from "../../../utils/Autofilladapter";
+
+const getCoordinateSnapshot = (latitude, longitude) =>
+    latitude && longitude
+        ? { lat: String(latitude), lng: String(longitude) }
+        : { lat: "--", lng: "--" };
 
 // ─── INITIAL STATE ─────────────────────────────────────────────────────────────
 const INIT = {
@@ -1153,39 +1166,70 @@ function FileDocument({ label, documents, onAdd, onDelete, reportId }) {
 // ─── MAIN COMPONENT ────────────────────────────────────────────────────────────
 export default function AdityaBirlaForm() {
     const dispatch = useDispatch();
+    const user = useSelector((state) => state.auth.user);
     const { id } = useParams();
     const navigate = useNavigate();
 
     const [form, setForm] = useState(INIT);
     const [liveLocation, setLiveLocation] = useState({ lat: "--", lng: "--" });
     const [saving, setSaving] = useState(false);
+    const [autoFilledFields, setAutoFilledFields] = useState([]);
 
-    // Auto capture location on mount
+    const handleAutoFill = createAutoFillAdapter(ADITYA_MAPPING, (mappedData) => {
+        setAutoFilledFields(Object.keys(mappedData));
+        setForm((prev) => applyMappedFields(prev, mappedData));
+
+        const latitude = mappedData["locationDetails.latitude"];
+        const longitude = mappedData["locationDetails.longitude"];
+        if (latitude && longitude) {
+            setLiveLocation(getCoordinateSnapshot(latitude, longitude));
+        }
+    });
+
     useEffect(() => {
-        if (!navigator.geolocation) return;
+        if (id || !navigator.geolocation) return;
+
         navigator.geolocation.getCurrentPosition(
-            pos => {
+            (pos) => {
                 const lat = pos.coords.latitude.toFixed(6);
                 const lng = pos.coords.longitude.toFixed(6);
                 setLiveLocation({ lat, lng });
-                setForm(prev => ({
+                setForm((prev) => ({
                     ...prev,
-                    locationDetails: { ...prev.locationDetails, latitude: lat, longitude: lng }
+                    locationDetails: {
+                        ...prev.locationDetails,
+                        latitude: lat,
+                        longitude: lng,
+                    },
                 }));
             },
             () => { },
             { enableHighAccuracy: true }
         );
-    }, []);
-
-    // Load existing report
-    useEffect(() => {
-        if (id) {
-            dispatch(fetchAdityaById(id))
-                .unwrap()
-                .then(data => setForm({ ...INIT, ...data, AttachDocuments: data.AttachDocuments || [] }));
-        }
     }, [id]);
+
+    useEffect(() => {
+        if (!id) return;
+
+        dispatch(fetchAdityaById(id))
+            .unwrap()
+            .then((data) => {
+                const nextForm = {
+                    ...INIT,
+                    ...data,
+                    AttachDocuments: data.AttachDocuments || [],
+                    imageUrls: data.imageUrls || [],
+                };
+
+                setForm(nextForm);
+                setLiveLocation(
+                    getCoordinateSnapshot(
+                        nextForm.locationDetails?.latitude,
+                        nextForm.locationDetails?.longitude
+                    )
+                );
+            });
+    }, [dispatch, id]);
 
     // Generic section setter
     const set = (sec, field, val) =>
@@ -1339,6 +1383,9 @@ export default function AdityaBirlaForm() {
             if (id) {
                 await dispatch(updateAdityaDetails({ id, ...payload })).unwrap();
                 toast.success("Updated ✅");
+                if (user?.role === "FieldOfficer") {
+                    navigate("/field/dashboard");
+                }
             } else {
                 const res = await dispatch(createAditya(payload)).unwrap();
                 toast.success("Created ✅");
@@ -1404,6 +1451,18 @@ export default function AdityaBirlaForm() {
 
             {/* Report Content */}
             <div className="p-4 print:p-0">
+                <div className="print:hidden mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    <div className="mb-2 text-sm font-semibold text-slate-800">
+                        AI Auto-fill
+                    </div>
+                    <AutoFillForm setFormData={handleAutoFill} />
+                    {autoFilledFields.length > 0 && (
+                        <div className="mt-3 text-xs text-slate-600">
+                            {autoFilledFields.length} fields auto-filled from uploaded documents.
+                        </div>
+                    )}
+                </div>
+
                 {/* Header */}
                 <div className="border-2 border-black flex items-start p-2 gap-2 print:border-2">
                     <div className="hdr">

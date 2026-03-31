@@ -364,6 +364,10 @@ import axiosInstance from "../../../config/axios";
 import getBankTagColor from "../getBankTagColor";
 import { selectFieldOfficers } from "../../../redux/selectors";
 import Spinner from "../../../components/Spinner";
+import {
+  getBankRoute,
+  getDisplayCustomerName,
+} from "../../../utils/dashboardRecord";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -394,11 +398,17 @@ const AssignedCase = () => {
     let filtered = cases;
 
     if (searchText) {
+      const normalizedSearchText = searchText.toLowerCase();
       filtered = filtered.filter((item) =>
-        Object.values(item).some(
-          (val) =>
-            val &&
-            val.toString().toLowerCase().includes(searchText.toLowerCase())
+        [
+          item.bankName,
+          getDisplayCustomerName(item),
+          item?.assignedTo?.name,
+          item.status,
+        ].some((value) =>
+          String(value || "")
+            .toLowerCase()
+            .includes(normalizedSearchText)
         )
       );
     }
@@ -420,7 +430,7 @@ const AssignedCase = () => {
   // Open modal
   const openAssignModal = (caseId, bankName) => {
     setSelectedCaseId(caseId);
-    setBankName(bankName)
+    setBankName(bankName);
     setIsModalOpen(true);
   };
 
@@ -452,7 +462,6 @@ const AssignedCase = () => {
       title: "Bank Name",
       dataIndex: "bankName",
       render: (bankName, record) => {
-        console.log(record)
         const color = getBankTagColor(bankName);
 
         let indicatorColor = "";
@@ -485,10 +494,10 @@ const AssignedCase = () => {
       title: "Customer",
       render: (record) => (
         <Link
-          to={`/bank/${record.bankName}/${record._id}`}
+          to={record.route || `/bank/${getBankRoute(record)}/${record._id}`}
           className="text-blue-600"
         >
-          {record.customerName || "N/A"}
+          {getDisplayCustomerName(record)}
         </Link>
       ),
     },
@@ -531,7 +540,7 @@ const AssignedCase = () => {
       title: "Action",
       render: (record) => (
         <div className="flex gap-3">
-          <Link to={record.route}>
+          <Link to={record.route || `/bank/${getBankRoute(record)}/edit/${record._id}`}>
             <Edit3 size={18} />
           </Link>
           <Button

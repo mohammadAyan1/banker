@@ -38,7 +38,7 @@ import { getAllDetails } from "../../redux/features/Banks/Primal/piramalThunks";
 // import { fetchDetails } from "../../redux/features/Banks/AdityaBank/adityaThunks";
 
 /////!SECTION
-import { fetchAllAditya } from "../../redux/features/Banks/AdityaBirlaBank/AdityaBirlaThunk"
+import { fetchAllAditya } from "../../redux/features/Banks/AdityaBirlaBank/AdityaBirlaThunk";
 
 ////!SECTION
 import { fetchAllDetails } from "../../redux/features/Banks/CholaBank/CholaThunks";
@@ -63,12 +63,16 @@ import { assignCase, deletedCases } from "../../redux/features/case/caseThunks";
 import { fetchFieldOfficers } from "../../redux/features/auth/authThunks";
 
 import getBankTagColor from "./getBankTagColor";
+import {
+  getDisplayAddress,
+  getDisplayContact,
+  getDisplayCustomerName,
+} from "../../utils/dashboardRecord";
 
 const { Search: AntSearch } = Input;
 const { Option } = Select;
 
 import { Edit3, Trash2, Plus } from "lucide-react";
-import DocumentAttach from "../../components/DocumentAttach";
 import ImageUploader from "../../components/ImageUploader";
 // import { getOutOfTatCases } from "../../redux/features/assignedCase/assignedCasesThunk";
 
@@ -213,10 +217,12 @@ const Pending = () => {
         .map((item) => ({
           ...item,
           _id: item._id,
-          bankName,
-          route,
-          displayCustomerName: item[customerNameKey] || "N/A",
-          customerNo: item[contactNoKey] || "N/A",
+          bankName: bankName || item.bankName || "N/A",
+          route: item.route || route,
+          displayCustomerName:
+            item[customerNameKey] || getDisplayCustomerName(item),
+          customerNo: item[contactNoKey] || getDisplayContact(item),
+          displayAddress: getDisplayAddress(item),
           createdAt: item.createdAt || new Date().toISOString(),
           assignedTo: item.assignedTo || null,
           status: item.status || "Pending",
@@ -309,7 +315,7 @@ const Pending = () => {
     );
     const manapuramWithBank = normalizeData(
       mannapuram,
-      "Manapuram Bank",
+      "Manappuram Bank",
       "manappuram",
       "applicantsName",
       "contactPerson"
@@ -411,9 +417,6 @@ const Pending = () => {
 
   useEffect(() => {
     setReportData(memoizedReportData);
-    console.log('====================================');
-    console.log(memoizedReportData);
-    console.log('====================================');
   }, [memoizedReportData]);
 
 
@@ -431,19 +434,21 @@ const Pending = () => {
 
     // Then filter by search term
     const lowerCaseSearch = search.toLowerCase();
-    return data.filter((item) =>
-      Object.values(item).some((value) =>
-        String(value).toLowerCase().includes(lowerCaseSearch)
-      )
-    );
+    return data.filter((item) => {
+      if (!lowerCaseSearch) return true;
+
+      return [
+        item.bankName,
+        item.displayCustomerName,
+        item.displayAddress,
+        item.customerNo,
+      ].some((value) =>
+        String(value || "")
+          .toLowerCase()
+          .includes(lowerCaseSearch)
+      );
+    });
   }, [search, reportData, selectedBank]);
-
-
-  useEffect(() => {
-    console.log('====================================');
-    console.log(filteredData);
-    console.log('====================================');
-  }, [filteredData])
 
 
   const bankOptions = [
@@ -456,7 +461,7 @@ const Pending = () => {
     { value: "HeroFinCorp Bank", label: "HeroFinCorp Bank" },
     { value: "Sundaram Bank", label: "Sundaram Bank" },
     { value: "Chola Bank", label: "Chola Bank" },
-    { value: "Manapuram Bank", label: "Manapuram Bank" },
+    { value: "Manappuram Bank", label: "Manappuram Bank" },
     { value: "piramalNPA Bank", label: "PiramalNPA Bank" },
     { value: "Samasta Bank", label: "Samasta Bank" },
     { value: "Fedral Bank", label: "Fedral Bank" },
@@ -497,11 +502,7 @@ const Pending = () => {
     {
       title: "Address as per Legal Document",
       key: "addressLegal",
-      render: (record) =>
-        record.addressLegal ||
-        record.address ||
-        record.propertyAddress ||
-        "N/A",
+      render: (record) => record.displayAddress || getDisplayAddress(record),
     },
     {
       title: "Date Added",
@@ -599,18 +600,19 @@ const Pending = () => {
         return (
           <div className="flex  gap-1">
             {attachments.map((url, index) => {
-              const fileName = url?.url?.split("/").pop();
+              const attachmentUrl = url?.url || url;
+              const fileName = attachmentUrl?.split("/").pop();
 
               return (
                 <a
                   key={index}
-                  href={url}
+                  href={attachmentUrl}
                   download
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline !flex"
                 >
-                  📄 {fileName.slice(0, 3) || `Attachment ${index + 1}`}
+                  📄 {fileName?.slice(0, 3) || `Attachment ${index + 1}`}
                 </a>
               );
             })}

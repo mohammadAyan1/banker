@@ -3,9 +3,44 @@ const modelMap = require("../../controllers/modelMap");
 const { deleteImage } = require("../../config/imageUploader"); // 👈 storage delete logic
 
 const dictionaryFix = {
-  HomeFirstTrench: "Homefirsttrench", // pehla capital, baaki small
-  // Add more cases as needed
+  homefirsttrench: "Homefirsttrench",
 };
+
+const WORK_IN_PROGRESS_STATUS = "Work in Progress";
+const NBSP_WORK_IN_PROGRESS_STATUS = "Work in Progress";
+const LEGACY_WORK_IN_PROGRESS_STATUS = "WorkÂ inÂ Progress";
+const WORK_IN_PROGRESS_STATUSES = [
+  WORK_IN_PROGRESS_STATUS,
+  NBSP_WORK_IN_PROGRESS_STATUS,
+  LEGACY_WORK_IN_PROGRESS_STATUS,
+];
+
+const bankRegistry = modelMap.bankRegistry || [];
+
+const defaultBankSlug = (modelKey) =>
+  modelKey.replace(/([A-Z])/g, "-$1").toLowerCase().replace(/^-/, "");
+
+const getBankMeta = (modelKey) => {
+  const registryEntry = bankRegistry.find((entry) => entry.key === modelKey);
+
+  return {
+    displayName:
+      registryEntry?.displayName ||
+      modelKey.replace(/([A-Z])/g, " $1").trim(),
+    route: registryEntry?.route || defaultBankSlug(modelKey),
+  };
+};
+
+const enrichCasesWithBankMeta = (cases, modelKey) => {
+  const { displayName, route } = getBankMeta(modelKey);
+
+  return cases.map((caseItem) => ({
+    ...caseItem.toObject(),
+    bankName: displayName,
+    bankSlug: route,
+  }));
+};
+
 function toPascalCase(str) {
   return str
     .replace(/\s+/g, "-")
@@ -15,10 +50,14 @@ function toPascalCase(str) {
 }
 
 function toPascalCaseSmart(str) {
-  const key = str.toLowerCase().replace(/[-_\s]/g, ""); // normalize input
+  const normalizedInput = String(str)
+    .replace(/\bbank\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const key = normalizedInput.toLowerCase().replace(/[-_\s]/g, ""); // normalize input
   if (dictionaryFix[key]) return dictionaryFix[key];
 
-  const pascal = toPascalCase(str);
+  const pascal = toPascalCase(normalizedInput);
   return pascal.charAt(0) + pascal.slice(1).toLowerCase(); // only first letter capital
 }
 
@@ -53,12 +92,12 @@ exports.assignCase = async (req, res) => {
       caseId,
       {
         assignedTo: fieldOfficerId,
-        status: "Work in Progress",
+        status: WORK_IN_PROGRESS_STATUS,
         route: route,
         // $push: {
         timeline: {
           // status: "Assigned",
-          status: "Work in Progress",
+          status: WORK_IN_PROGRESS_STATUS,
           updatedAt: new Date(),
           updatedBy: req.user._id,
           note: `Assigned to user ${fieldOfficerId}`,
@@ -259,7 +298,7 @@ exports.acceptCase = async (req, res) => {
     return res.status(400).json({ error: "Bank name is required." });
   }
 
-  const modelKey = toPascalCase(bankName);
+  const modelKey = toPascalCaseSmart(bankName);
   const Model = modelMap[modelKey];
 
   if (!Model) {
@@ -293,7 +332,7 @@ exports.updateCaseStatus = async (req, res) => {
     return res.status(400).json({ error: "Bank name is required." });
   }
 
-  const modelKey = toPascalCase(bankName);
+  const modelKey = toPascalCaseSmart(bankName);
   const Model = modelMap[modelKey];
 
   if (!Model) {
@@ -384,10 +423,10 @@ exports.getAllAssignedCases = async (req, res) => {
       // );
       const cases = await Model.find({
         assignedTo: { $ne: null },
-        status: "Work in Progress", // ✅ status filter added
+        status: { $in: WORK_IN_PROGRESS_STATUSES },
       }).populate("assignedTo", "name email");
 
-      allCases.push(...cases); // merge all cases
+      allCases.push(...enrichCasesWithBankMeta(cases, modelKey)); // merge all cases
     }
 
     res.json(allCases);
@@ -413,18 +452,7 @@ exports.getPendingCases = async (req, res) => {
       if (pendingCases.length > 0) {
         // Optional: Add bank name info for frontend clarity
         const bankName = modelKey.replace(/([A-Z])/g, " $1").trim(); // "HomeFirst" → "Home First"
-        const bankSlug = modelKey
-          .replace(/([A-Z])/g, "-$1")
-          .toLowerCase()
-          .replace(/^-/, "");
-
-        const enrichedCases = pendingCases.map((c) => ({
-          ...c.toObject(),
-          bankName,
-          bankSlug,
-        }));
-
-        allPendingCases.push(...enrichedCases);
+        allPendingCases.push(...enrichCasesWithBankMeta(pendingCases, modelKey));
       }
     }
 
@@ -490,7 +518,7 @@ exports.finalUpdate = async (req, res) => {
 
   console.log(bankName, "zero")
 
-  const modelKey = toPascalCase(bankName);
+  const modelKey = toPascalCaseSmart(bankName);
 
   console.log(modelKey, "first")
 
@@ -559,7 +587,7 @@ exports.getFinalSubmittedCases = async (req, res) => {
         "name email"
       );
 
-      finalCases.push(...cases);
+      finalCases.push(...enrichCasesWithBankMeta(cases, modelKey));
     }
 
     res.status(200).json(finalCases);
@@ -581,15 +609,16 @@ exports.getCancelledCases = async (req, res) => {
 
       const cases = await Model.find({ status: "cancelled" });
 
-      console.log(cases.length, "LION");
-
       totalCancelledCount += cases.length;
 
       if (cases.length > 0) {
+        const { displayName, route } = getBankMeta(key);
         cancelledCases.push({
           model: key,
+          bankName: displayName,
+          bankSlug: route,
           count: cases.length, // optional: show count per model
-          cases,
+          cases: enrichCasesWithBankMeta(cases, key),
         });
       }
     }
@@ -633,17 +662,21 @@ exports.getOutOfTATCases = async (req, res) => {
           $nin: [
             "cancelled",
             "completed",
-            "Work in Progress",
+            ...WORK_IN_PROGRESS_STATUSES,
             "FinalSubmitted",
           ],
         },
       });
 
       if (reports.length > 0) {
+        const { displayName, route } = getBankMeta(modelKey);
         result.push(
           ...reports.map((r) => ({
             ...r.toObject(),
             bank: modelKey, // 👈 add bank/model name
+            bankName: displayName,
+            bankSlug: route,
+            bank: displayName,
           }))
         );
       }
@@ -712,22 +745,26 @@ exports.getSummaryData = async (req, res) => {
     const totalSubmissions = [];
     const queryRaised = [];
 
-    for (const modelKey in modelMap) {
-      const Model = modelMap[modelKey];
+    const bankRegistry =
+      modelMap.bankRegistry ||
+      Object.entries(modelMap).map(([key, model]) => ({
+        key,
+        displayName: key.replace(/([A-Z])/g, " $1").trim(),
+        model,
+      }));
+
+    for (const bankConfig of bankRegistry) {
+      const { key: modelKey, displayName, model: Model } = bankConfig;
 
       const [pendingCases, workingCases, totalCases, queryCases] =
         await Promise.all([
-          Model.find({ status: "Pending" }).populate("assignedTo createdBy"),
-          Model.find({ status: "Work in Progress" }).populate(
-            "assignedTo createdBy"
-          ),
-          Model.find({}).populate("assignedTo createdBy"),
-          Model.find({ status: "Query Raised" }).populate(
-            "assignedTo createdBy"
-          ),
+          Model.find({ status: "Pending" }),
+          Model.find({ status: { $in: WORK_IN_PROGRESS_STATUSES } }),
+          Model.find({}),
+          Model.find({ status: "Query Raised" }),
         ]);
 
-      const bankName = modelKey.replace(/([A-Z])/g, " $1").trim();
+      const bankName = displayName;
       const bankSlug = modelKey
         .replace(/([A-Z])/g, "-$1")
         .toLowerCase()

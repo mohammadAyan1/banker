@@ -82,6 +82,53 @@ const resolveRule = (rule, extractedData) => {
     return null;
 };
 
+const cloneValue = (value) => {
+    if (Array.isArray(value)) {
+        return value.map(cloneValue);
+    }
+
+    if (value && typeof value === "object") {
+        return Object.fromEntries(
+            Object.entries(value).map(([key, nestedValue]) => [
+                key,
+                cloneValue(nestedValue),
+            ])
+        );
+    }
+
+    return value;
+};
+
+export const applyMappedFields = (baseObject, mappedFields) => {
+    const nextState = cloneValue(baseObject ?? {});
+
+    Object.entries(mappedFields || {}).forEach(([targetPath, value]) => {
+        if (!targetPath) return;
+
+        const pathParts = targetPath.split(".");
+        let cursor = nextState;
+
+        for (let index = 0; index < pathParts.length - 1; index += 1) {
+            const key = pathParts[index];
+
+            if (
+                cursor[key] === null ||
+                cursor[key] === undefined ||
+                typeof cursor[key] !== "object" ||
+                Array.isArray(cursor[key])
+            ) {
+                cursor[key] = {};
+            }
+
+            cursor = cursor[key];
+        }
+
+        cursor[pathParts[pathParts.length - 1]] = value;
+    });
+
+    return nextState;
+};
+
 /**
  * Core adapter factory.
  *

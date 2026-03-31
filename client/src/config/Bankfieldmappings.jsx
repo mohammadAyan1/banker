@@ -1,98 +1,112 @@
-/**
- * ─────────────────────────────────────────────────────────────────────────────
- * bankFieldMappings.js
- *
- * CENTRALIZED FIELD MAPPING CONFIG — har bank ke liye ek jagah sab kuch.
- *
- * Pattern:
- *   { targetFormField: "extractedDataKey" | ["fallback1", "fallback2"] | fn }
- *
- * extractedData keys (AutoFillForm jo deta hai):
- *   customerName, propertyOwnerName, addressLegal, addressSite,
- *   city, projectPinCode, projectState, propertyName,
- *   dateOfReport, refNo, unitType, documentsAvailable,
- *   zone, usageOfProperty, ownershipType, numberAndDate,
- *   north/south/east/westDocument, plotArea, landArea,
- *   Dimension, linearDimension, typeOfStructure, ...
- *
- * Naya bank add karna ho to bas ek naya object add karo yahan.
- * ─────────────────────────────────────────────────────────────────────────────
- */
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HOME FIRST — TRENCH REPORT
-// ─────────────────────────────────────────────────────────────────────────────
-// export const TRENCH_MAPPING = {
-//     propertyAddress: ["addressSite", "addressLegal", "propertyName"],
-//     dateOfReport: "dateOfReport",
-//     visitedPersonName: "customerName",
-//     latitude: "property.latitude",      // new
-//     longitude: "property.longitude",    // new
-//     dateOfVisit: "dateOfReport",        // new – same source as dateOfReport
-// };
-
-
-// In Bankfieldmappings.js
 export const TRENCH_MAPPING = {
     propertyAddress: ["addressSite", "addressLegal", "propertyName"],
     dateOfReport: "dateOfReport",
     visitedPersonName: "customerName",
-    latitude: "property.latitude",
-    longitude: "property.longitude",
+    latitude: "latitude",
+    longitude: "longitude",
     dateOfVisit: "dateOfReport",
     contactNumber: "contactNumber",
-    LandArea: "property.LandArea",   // ✅ nested path
+    LandArea: ["property.LandArea", "landArea"],
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EXAMPLE: IDFC BANK — add karo jab chahiye
-// ─────────────────────────────────────────────────────────────────────────────
-// export const IDFC_MAPPING = {
-//   applicantName:   "customerName",
-//   ownerName:       "propertyOwnerName",
-//   siteAddress:     ["addressSite", "addressLegal"],
-//   legalAddress:    ["addressLegal", "addressSite"],
-//   pinCode:         "projectPinCode",
-//   state:           "projectState",
-//   city:            "city",
-//   reportDate:      "dateOfReport",
-//   docRefNo:        "refNo",
-//   propertyType:    "unitType",
-//   usageZone:       "zone",
-//   northBoundary:   "northDocument",
-//   southBoundary:   "southDocument",
-//   eastBoundary:    "eastDocument",
-//   westBoundary:    "westDocument",
-//   plotAreaSqFt:    "plotArea",
-//   dimensions:      ["Dimension", "linearDimension"],
-// };
+export const ADITYA_MAPPING = {
+    "basicDetails.nameOfClient": "customerName",
+    "basicDetails.nameOfPropertyOwner": "propertyOwnerName",
+    "basicDetails.caseReferenceNumber": "refNo",
+    "basicDetails.reportDate": "dateOfReport",
+    "basicDetails.visitDate": "dateOfReport",
+    "basicDetails.initiationDate": "dateOfReport",
+    "locationDetails.propertyAddressAsTRF": [
+        "addressLegal",
+        "addressSite",
+        "propertyName",
+    ],
+    "locationDetails.propertyAddressAsVisit": [
+        "addressSite",
+        "addressLegal",
+        "propertyName",
+    ],
+    "locationDetails.propertyAddressAsDocs": [
+        "addressLegal",
+        "addressSite",
+        "propertyName",
+    ],
+    "locationDetails.mainLocality": "city",
+    "locationDetails.latitude": "latitude",
+    "locationDetails.longitude": "longitude",
+    "locationDetails.typeOfProperty": ["usageOfProperty", "zone"],
+    "locationDetails.currentUsage": "usageOfProperty",
+    "locationDetails.propertyType": ["usageOfProperty", "zone"],
+    "locationDetails.propertySubType": "unitType",
+    "documentDetails.saleDeedDetails": [
+        "numberAndDate",
+        "documentsAvailable",
+    ],
+    "boundaryDetails.northAsPerDocs": "northDocument",
+    "boundaryDetails.southAsPerDocs": "southDocument",
+    "boundaryDetails.eastAsPerDocs": "eastDocument",
+    "boundaryDetails.westAsPerDocs": "westDocument",
+    "boundaryDetails.northActual": "northActual",
+    "boundaryDetails.southActual": "southActual",
+    "boundaryDetails.eastActual": "eastActual",
+    "boundaryDetails.westActual": "westActual",
+    "boundaryDetails.boundaryMatching": (data) =>
+        data.boundariesMatching || "YES",
+    "accommodationDetails.typeOfStructure": "typeOfStructure",
+    "valuationDetails.plotAreaInDeed": ["plotArea", "landArea"],
+    "valuationDetails.plotAreaPhysical": ["plotArea", "landArea"],
+    "valuationDetails.builtUpAreaNorms": ["plotArea", "landArea"],
+    "valuationDetails.builtUpAreaTinShed": ["plotArea", "landArea"],
+};
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EXAMPLE: BAJAJ FINSERV — custom transform example
-// ─────────────────────────────────────────────────────────────────────────────
-// export const BAJAJ_MAPPING = {
-//   borrowerName:    "customerName",
-//   propertyAddr:    ["addressSite", "addressLegal"],
-//   propertyUse:     (data) => data.usageOfProperty?.toUpperCase() || null,
-//   visitDate:       "dateOfReport",
-//   area:            "plotArea",
-// };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// EXAMPLE: PIRAMAL — multi-field concat example
-// ─────────────────────────────────────────────────────────────────────────────
-// export const PIRAMAL_MAPPING = {
-//   customerFullName: "customerName",
-//   fullAddress:      ["addressLegal", "addressSite"],
-//   refNumber:        "refNo",
-//   dateReport:       "dateOfReport",
-//   propType:         "unitType",
-//   plotSize:         "plotArea",
-//   pinCode:          "projectPinCode",
-//   stateName:        "projectState",
-//   // Custom function — seller + buyer naam combine
-//   partiesInvolved:  (data) => {
-//     const parts = [data.propertyOwnerName, data.customerName].filter(Boolean);
-//     return parts.length ? parts.join(" → ") : null;
-//   },
-// };
+export const MANAPPURAM_MAPPING = {
+    "header.caseRefNo": "refNo",
+    "header.dateOfVisit": "dateOfReport",
+    "header.dateOfReport": "dateOfReport",
+    "header.contactedPerson": (data) =>
+        [data.customerName, data.contactNumber].filter(Boolean).join(" / "),
+    "propertyInfo.applicantName": "customerName",
+    "propertyInfo.ownerName": "propertyOwnerName",
+    "propertyInfo.documentProduced": "documentsAvailable",
+    "propertyInfo.typeOfProperty": ["usageOfProperty", "unitType"],
+    "propertyInfo.currentUsage": "usageOfProperty",
+    "propertyInfo.propertyUsage": "usageOfProperty",
+    "propertyInfo.addressAtSite": [
+        "addressSite",
+        "addressLegal",
+        "propertyName",
+    ],
+    "propertyInfo.addressAsPerDocument": [
+        "addressLegal",
+        "addressSite",
+        "propertyName",
+    ],
+    "propertyInfo.landmark": "propertyName",
+    "propertyInfo.locationOfProperty": (data) =>
+        [data.city, data.projectState].filter(Boolean).join(", "),
+    "siteBoundaries.northDoc": "northDocument",
+    "siteBoundaries.southDoc": "southDocument",
+    "siteBoundaries.eastDoc": "eastDocument",
+    "siteBoundaries.westDoc": "westDocument",
+    "siteBoundaries.northActual": "northActual",
+    "siteBoundaries.southActual": "southActual",
+    "siteBoundaries.eastActual": "eastActual",
+    "siteBoundaries.westActual": "westActual",
+    "siteBoundaries.boundariesTallied": (data) =>
+        data.boundariesMatching || "Yes",
+    "technicalDetails.totalLandArea": ["plotArea", "landArea"],
+    "technicalDetails.constructionType": "typeOfStructure",
+    "valuationGLR.landArea": ["plotArea", "landArea"],
+    "valuationPMR.landArea": ["plotArea", "landArea"],
+    "summary.propertyAddress": [
+        "addressLegal",
+        "addressSite",
+        "propertyName",
+    ],
+    "summary.propertyType": ["unitType", "usageOfProperty"],
+    "summary.applicantName": "customerName",
+    "summary.coordinates": (data) =>
+        data.latitude && data.longitude
+            ? `${data.latitude}, ${data.longitude}`
+            : null,
+};

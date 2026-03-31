@@ -1,7 +1,62 @@
 import React, { useEffect, useState } from "react";
 import { Table } from "antd";
-import { fetchSummaryData } from "../../../redux/features/assignedCase/assignedCasesThunk";
 import { useDispatch } from "react-redux";
+import { fetchSummaryData } from "../../../redux/features/assignedCase/assignedCasesThunk";
+
+const readValue = (record, paths) => {
+  for (const path of paths) {
+    const value = path
+      .split(".")
+      .reduce(
+        (accumulator, key) =>
+          accumulator && accumulator[key] !== undefined
+            ? accumulator[key]
+            : undefined,
+        record
+      );
+
+    if (value !== undefined && value !== null && value !== "") {
+      return value;
+    }
+  }
+
+  return "N/A";
+};
+
+const normalizeSummaryRecord = (record, index) => ({
+  ...record,
+  key: record._id || index,
+  customerName: readValue(record, [
+    "customerName",
+    "visitedPersonName",
+    "applicantName",
+    "basicDetails.nameOfClient",
+    "propertyInfo.applicantName",
+    "summary.applicantName",
+    "header.contactedPerson",
+  ]),
+  propertyAddress: readValue(record, [
+    "addressLegal",
+    "propertyAddress",
+    "address",
+    "locationDetails.propertyAddressAsVisit",
+    "locationDetails.propertyAddressAsDocs",
+    "propertyInfo.addressAtSite",
+    "propertyInfo.addressAsPerDocument",
+    "summary.propertyAddress",
+  ]),
+  constructionStage: readValue(record, [
+    "constructionStage",
+    "constructionStatus",
+    "technicalDetails.percentCompletion",
+    "valuationDetails.percentageCompletion",
+  ]),
+  dateOfVisit: readValue(record, [
+    "dateOfVisit",
+    "basicDetails.visitDate",
+    "header.dateOfVisit",
+  ]),
+});
 
 const columns = [
   {
@@ -14,15 +69,11 @@ const columns = [
     title: "Customer Name",
     dataIndex: "customerName",
     key: "customerName",
-    render: (_, record) =>
-      record.customerName || record.visitedPersonName || "N/A",
   },
   {
     title: "Address",
     dataIndex: "propertyAddress",
     key: "propertyAddress",
-    render: (_, record) =>
-      record.addressLegal || record.propertyAddress || "N/A",
   },
   {
     title: "Status",
@@ -31,6 +82,8 @@ const columns = [
     filters: [
       { text: "Pending", value: "Pending" },
       { text: "Approved", value: "Approved" },
+      { text: "Work in Progress", value: "Work in Progress" },
+      { text: "FinalSubmitted", value: "FinalSubmitted" },
     ],
     onFilter: (value, record) => record.status === value,
   },
@@ -54,14 +107,9 @@ const SummaryCard = () => {
     const loadData = async () => {
       try {
         const response = await dispatch(fetchSummaryData()).unwrap();
-        console.log("API response:", response);
-
-        // Add a key to each record for the table (AntD requires it)
-        const formattedData = (response?.totalSubmissions || []).map((item, index) => ({
-          ...item,
-          key: item._id || index,
-        }));
-
+        const formattedData = (response?.totalSubmissions || []).map(
+          normalizeSummaryRecord
+        );
         setTableData(formattedData);
       } catch (error) {
         console.error("Failed to load data:", error);

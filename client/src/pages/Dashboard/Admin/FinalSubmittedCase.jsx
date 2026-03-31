@@ -8,13 +8,11 @@ import { fetchTotalSubmitCase } from "../../../redux/features/assignedCase/assig
 import Spinner from "../../../components/Spinner";
 import getBankTagColor from "../getBankTagColor";
 import { Edit3, Trash2 } from "lucide-react";
-
-const getBankRoute = (bankName) => {
-  if (!bankName) return "";
-  const lower = bankName.toLowerCase();
-  if (lower === "homefirst" || lower === "home first") return "home-first";
-  return lower.replace(/\s+/g, "-");
-};
+import {
+  getBankRoute,
+  getDisplayAddress,
+  getDisplayCustomerName,
+} from "../../../utils/dashboardRecord";
 
 const FinalSubmittedCases = () => {
   const dispatch = useDispatch();
@@ -37,17 +35,8 @@ const FinalSubmittedCases = () => {
       title: "Customer Name",
       dataIndex: "customerName",
       render: (text, record) => {
-
-        console.log('====================================');
-        console.log(record);
-        console.log('====================================');
-
-        const displayName =
-          record.customerName ||
-          record.applicantName ||
-          record.visitedPersonName ||
-          "N/A";
-        const bankRoute = getBankRoute(record.bankName);
+        const displayName = getDisplayCustomerName(record);
+        const bankRoute = getBankRoute(record);
         return (
           <Link
             to={`/bank/${bankRoute}/${record._id}`}
@@ -61,7 +50,7 @@ const FinalSubmittedCases = () => {
     {
       title: "Address as per Legal Document",
       dataIndex: "addressLegal",
-      render: (text, record) => record.addressLegal || record.address || "N/A",
+      render: (text, record) => getDisplayAddress(record),
     },
     {
       title: "Assigned To",
@@ -74,7 +63,7 @@ const FinalSubmittedCases = () => {
         <>
           <div className='flex gap-4 items-center'>
             <Link
-              to={`/bank/home-first-trench/edit/${record._id}`}
+              to={record.route || `/bank/${getBankRoute(record)}/edit/${record._id}`}
               className='!text-green-600 hover:underline border p-1'
             >
               <Edit3 size={18} />

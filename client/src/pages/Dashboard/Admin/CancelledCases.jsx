@@ -9,14 +9,10 @@ import Spinner from "../../../components/Spinner";
 
 import { useState, useMemo } from "react";
 import { Input, Select } from "antd";
-
-const getBankRoute = (bankName) => {
-  // console.log(bankName, "Cancel");
-  if (!bankName) return "";
-  const lower = bankName.toLowerCase();
-  if (lower === "homefirst" || lower === "home first") return "home-first";
-  return lower.replace(/\s+/g, "-");
-};
+import {
+  getDisplayAddress,
+  getDisplayCustomerName,
+} from "../../../utils/dashboardRecord";
 
 // const CancelledCases = () => {
 //   const dispatch = useDispatch();
@@ -135,6 +131,7 @@ const CancelledCases = () => {
     return cancelledCases.cancelledCases.flatMap((group) =>
       group.cases.map((caseItem) => ({
         ...caseItem,
+        bankName: caseItem.bankName || group.bankName,
         model: group.model,
       }))
     );
@@ -150,16 +147,11 @@ const CancelledCases = () => {
 
   const filteredCases = useMemo(() => {
     return flatCases.filter((item) => {
-      const nameMatch = (
-        item.customerName ||
-        item.applicantName ||
-        item.visitedPersonName ||
-        ""
-      )
+      const nameMatch = getDisplayCustomerName(item)
         .toLowerCase()
         .includes(searchText.toLowerCase());
 
-      const addressMatch = (item.addressLegal || item.address || "")
+      const addressMatch = getDisplayAddress(item)
         .toLowerCase()
         .includes(searchText.toLowerCase());
 
@@ -183,24 +175,19 @@ const CancelledCases = () => {
       title: "Customer Name",
       dataIndex: "customerName",
       sorter: (a, b) =>
-        (a.customerName || a.applicantName || "").localeCompare(
-          b.customerName || b.applicantName || b.visitedPersonName || ""
-        ),
+        getDisplayCustomerName(a).localeCompare(getDisplayCustomerName(b)),
       render: (text, record) => {
-        const displayName =
-          record.customerName ||
-          record.applicantName ||
-          record.visitedPersonName ||
-          "N/A";
         return (
-          <span className='text-blue-600 hover:underline'>{displayName}</span>
+          <span className='text-blue-600 hover:underline'>
+            {getDisplayCustomerName(record)}
+          </span>
         );
       },
     },
     {
       title: "Address as per Legal Document",
       dataIndex: "addressLegal",
-      render: (text, record) => record.addressLegal || record.address || "N/A",
+      render: (text, record) => getDisplayAddress(record),
     },
     {
       title: "Assigned To",

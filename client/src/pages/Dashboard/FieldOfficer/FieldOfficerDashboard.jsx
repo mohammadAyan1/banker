@@ -369,6 +369,12 @@ import toast from "react-hot-toast";
 import CaseNotes from "../../../components/CaseNotes";
 import dayjs from "dayjs";
 import { CheckCheck, Eye } from "lucide-react";
+import {
+  getBankRoute,
+  getDisplayAddress,
+  getDisplayContact,
+  getDisplayCustomerName,
+} from "../../../utils/dashboardRecord";
 
 const { Search } = Input;
 
@@ -447,14 +453,15 @@ const FieldOfficerDashboard = () => {
   const filteredCases = filterCases()?.filter((caseItem) => {
     if (!searchText) return true;
 
-    return (
-      caseItem.bankName?.toLowerCase().includes(searchText) ||
-      caseItem.customerName?.toLowerCase().includes(searchText) ||
-      caseItem.applicantName?.toLowerCase().includes(searchText) ||
-      caseItem.addressLegal?.toLowerCase().includes(searchText) ||
-      caseItem.address?.toLowerCase().includes(searchText) ||
-      caseItem.customerNo?.toLowerCase().includes(searchText) ||
-      caseItem.contactPersonNumber?.toLowerCase().includes(searchText)
+    return [
+      caseItem.bankName,
+      getDisplayCustomerName(caseItem),
+      getDisplayAddress(caseItem),
+      getDisplayContact(caseItem),
+    ].some((value) =>
+      String(value || "")
+        .toLowerCase()
+        .includes(searchText)
     );
   });
 
@@ -465,11 +472,6 @@ const FieldOfficerDashboard = () => {
     if (!aIsToday && bIsToday) return 1;
     return 0;
   });
-
-
-  useEffect(() => {
-    console.log(sortedCases)
-  }, [sortedCases])
 
   const summaryCounts = {
     TOTAL_ASSIGNED: foCases?.length,
@@ -494,15 +496,12 @@ const FieldOfficerDashboard = () => {
       key: "customerName",
       render: (_, record) => (
         <span className='text-blue-600 hover:underline'>
-          {record.customerName ||
-            record.applicantName ||
-            record.visitedPersonName ||
-            "N/A"}
+          {getDisplayCustomerName(record)}
         </span>
       ),
       sorter: (a, b) => {
-        const nameA = a.customerName || a.applicantName || "";
-        const nameB = b.customerName || b.applicantName || "";
+        const nameA = getDisplayCustomerName(a);
+        const nameB = getDisplayCustomerName(b);
         return nameA.localeCompare(nameB);
       },
     },
@@ -523,10 +522,7 @@ const FieldOfficerDashboard = () => {
       key: "addressLegal",
       render: (_, record) => (
         <span className='text-blue-600 hover:underline'>
-          {record.addressLegal ||
-            record.address ||
-            record.propertyAddress ||
-            "N/A"}
+          {getDisplayAddress(record)}
         </span>
       ),
     },
@@ -536,7 +532,7 @@ const FieldOfficerDashboard = () => {
       key: "contactNumber",
       render: (_, record) => (
         <span className='text-blue-600 hover:underline'>
-          {record.customerNo || record.contactPersonNumber || "N/A"}
+          {getDisplayContact(record)}
         </span>
       ),
     },
@@ -556,7 +552,10 @@ const FieldOfficerDashboard = () => {
           );
         } else {
           return (
-            <Link to={`${record.route}`} className='flex gap-3 items-center'>
+            <Link
+              to={record.route || `/bank/${getBankRoute(record)}/${record._id}`}
+              className='flex gap-3 items-center'
+            >
               <Eye className='text-blue-600 hover:text-blue-800' />
               {record.isReportSubmitted && (
                 <CheckCheck className='text-green-500' />

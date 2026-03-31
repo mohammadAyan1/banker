@@ -1,7 +1,7 @@
 
 
 import React, { useState, useRef, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
     createManappuramReport,
     fetchManappuramById,
@@ -11,6 +11,38 @@ import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import axiosInstance from "../../../config/axios";
 import JSZip from "jszip";
+import AutoFillForm from "../../AutoFillForm";
+import { MANAPPURAM_MAPPING } from "../../../config/Bankfieldmappings";
+import {
+    applyMappedFields,
+    createAutoFillAdapter,
+} from "../../../utils/Autofilladapter";
+
+const getCoordinateSnapshot = (coordinates = "") => {
+    const [latitude = "--", longitude = "--"] = String(coordinates)
+        .split(",")
+        .map((value) => value.trim());
+
+    return {
+        lat: latitude || "--",
+        lng: longitude || "--",
+    };
+};
+
+const normalizeRemarkText = (remark = "") =>
+    String(remark)
+        .replace(/<\/div>\s*<div>/gi, "\n")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/gi, " ")
+        .trim();
+
+const normalizeRemarks = (remarks = []) => {
+    const nextRemarks = Array.isArray(remarks) ? remarks : [];
+    return nextRemarks.length > 0
+        ? nextRemarks.map((remark) => normalizeRemarkText(remark))
+        : [""];
+};
 
 /* ─── PRINT STYLES ─────────────────────────────────────────────────────────── */
 // Injected once so window.print() picks it up
@@ -32,7 +64,18 @@ if (!document.getElementById("mnfl-print-style")) {
       table { page-break-inside: auto; }
       tr { page-break-inside: avoid; page-break-after: auto; }
     }
-    @media screen { #mnfl-print-area { display: none; } }
+    @media screen {
+      #mnfl-print-area {
+        position: fixed !important;
+        left: -200vw !important;
+        top: 0 !important;
+        width: 794px !important;
+        max-height: 1px !important;
+        overflow: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+    }
   `;
     document.head.appendChild(s);
 }
@@ -364,17 +407,12 @@ function FileDocument({ label, documents, onAdd, onDelete, reportId }) {
 
 /* ─── PRINT AREA ────────────────────────────────────────────────────────────── */
 function PrintArea({ form }) {
-
-
-    console.log('====================================');
-    console.log(form);
-    console.log('====================================');
-
-    const latLog = form?.summary?.coordinates?.split(",")
-    console.log('====================================');
-    console.log(latLog);
-    console.log('====================================');
-
+    const mapLocation = getCoordinateSnapshot(form?.summary?.coordinates);
+    const hasMapLocation =
+        mapLocation.lat !== "--" && mapLocation.lng !== "--";
+    const staticMapUrl = hasMapLocation
+        ? `https://staticmap.openstreetmap.de/staticmap.php?center=${mapLocation.lat},${mapLocation.lng}&zoom=15&size=865x320&markers=${mapLocation.lat},${mapLocation.lng},red-pushpin`
+        : "";
 
     const H = form.header,
         PI = form.propertyInfo,
@@ -994,7 +1032,9 @@ function PrintArea({ form }) {
                             {form.remarks.map((remark, i) => (
                                 <div key={i}>
                                     <span style={{ fontWeight: "bold" }}>{i + 1}. </span>
-                                    <span dangerouslySetInnerHTML={{ __html: remark }} />
+                                    <span style={{ whiteSpace: "pre-wrap" }}>
+                                        {normalizeRemarkText(remark)}
+                                    </span>
                                 </div>
                             ))}
                         </td>
@@ -1194,6 +1234,7 @@ function PrintArea({ form }) {
                                     key={i}
                                     src={src}
                                     alt=""
+                                    loading="eager"
                                     style={{
                                         width: "32%",
                                         height: "120px",
@@ -1220,26 +1261,23 @@ function PrintArea({ form }) {
                     Coordinate:- {SUM.coordinates}
                 </div>
             )} */}
-
-
             {/* Map Section */}
-            {SUM.coordinates && (
+            {hasMapLocation && (
                 <div style={{ marginTop: 10 }}>
                     <div style={{ fontWeight: "bold", marginBottom: 5 }}>
                         Location Map
                     </div>
 
-
                     <img
-                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${latLog?.[0]?.trim()},${latLog?.[1]?.trim()}&zoom=15&size=600x300&markers=color:red|${latLog?.[0]?.trim()},${latLog?.[0]?.trim()}&key=YOUR_API_KEY`}
+                        src={staticMapUrl}
                         alt="map"
+                        loading="eager"
                         style={{
                             width: "100%",
                             height: "220px",
                             border: "1px solid black"
                         }}
                     />
-
                 </div>
             )}
         </div>
@@ -1249,16 +1287,31 @@ function PrintArea({ form }) {
 /* ─── MAIN COMPONENT ────────────────────────────────────────────────────────── */
 export default function ManappuramForm() {
     const dispatch = useDispatch();
+    const user = useSelector((state) => state.auth.user);
     const { id } = useParams();
     const navigate = useNavigate();
 
     const [form, setForm] = useState(INIT);
     const [liveLocation, setLiveLocation] = useState({ lat: "--", lng: "--" });
     const [saving, setSaving] = useState(false);
+    const [autoFilledFields, setAutoFilledFields] = useState([]);
 
-    // Auto-capture GPS on mount
+    const handleAutoFill = createAutoFillAdapter(
+        MANAPPURAM_MAPPING,
+        (mappedData) => {
+            setAutoFilledFields(Object.keys(mappedData));
+            setForm((prev) => applyMappedFields(prev, mappedData));
+
+            const coordinates = mappedData["summary.coordinates"];
+            if (coordinates) {
+                setLiveLocation(getCoordinateSnapshot(coordinates));
+            }
+        }
+    );
+
     useEffect(() => {
-        if (!navigator.geolocation) return;
+        if (id || !navigator.geolocation) return;
+
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const lat = pos.coords.latitude.toFixed(6);
@@ -1272,23 +1325,26 @@ export default function ManappuramForm() {
             () => { },
             { enableHighAccuracy: true }
         );
-    }, []);
-
-    // Load existing report
-    useEffect(() => {
-        if (id) {
-            dispatch(fetchManappuramById(id))
-                .unwrap()
-                .then((data) =>
-                    setForm({
-                        ...INIT,
-                        ...data,
-                        AttachDocuments: data.AttachDocuments || [],
-                        imageUrls: data.imageUrls || [],
-                    })
-                );
-        }
     }, [id]);
+
+    useEffect(() => {
+        if (!id) return;
+
+        dispatch(fetchManappuramById(id))
+            .unwrap()
+            .then((data) => {
+                const nextForm = {
+                    ...INIT,
+                    ...data,
+                    AttachDocuments: data.AttachDocuments || [],
+                    imageUrls: data.imageUrls || [],
+                    remarks: normalizeRemarks(data.remarks),
+                };
+
+                setForm(nextForm);
+                setLiveLocation(getCoordinateSnapshot(nextForm.summary?.coordinates));
+            });
+    }, [dispatch, id]);
 
     // Generic setter
     const set = (sec, field, val) =>
@@ -1424,6 +1480,7 @@ export default function ManappuramForm() {
             setSaving(true);
             const payload = {
                 ...form,
+                remarks: normalizeRemarks(form.remarks),
                 imageUrls: form.imageUrls
                     .map((img) => (typeof img === "string" ? { url: img } : img))
                     .filter((img) => img?.url?.startsWith("http")),
@@ -1435,6 +1492,9 @@ export default function ManappuramForm() {
             if (id) {
                 await dispatch(updateManappuramDetails({ id, ...payload })).unwrap();
                 toast.success("Updated ✅");
+                if (user?.role === "FieldOfficer") {
+                    navigate("/field/dashboard");
+                }
             } else {
                 const res = await dispatch(createManappuramReport(payload)).unwrap();
                 toast.success("Created ✅");
@@ -1513,6 +1573,18 @@ export default function ManappuramForm() {
 
             {/* ── FORM CONTENT ── */}
             <div className="p-4">
+                <div className="no-print mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    <div className="mb-2 text-sm font-semibold text-slate-800">
+                        AI Auto-fill
+                    </div>
+                    <AutoFillForm setFormData={handleAutoFill} />
+                    {autoFilledFields.length > 0 && (
+                        <div className="mt-3 text-xs text-slate-600">
+                            {autoFilledFields.length} fields auto-filled from uploaded documents.
+                        </div>
+                    )}
+                </div>
+
                 {/* Header */}
                 <div className="border-2 border-black flex items-start p-2">
                     <div className="w-full text-center py-2">
@@ -2393,52 +2465,10 @@ export default function ManappuramForm() {
                         <div key={i} className="flex gap-2 mb-2">
                             <span className="font-bold text-xs mt-2">{i + 1}.</span>
                             <div className="flex-1">
-                                <div className="no-print flex gap-1 mb-1">
-                                    <button
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            document.execCommand("bold");
-                                        }}
-                                        className="border px-2 py-0.5 text-xs"
-                                    >
-                                        <b>B</b>
-                                    </button>
-                                    <button
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            document.execCommand("italic");
-                                        }}
-                                        className="border px-2 py-0.5 text-xs"
-                                    >
-                                        <i>I</i>
-                                    </button>
-                                    <button
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            document.execCommand("underline");
-                                        }}
-                                        className="border px-2 py-0.5 text-xs"
-                                    >
-                                        <u>U</u>
-                                    </button>
-                                    <input
-                                        type="color"
-                                        onChange={(e) =>
-                                            document.execCommand(
-                                                "foreColor",
-                                                false,
-                                                e.target.value
-                                            )
-                                        }
-                                        className="w-6 h-6 border"
-                                    />
-                                </div>
-                                <div
-                                    contentEditable
-                                    suppressContentEditableWarning
-                                    onInput={(e) => updateRemark(i, e.currentTarget.innerHTML)}
-                                    dangerouslySetInnerHTML={{ __html: remark }}
-                                    className="min-h-[50px] border border-gray-300 rounded p-2 text-xs bg-white outline-none"
+                                <textarea
+                                    value={remark}
+                                    onChange={(e) => updateRemark(i, e.target.value)}
+                                    className="min-h-[90px] w-full resize-y rounded border border-gray-300 bg-white p-2 text-xs outline-none"
                                 />
                             </div>
                             <button
