@@ -400,14 +400,33 @@ const GeneralDetails = ({ isEdit, extractedData, onDocumentsChange }) => {
   useEffect(() => {
     const merged = { ...extractedData, ...isEdit };
     if (merged.documents && Array.isArray(merged.documents)) {
+      // const updatedDocs = defaultDocumentData.map((defaultDoc) => {
+      //   const existing = merged.documents.find((d) => d.type === defaultDoc.type);
+      //   return {
+      //     ...defaultDoc,
+      //     ...existing,
+      //     selectedApprovingAuthority: existing?.approvingAuthority || "",
+      //   };
+      // });
+
       const updatedDocs = defaultDocumentData.map((defaultDoc) => {
         const existing = merged.documents.find((d) => d.type === defaultDoc.type);
+
         return {
           ...defaultDoc,
           ...existing,
+
+          // 🔥 FIX: array preserve karo
+          approvingAuthority: defaultDoc.approvingAuthority,
+
+          // selected value alag se set karo
           selectedApprovingAuthority: existing?.approvingAuthority || "",
         };
       });
+
+      console.log(updatedDocs, "ASDFGHJKL");
+
+
       setDocuments(updatedDocs);
     }
   }, [isEdit, extractedData]);
@@ -451,7 +470,7 @@ const GeneralDetails = ({ isEdit, extractedData, onDocumentsChange }) => {
           placeholder="Select"
           allowClear
         >
-          {record.approvingAuthority.map((option) => (
+          {record?.approvingAuthority?.map((option) => (
             <Option key={option} value={option}>{option}</Option>
           ))}
         </Select>

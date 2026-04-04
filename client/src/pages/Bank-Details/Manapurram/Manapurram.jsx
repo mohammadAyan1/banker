@@ -2818,10 +2818,15 @@ const INIT = {
     // Excel uses *0.85 (15% deduction) for distress value
     distressValue: "0",
     remarks: [
-        "GIVEN XEROX COPY OF SALE DEED IN FAVOUR OF APPLICANT.",
-        "DURING PROPERTY VISIT CUSTOMER MET AT THE PROPERTY.",
+        "GIVEN XEROX COPY OF SALE DEED IN FAVOUR OF MR. NAVEEN PRATAP SINGH S/O MR. MANISH SINGH.",
+        " DURING PROPERTY VISIT MR. NAVEEN PRATAP SINGH JI MET AT THE PROPERTY HE IS CUSTOMER AND HIS CONT NO. 7806052286. IT WAS CLEARLY EXPLAINED TO HIM THAT THE PROPERTY VISIT IS BEING DONE FOR VALUATION PURPOSE IN RELATION WITH LOAN PROPOSAL.",
         "RATE HAS BEEN CONFIRM FROM MARKET ENQUIRY.",
-        "PROPERTY IS SITUATED AT SURROUNDING AREA OF LOCALITY IS RESIDENTIAL ZONING.",
+        " PROPERTY IS SITUATED AT SURROUNDING AREA OF LOCALITY IS RESIDENTIAL ZONING.",
+        "AT SITE PROPERTY IS OPEN PLOT WHICH IS DEMARCATED BY BENDING WIRE.",
+        "PROPERTY IS NOT IDENTIFIED BY AS PER SALE DEED AND LOCAL ENQUIRY.",
+        "AS PER DEED 2800 SQFT AND AT SITE LAND AREA IS 40*45= 1800 SQFT.",
+        "AS PER SALE DEED AND ACTUAL KHASRA ARE NOT MATCHED.",
+        "TENTATIVE LAND RATE IS RS. 900/- SQFT."
     ],
     summary: {
         propertyAddress: "",
@@ -2836,6 +2841,125 @@ const INIT = {
 };
 
 /* ─── PHOTO GRID — uploads to backend (like AdityaBirla) ────────────────────── */
+// function PhotoGrid({ label, photos, onAdd, onDelete, reportId, onCaptureLocation }) {
+//     const ref = useRef();
+//     const [uploading, setUploading] = useState(false);
+
+//     const handleFiles = async (e) => {
+//         // Capture GPS first
+//         if (navigator.geolocation) {
+//             navigator.geolocation.getCurrentPosition(
+//                 (pos) =>
+//                     onCaptureLocation &&
+//                     onCaptureLocation(
+//                         pos.coords.latitude.toFixed(6),
+//                         pos.coords.longitude.toFixed(6)
+//                     ),
+//                 () => { },
+//                 { enableHighAccuracy: true }
+//             );
+//         }
+
+//         const files = Array.from(e.target.files);
+//         if (!files.length) return;
+//         setUploading(true);
+
+//         try {
+//             for (const file of files) {
+//                 const formData = new FormData();
+//                 formData.append("file", file);
+//                 if (reportId) formData.append("reportId", reportId);
+
+//                 const res = await axiosInstance.post(
+//                     "/manappuram/upload-image",
+//                     formData,
+//                     { headers: { "Content-Type": "multipart/form-data" } }
+//                 );
+
+//                 if (res.data?.success) {
+//                     onAdd({ url: res.data.url, fileId: res.data.fileId });
+//                 } else {
+//                     toast.error("Image upload failed");
+//                 }
+//             }
+//         } catch (err) {
+//             console.error(err);
+//             toast.error("Image upload error");
+//         } finally {
+//             setUploading(false);
+//             e.target.value = "";
+//         }
+//     };
+
+//     return (
+//         <div>
+//             <table className="w-full border-collapse border border-black mb-1">
+//                 <tbody>
+//                     <tr>
+//                         <th className="bg-amber-50 border border-black p-1 text-xs font-medium">
+//                             {label}
+//                         </th>
+//                     </tr>
+//                 </tbody>
+//             </table>
+
+//             <div className="grid grid-cols-3 gap-1">
+//                 {photos.map((img, i) => {
+//                     const src = typeof img === "string" ? img : img?.url;
+//                     return (
+//                         <div
+//                             key={i}
+//                             className="relative border border-black min-h-[180px]"
+//                         >
+//                             <img
+//                                 src={src}
+//                                 alt=""
+//                                 className="w-full h-48 object-cover"
+//                             />
+//                             <div className="absolute top-1 left-1 no-print">
+//                                 <button
+//                                     onClick={() => window.open(src, "_blank")}
+//                                     className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm"
+//                                     title="View"
+//                                 >
+//                                     👁️
+//                                 </button>
+//                             </div>
+//                             <button
+//                                 onClick={() => onDelete(i, img.fileId)}
+//                                 className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm no-print"
+//                             >
+//                                 ×
+//                             </button>
+//                         </div>
+//                     );
+//                 })}
+
+//                 {/* Upload cell */}
+//                 <div
+//                     className="no-print relative border border-black min-h-[180px] cursor-pointer"
+//                     onClick={() => !uploading && ref.current.click()}
+//                     style={{ cursor: uploading ? "wait" : "pointer" }}
+//                 >
+//                     <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-600 text-xs text-center px-2">
+//                         {uploading ? "⏳ Uploading..." : "📷 Click to Upload\n(GPS auto-captured)"}
+//                     </div>
+//                 </div>
+//             </div>
+
+//             <input
+//                 ref={ref}
+//                 type="file"
+//                 multiple
+//                 accept="image/*"
+//                 className="hidden"
+//                 onChange={handleFiles}
+//             />
+//         </div>
+//     );
+// }
+
+
 function PhotoGrid({ label, photos, onAdd, onDelete, reportId, onCaptureLocation }) {
     const ref = useRef();
     const [uploading, setUploading] = useState(false);
@@ -2904,13 +3028,14 @@ function PhotoGrid({ label, photos, onAdd, onDelete, reportId, onCaptureLocation
                     return (
                         <div
                             key={i}
-                            className="relative border border-black min-h-[180px]"
+                            className="relative border border-black min-h-[180px] flex items-center justify-center bg-black"
                         >
                             <img
                                 src={src}
                                 alt=""
-                                className="w-full h-48 object-cover"
+                                className="max-w-full max-h-full object-contain"
                             />
+
                             <div className="absolute top-1 left-1 no-print">
                                 <button
                                     onClick={() => window.open(src, "_blank")}
@@ -2920,6 +3045,7 @@ function PhotoGrid({ label, photos, onAdd, onDelete, reportId, onCaptureLocation
                                     👁️
                                 </button>
                             </div>
+
                             <button
                                 onClick={() => onDelete(i, img.fileId)}
                                 className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm no-print"
@@ -2932,12 +3058,14 @@ function PhotoGrid({ label, photos, onAdd, onDelete, reportId, onCaptureLocation
 
                 {/* Upload cell */}
                 <div
-                    className="no-print relative border border-black min-h-[180px] cursor-pointer"
+                    className="no-print relative border border-black min-h-[180px] cursor-pointer flex items-center justify-center bg-gray-100"
                     onClick={() => !uploading && ref.current.click()}
                     style={{ cursor: uploading ? "wait" : "pointer" }}
                 >
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-600 text-xs text-center px-2">
-                        {uploading ? "⏳ Uploading..." : "📷 Click to Upload\n(GPS auto-captured)"}
+                    <div className="text-gray-600 text-xs text-center px-2 whitespace-pre-line">
+                        {uploading
+                            ? "⏳ Uploading..."
+                            : "📷 Click to Upload\n(GPS auto-captured)"}
                     </div>
                 </div>
             </div>
@@ -3786,6 +3914,34 @@ function PrintArea({ form }) {
                             {(parseFloat(SUM.forcedSaleValue) || 0).toLocaleString("en-IN")}
                         </td>
                     </tr>
+                    <tr>
+                        <td
+                            colSpan={2}
+                            style={{
+                                ...td,
+                                textAlign: "center",
+                                padding: "5px",
+                                borderBottom: "1px solid black",
+                                background: "black",
+
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "inline-block",
+                                    background: "black",
+                                    color: "white",
+                                    fontWeight: "bold",
+                                    padding: "3px 20px",
+                                    fontSize: "8.5pt",
+                                    letterSpacing: 1,
+                                }}
+                            >
+                                PURPOS
+                            </div>
+                        </td>
+                    </tr>
+
                 </tbody>
             </table>
 
@@ -4128,7 +4284,7 @@ export default function ManappuramForm() {
 
             {/* ── FORM CONTENT ── */}
             <div className="p-4">
-                <div className="no-print mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                {/* <div className="no-print mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <div className="mb-2 text-sm font-semibold text-slate-800">
                         AI Auto-fill
                     </div>
@@ -4138,7 +4294,7 @@ export default function ManappuramForm() {
                             {autoFilledFields.length} fields auto-filled from uploaded documents.
                         </div>
                     )}
-                </div>
+                </div> */}
 
                 {/* Header */}
                 <div className="border-2 border-black flex items-start p-2">
@@ -5180,6 +5336,18 @@ export default function ManappuramForm() {
                             />
                         )}
                     </div>
+                </div>
+
+                <div className="no-print mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    <div className="mb-2 text-sm font-semibold text-slate-800">
+                        AI Auto-fill
+                    </div>
+                    <AutoFillForm setFormData={handleAutoFill} />
+                    {autoFilledFields.length > 0 && (
+                        <div className="mt-3 text-xs text-slate-600">
+                            {autoFilledFields.length} fields auto-filled from uploaded documents.
+                        </div>
+                    )}
                 </div>
 
                 {/* Bottom save/print */}
