@@ -141,6 +141,16 @@ const HFBankDetails = () => {
           }
 
           @media print {
+  .flex {
+    display: block !important;
+  }
+
+  .overflow-hidden {
+    overflow: visible !important;
+  }
+}
+
+          @media print {
             html, body {
               width: 210mm;
               height: auto;

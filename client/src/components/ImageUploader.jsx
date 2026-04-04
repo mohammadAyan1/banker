@@ -77,7 +77,18 @@ const ImageUploader = ({
         credentials: "include",
       });
       const data = await res.json();
+
+      console.log(showUploadImage);
+
       if (!data.success) return;
+
+      if (!id) {
+        setShowUploadImage(() =>
+          showUploadImage.filter((pr) => pr?.fileId !== fileUrl)
+        );
+      }
+
+      if (!id) return
       removeImage(id, ActualUrl);
     } catch (error) {
       console.error("Delete error:", error);
@@ -352,66 +363,103 @@ const ImageUploader = ({
         </div>
       )}
 
-      {showUploadImage?.length > 0 && (
+      {/* {showUploadImage?.length > 0 && (
         <div>
           {showUploadImage?.map((imageData, index) => (
-
-            <img src={imageData?.url}
-              alt={`uploaded-${index}`}
-
-            />
+            <div className="flex flex-col justify-center items-center gap-2">
+              <img
+                src={imageData?.url}
+                alt={`uploaded-${index}`}
+                className="w-full h-80 object-contain"
+              />
+            </div>
           ))}
         </div>
-      )}
-      {/* Display uploaded images (from server) */}
-      {uploadedImages?.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-lg font-medium text-gray-800 mb-3">
-            Uploaded Images
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {uploadedImages.map((item, index) => {
+      )} */}
 
+      {/* // 🔥 IMPORTANT PART ONLY (UI + DELETE FIX) */}
 
-              console.log('====================================');
-              console.log(index);
-              console.log('====================================');
-              (
+      {showUploadImage?.length > 0 && (
+        <div className="mt-4">
 
+          {/* ✅ FLEX ROW + WRAP */}
+          <div className="flex flex-wrap gap-3">
 
+            {showUploadImage.map((imageData, index) => (
+              <div
+                key={index}
+                className="relative w-40 h-40 border rounded overflow-hidden flex items-center justify-center bg-black"
+              >
+                {/* ✅ IMAGE (NO CROP) */}
+                <img
+                  src={imageData?.url}
+                  alt={`uploaded-${index}`}
+                  className="max-w-full max-h-full object-contain"
+                />
 
-                <div
-                  key={item.url || index}
-                  className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                {/* ❌ DELETE BUTTON */}
+                <button
+                  onClick={() => handleRemoveImage(imageData?.fileId, imageData)}
+                  className="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm"
                 >
-                  <img
-                    src={item?.url}
-                    alt={`uploaded-${index}`}
-                    className="w-full h-32 object-cover"
-                  />
-                  {/* Overlay buttons on hover */}
-                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <Button
-                      type="primary"
-                      shape="circle"
-                      icon={<EyeOutlined />}
-                      size="small"
-                      onClick={() => handlePreview({ url: item.url })}
-                    />
-                    <Button
-                      danger
-                      shape="circle"
-                      icon={<DeleteOutlined />}
-                      size="small"
-                      onClick={() => handleRemoveImage(item?.fileId, item)}
-                    />
-                  </div>
-                </div>
-              )
-            })}
+                  ×
+                </button>
+              </div>
+            ))}
+
           </div>
         </div>
       )}
+
+      {/* Display uploaded images (from server) */}
+      {
+        uploadedImages?.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-lg font-medium text-gray-800 mb-3">
+              Uploaded Images
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {uploadedImages.map((item, index) => {
+
+
+                console.log('====================================');
+                console.log(item?.url);
+                console.log('====================================');
+                return (
+
+                  <div
+                    key={item?.url || index}
+                    className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <img
+                      src={item?.url}
+                      alt={`uploaded-${index}`}
+                      className="w-full h-32 object-cover"
+                    />
+                    {/* Overlay buttons on hover */}
+                    <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<EyeOutlined />}
+                        size="small"
+                        onClick={() => handlePreview({ url: item.url })}
+                      />
+                      <Button
+                        danger
+                        shape="circle"
+                        icon={<DeleteOutlined />}
+                        size="small"
+                        onClick={() => handleRemoveImage(item?.fileId, item)}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      }
     </div>
   );
 };

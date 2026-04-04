@@ -148,6 +148,13 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
     }
   };
 
+
+  useEffect(() => {
+    console.log(docUrls);
+
+  }, [docUrls])
+
+
   if (loading) return <Spin />;
 
   return (

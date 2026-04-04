@@ -52,12 +52,25 @@ const DocumentUploader = ({ caseId, bankName, docUrls, setDocUrls, fetchData }) 
                 throw new Error("Upload failed");
             }
 
-            const newUrls = data.urls.map((item) => item.url);
-            // setDocUrls((prev) => [...prev, ...newUrls]);
+            console.log(data?.urls, "ASDFGHJKL");
+            // const newUrls = data.urls.map((item) => item.url);
+            // setDocUrls((prev) => [
+            //     ...(Array.isArray(prev) ? prev : []),
+            //     ...(Array.isArray(newUrls) ? newUrls : [newUrls]),
+            // ]);
+
+
+            const newDocs = data.urls.map((item) => ({
+                url: item.url,
+                fileId: item.fileId,
+                name: item.name,
+            }));
+
             setDocUrls((prev) => [
                 ...(Array.isArray(prev) ? prev : []),
-                ...(Array.isArray(newUrls) ? newUrls : [newUrls])
+                ...newDocs,
             ]);
+
             setFileList([]);
             toast.success("Documents uploaded successfully");
 
@@ -71,14 +84,23 @@ const DocumentUploader = ({ caseId, bankName, docUrls, setDocUrls, fetchData }) 
         }
     };
 
+
+    useEffect(() => {
+        console.log(docUrls);
+    }, [docUrls])
+
     // Delete document from ImageKit and from case (if caseId exists)
     const handleDeleteDocument = async (docUrl) => {
         try {
+            console.log(docUrl, "ASDFGHJKLKJHGFDS");
+
+
+
             // 1. Delete from ImageKit
             await fetch(`${CPANEL}/api/remove/delete-file`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ filePath: docUrl }),
+                body: JSON.stringify({ filePath: docUrl?.fileId }),
             });
 
             // 2. If case exists, remove from database
@@ -96,7 +118,7 @@ const DocumentUploader = ({ caseId, bankName, docUrls, setDocUrls, fetchData }) 
             }
 
             // 3. Remove from local state
-            setDocUrls((prev) => prev.filter((url) => url !== docUrl));
+            setDocUrls((prev) => prev.filter((url) => url?.fileId !== docUrl?.fileId));
             toast.success("Document removed");
 
             // ✅ Only refresh data if we are in edit mode (caseId exists)
@@ -173,7 +195,7 @@ const DocumentUploader = ({ caseId, bankName, docUrls, setDocUrls, fetchData }) 
                         bordered
                         dataSource={docUrls}
                         renderItem={(docUrl) => {
-                            const fileName = docUrl.split("/").pop();
+                            const fileName = docUrl?.url?.split("/").pop();
                             return (
                                 <List.Item
                                     actions={[

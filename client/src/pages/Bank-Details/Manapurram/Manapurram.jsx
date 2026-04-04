@@ -3941,6 +3941,21 @@ function PrintArea({ form }) {
                             </div>
                         </td>
                     </tr>
+                    <tr
+
+                        colSpan={2}
+                        style={{
+                            ...td,
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            padding: "6px",
+                            fontSize: "10pt",
+                            borderBottom: "1px solid black",
+                        }}
+
+                    >
+                        TO ASSEST THE PRESENT MARKET VALUE OF THE PROPERTIES AS REQUIRED FOR THE SECURITY PURPOSE
+                    </tr>
 
                 </tbody>
             </table>
