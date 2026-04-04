@@ -86,6 +86,8 @@ const ImageUploader = ({
         setShowUploadImage(() =>
           showUploadImage.filter((pr) => pr?.fileId !== fileUrl)
         );
+        // if (data.success) await fetchData();
+
       }
 
       if (!id) return
@@ -398,12 +400,12 @@ const ImageUploader = ({
                 />
 
                 {/* ❌ DELETE BUTTON */}
-                <button
+                {/* <button
                   onClick={() => handleRemoveImage(imageData?.fileId, imageData)}
                   className="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm"
                 >
                   ×
-                </button>
+                </button> */}
               </div>
             ))}
 
