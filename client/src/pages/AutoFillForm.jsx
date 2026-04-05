@@ -608,13 +608,13 @@ const AutoFillForm = ({ setFormData }) => {
 
     return (
         <div style={{ marginBottom: 24 }}>
-            <Alert
+            {/* <Alert
                 message="Auto-fill from Documents"
                 description="Property documents upload karein (PDF, images, etc.). AI key information extract karke sabhi form fields mein Hinglish mein auto-fill kar dega."
                 type="info"
                 showIcon
                 style={{ marginBottom: 16 }}
-            />
+            /> */}
 
             <DocumentUpload onUpload={handleUpload} disabled={loading} />
 
