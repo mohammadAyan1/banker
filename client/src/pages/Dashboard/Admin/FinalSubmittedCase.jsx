@@ -1,0 +1,115 @@
+// pages/Case/FinalSubmittedCases.jsx
+
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Button, Table, Tag } from "antd";
+import { Link } from "react-router-dom";
+import { fetchTotalSubmitCase } from "../../../redux/features/assignedCase/assignedCasesThunk";
+import Spinner from "../../../components/Spinner";
+import getBankTagColor from "../getBankTagColor";
+import { Edit3, Trash2 } from "lucide-react";
+import {
+  getBankRoute,
+  getDisplayAddress,
+  getDisplayCustomerName,
+  getDisplayCity,
+} from "../../../utils/dashboardRecord";
+
+const FinalSubmittedCases = () => {
+  const dispatch = useDispatch();
+  const { final, loading, selectedZone } = useSelector((state) => state.assignedCases);
+
+  useEffect(() => {
+    dispatch(fetchTotalSubmitCase());
+  }, [dispatch]);
+
+  const filteredFinal = (final || []).filter(item => {
+    if (!selectedZone) return true;
+    const city = getDisplayCity(item);
+    return city.toLowerCase().includes(selectedZone.toLowerCase());
+  });
+
+  const columns = [
+    {
+      title: "Bank Name",
+      dataIndex: "bankName",
+      render: (bankName) => {
+        const color = getBankTagColor(bankName);
+        return <Tag color={color}>{bankName}</Tag>;
+      },
+    },
+    {
+      title: "Customer Name",
+      dataIndex: "customerName",
+      render: (text, record) => {
+        const displayName = getDisplayCustomerName(record);
+        const bankRoute = getBankRoute(record);
+        return (
+          <Link
+            to={`/bank/${bankRoute}/${record._id}`}
+            className='text-blue-600 hover:underline'
+          >
+            {displayName}
+          </Link>
+        );
+      },
+    },
+    {
+      title: "Address as per Legal Document",
+      dataIndex: "addressLegal",
+      render: (text, record) => getDisplayAddress(record),
+    },
+    {
+      title: "Assigned To",
+      dataIndex: ["assignedTo", "name"],
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (record) => (
+        <>
+          <div className='flex gap-4 items-center'>
+            <Link
+              to={record.route || `/bank/${getBankRoute(record)}/edit/${record._id}`}
+              className='!text-green-600 hover:underline border p-1'
+            >
+              <Edit3 size={18} />
+            </Link>
+            {/* <Button
+              onClick={() => {
+                dispatch(deletedCases(record._id));
+                toast.success("Case deleted successfully!");
+                navigate(0);
+              }}
+              className='!text-red-600 hover:underline'
+            >
+              <Trash2 size={18} />
+            </Button> */}
+          </div>
+        </>
+      ),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      render: (status) => (
+        <span className='bg-blue-600 text-white px-2 py-1 rounded font-semibold inline-block'>
+          {status}
+        </span>
+      ),
+    },
+  ];
+
+  return (
+    <div className='p-4'>
+      <h2 className='text-xl font-bold mb-4'>Final Submitted Cases</h2>
+      {loading ? (
+        <Spinner />
+      ) : (
+        <Table dataSource={filteredFinal} columns={columns} rowKey='_id' bordered />
+      )}
+    </div>
+  );
+};
+
+export default FinalSubmittedCases;
