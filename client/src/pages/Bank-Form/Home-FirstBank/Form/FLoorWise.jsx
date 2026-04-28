@@ -1,7 +1,15 @@
 import React, { useEffect } from "react";
 import { Form, Input, Button, Row, Col, Divider } from "antd";
 
-const FLoorWise = ({ isEdit, onNext, onBack, extractedData }) => {
+const FLoorWise = ({
+    isEdit,
+    onNext,
+    onBack,
+    registerSectionSubmitter,
+    sectionId,
+    showActionButtons = true,
+    extractedData,
+}) => {
     const [form] = Form.useForm();
 
     useEffect(() => {
@@ -37,8 +45,15 @@ const FLoorWise = ({ isEdit, onNext, onBack, extractedData }) => {
     }, [isEdit, extractedData, form]);
 
     const handleSubmit = (values) => {
+        if (!onNext) return;
         onNext(values);
     };
+
+    useEffect(() => {
+        if (!registerSectionSubmitter || !sectionId) return;
+
+        registerSectionSubmitter(sectionId, async () => form.validateFields());
+    }, [registerSectionSubmitter, sectionId, form]);
 
     const RowInput = ({ label, plan, site, remark }) => (
         <Row gutter={16} className="mb-2">
@@ -95,20 +110,22 @@ const FLoorWise = ({ isEdit, onNext, onBack, extractedData }) => {
                 <RowInput label="Total BUA" plan="totalPlan" site="totalSite" remark="totalRemark" />
 
                 {/* Buttons */}
-                <Form.Item className="text-end mt-4">
-                    {onBack && (
-                        <Button
-                            onClick={onBack}
-                            className="mr-2 px-4 py-2 bg-gray-500 text-white"
-                        >
-                            Back
-                        </Button>
-                    )}
+                {showActionButtons && (
+                    <Form.Item className="text-end mt-4">
+                        {onBack && (
+                            <Button
+                                onClick={onBack}
+                                className="mr-2 px-4 py-2 bg-gray-500 text-white"
+                            >
+                                Back
+                            </Button>
+                        )}
 
-                    <Button type="primary" htmlType="submit">
-                        Next
-                    </Button>
-                </Form.Item>
+                        <Button type="primary" htmlType="submit">
+                            Submit
+                        </Button>
+                    </Form.Item>
+                )}
 
             </Form>
         </div>

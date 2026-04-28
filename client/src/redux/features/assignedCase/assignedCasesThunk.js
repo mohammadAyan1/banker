@@ -4,17 +4,23 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const fetchAssignedCases = createAsyncThunk(
   "cases/fetchAssigned",
-  async () => {
-    const res = await axios.get("/case/assigned");
-    return res.data;
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const res = await axios.get("/case/assigned", { params });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch assigned cases"
+      );
+    }
   }
 );
 
 export const fetchPendingCases = createAsyncThunk(
   "cases/fetchPending",
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get("/case/pending"); // API endpoint
+      const response = await axios.get("/case/pending", { params });
       return response.data;
     } catch (err) {
       return rejectWithValue(
@@ -26,9 +32,9 @@ export const fetchPendingCases = createAsyncThunk(
 
 export const fetchTotalSubmitCase = createAsyncThunk(
   "cases/FinalSubmittedCase",
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get("/case/total-submit-data"); // API endpoint
+      const response = await axios.get("/case/total-submit-data", { params });
 
       return response.data;
     } catch (err) {
@@ -41,9 +47,9 @@ export const fetchTotalSubmitCase = createAsyncThunk(
 
 export const getCancelledCases = createAsyncThunk(
   "cases/getCancelledCases",
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get("/case/cancelled");
+      const response = await axios.get("/case/cancelled", { params });
 
       // console.log(response, "Data");
       return response.data;
@@ -57,9 +63,9 @@ export const getCancelledCases = createAsyncThunk(
 
 export const getOutOfTatCases = createAsyncThunk(
   "cases/getOutOfTatCases",
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get("/case/out-of-tat");
+      const response = await axios.get("/case/out-of-tat", { params });
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -71,9 +77,9 @@ export const getOutOfTatCases = createAsyncThunk(
 
 export const fetchSummaryData = createAsyncThunk(
   "summary/fetchSummaryData",
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get("/case/summary-data");
+      const response = await axios.get("/case/summary-data", { params });
       return response.data;
     } catch (error) {
       console.error("Error fetching summary data:", error);

@@ -4,7 +4,15 @@
 
   const { Option } = Select;
 
-  const PropertyDetails = ({ isEdit, onNext, onBack, extractedData }) => {
+  const PropertyDetails = ({
+    isEdit,
+    onNext,
+    onBack,
+    registerSectionSubmitter,
+    sectionId,
+    showActionButtons = true,
+    extractedData,
+  }) => {
     const [form] = Form.useForm();
 
     const initialValues = {
@@ -78,8 +86,15 @@
     }, [isEdit, extractedData, form]);
 
     const handleFinish = (values) => {
+      if (!onNext) return;
       onNext(values);
     };
+
+    useEffect(() => {
+      if (!registerSectionSubmitter || !sectionId) return;
+
+      registerSectionSubmitter(sectionId, async () => form.validateFields());
+    }, [registerSectionSubmitter, sectionId, form]);
 
     return (
       <div className="max-w-5xl mx-auto p-6 bg-white rounded shadow">
@@ -222,18 +237,20 @@
           </Form.Item>
 
           {/* Actions */}
-          <Form.Item className="lg:col-span-2 text-end">
-            {onBack && (
-              <Button
-                type="default"
-                onClick={onBack}
-                className="mr-2 px-4 py-2 bg-gray-500 text-white rounded"
-              >
-                Back
-              </Button>
-            )}
-            <Button type="primary" htmlType="submit">Next</Button>
-          </Form.Item>
+          {showActionButtons && (
+            <Form.Item className="lg:col-span-2 text-end">
+              {onBack && (
+                <Button
+                  type="default"
+                  onClick={onBack}
+                  className="mr-2 px-4 py-2 bg-gray-500 text-white rounded"
+                >
+                  Back
+                </Button>
+              )}
+              <Button type="primary" htmlType="submit">Submit</Button>
+            </Form.Item>
+          )}
         </Form>
       </div>
     );

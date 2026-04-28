@@ -1,121 +1,96 @@
-// pages/Case/OutOfTATCases.jsx
-
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Table, Tag, Input, Select } from "antd";
 import { Link } from "react-router-dom";
+
+import { getOutOfTatCases } from "../../../redux/features/assignedCase/assignedCasesThunk";
 import Spinner from "../../../components/Spinner";
 import getBankTagColor from "../getBankTagColor";
 import {
   getBankRoute,
   getDisplayAddress,
   getDisplayCustomerName,
-  getDisplayCity,
 } from "../../../utils/dashboardRecord";
 
 const { Option } = Select;
 
 const OutOfTATCase = () => {
   const dispatch = useDispatch();
-  
-  // ✅ NEW: Filter states
-  const [searchText, setSearchText] = useState("");
-  const [selectedBanks, setSelectedBanks] = useState([]);
-  const [selectedStatuses, setSelectedStatuses] = useState([]);
-
   const {
-    data: cases,
-    pendingCases,
-    final,
-    cancelledCases,
     loading,
     outOfTatCases,
+    outOfTatPagination,
+    outOfTatFilterOptions,
     selectedZone,
   } = useSelector((state) => state.assignedCases);
 
-  // ✅ NEW: Get unique banks and statuses dynamically
-  const uniqueBanks = useMemo(() => {
-    const rawData = outOfTatCases?.data || [];
-    return [...new Set(rawData.map(item => item.bank).filter(Boolean))];
-  }, [outOfTatCases]);
+  const [searchText, setSearchText] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedBanks, setSelectedBanks] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  const uniqueStatuses = useMemo(() => {
-    const rawData = outOfTatCases?.data || [];
-    return [...new Set(rawData.map(item => item.status).filter(Boolean))];
-  }, [outOfTatCases]);
+  const bankFilter = useMemo(() => selectedBanks.join(","), [selectedBanks]);
+  const statusFilter = useMemo(
+    () => selectedStatuses.join(","),
+    [selectedStatuses]
+  );
 
-  // ✅ UPDATED: Filtered data with multiple filters
-  const OUTCase = useMemo(() => {
-    let filtered = (outOfTatCases?.data || []);
+  const queryParams = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      city: selectedZone || undefined,
+      search: debouncedSearch || undefined,
+      bankName: bankFilter || undefined,
+      status: statusFilter || undefined,
+    }),
+    [bankFilter, currentPage, debouncedSearch, pageSize, selectedZone, statusFilter]
+  );
 
-    // Multiple bank filter
-    if (selectedBanks.length > 0) {
-      filtered = filtered.filter(item => selectedBanks.includes(item.bank));
-    }
+  const fetchOutOfTatList = useCallback(async () => {
+    await dispatch(getOutOfTatCases(queryParams));
+  }, [dispatch, queryParams]);
 
-    // Multiple status filter
-    if (selectedStatuses.length > 0) {
-      filtered = filtered.filter(item => selectedStatuses.includes(item.status));
-    }
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText.trim());
+    }, 350);
 
-    // Zone filter
-    if (selectedZone) {
-      filtered = filtered.filter(item => {
-        const city = getDisplayCity(item);
-        return city.toLowerCase().includes(selectedZone.toLowerCase());
-      });
-    }
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
-    // Search text filter
-    if (searchText) {
-      const searchLower = searchText.toLowerCase();
-      filtered = filtered.filter(item => {
-        const customerName = getDisplayCustomerName(item).toLowerCase();
-        const address = getDisplayAddress(item).toLowerCase();
-        const bank = (item.bank || "").toLowerCase();
-        const status = (item.status || "").toLowerCase();
+  useEffect(() => {
+    fetchOutOfTatList();
+  }, [fetchOutOfTatList]);
 
-        return (
-          customerName.includes(searchLower) ||
-          address.includes(searchLower) ||
-          bank.includes(searchLower) ||
-          status.includes(searchLower)
-        );
-      });
-    }
-
-    return filtered;
-  }, [outOfTatCases, selectedBanks, selectedStatuses, selectedZone, searchText]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedZone]);
 
   const columns = [
     {
       title: "Bank Name",
-      dataIndex: "bank",
-      render: (bank) => {
-        const color = getBankTagColor(bank);
-        return <Tag color={color}>{bank}</Tag>;
-      },
+      dataIndex: "bankName",
+      render: (bankName) => (
+        <Tag color={getBankTagColor(bankName)}>{bankName}</Tag>
+      ),
     },
     {
       title: "Customer Name",
-      dataIndex: "customerName",
-      render: (text, record) => {
-        const displayName = getDisplayCustomerName(record);
-        const bankRoute = getBankRoute(record);
-        return (
-          <Link
-            to={`/bank/${bankRoute}/${record._id}`}
-            className='text-blue-600 hover:underline'
-          >
-            {displayName}
-          </Link>
-        );
-      },
+      render: (_, record) => (
+        <Link
+          to={`/bank/${getBankRoute(record)}/${record._id}`}
+          className="text-blue-600 hover:underline"
+        >
+          {getDisplayCustomerName(record)}
+        </Link>
+      ),
     },
     {
       title: "Address as per Legal Document",
-      dataIndex: "addressLegal",
-      render: (text, record) => getDisplayAddress(record),
+      render: (_, record) => getDisplayAddress(record),
     },
     {
       title: "Created At",
@@ -133,7 +108,7 @@ const OutOfTATCase = () => {
       title: "Status",
       dataIndex: "status",
       render: (status) => (
-        <span className='bg-red-600 text-white px-2 py-1 rounded font-semibold inline-block'>
+        <span className="bg-red-600 text-white px-2 py-1 rounded font-semibold inline-block">
           {status}
         </span>
       ),
@@ -141,22 +116,26 @@ const OutOfTATCase = () => {
   ];
 
   return (
-    <div className='p-4'>
-      <h2 className='text-xl font-bold mb-4'>⏰ Out of TAT Cases</h2>
+    <div className="p-4">
+      <h2 className="text-xl font-bold mb-4">⏰ Out of TAT Cases</h2>
 
-      {/* ✅ NEW: Filter Row */}
-      <div className='flex flex-wrap gap-4 mb-4'>
+      <div className="flex flex-wrap gap-4 mb-4">
         <Select
           mode="multiple"
           placeholder="Filter by Bank"
           style={{ minWidth: 200 }}
           value={selectedBanks}
-          onChange={setSelectedBanks}
+          onChange={(values) => {
+            setSelectedBanks(values);
+            setCurrentPage(1);
+          }}
           allowClear
           maxTagCount={2}
         >
-          {uniqueBanks.map(bank => (
-            <Option key={bank} value={bank}>{bank}</Option>
+          {(outOfTatFilterOptions?.banks || []).map((bank) => (
+            <Option key={bank} value={bank}>
+              {bank}
+            </Option>
           ))}
         </Select>
 
@@ -165,27 +144,57 @@ const OutOfTATCase = () => {
           placeholder="Filter by Status"
           style={{ minWidth: 200 }}
           value={selectedStatuses}
-          onChange={setSelectedStatuses}
+          onChange={(values) => {
+            setSelectedStatuses(values);
+            setCurrentPage(1);
+          }}
           allowClear
           maxTagCount={2}
         >
-          {uniqueStatuses.map(status => (
-            <Option key={status} value={status}>{status}</Option>
+          {(outOfTatFilterOptions?.statuses || []).map((status) => (
+            <Option key={status} value={status}>
+              {status}
+            </Option>
           ))}
         </Select>
 
         <Input
           placeholder="Search by customer, address, bank or status"
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+          onChange={(event) => {
+            setSearchText(event.target.value);
+            setCurrentPage(1);
+          }}
           style={{ width: 300 }}
+          allowClear
         />
       </div>
 
       {loading ? (
         <Spinner />
       ) : (
-        <Table dataSource={OUTCase} columns={columns} rowKey='_id' bordered />
+        <Table
+          dataSource={outOfTatCases}
+          columns={columns}
+          rowKey="_id"
+          bordered
+          pagination={{
+            current: outOfTatPagination?.page || currentPage,
+            pageSize: outOfTatPagination?.limit || pageSize,
+            total: outOfTatPagination?.total || 0,
+            showSizeChanger: true,
+          }}
+          onChange={(pagination) => {
+            if (pagination.current !== currentPage) {
+              setCurrentPage(pagination.current);
+            }
+
+            if (pagination.pageSize !== pageSize) {
+              setPageSize(pagination.pageSize);
+              setCurrentPage(1);
+            }
+          }}
+        />
       )}
     </div>
   );

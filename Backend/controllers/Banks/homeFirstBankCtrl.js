@@ -1,5 +1,25 @@
 const ValuationReport = require("../../model/Banks/homeFirstModel");
 const Notification = require("../../model/Notification");
+const { deleteImage } = require("../../config/imageUploader");
+
+const getAssetUrl = (asset) =>
+  typeof asset === "string" ? asset : asset?.url || "";
+
+const buildAssetPullQuery = (fieldName, asset) => {
+  if (typeof asset === "string") {
+    return { $pull: { [fieldName]: asset } };
+  }
+
+  if (asset?.fileId) {
+    return { $pull: { [fieldName]: { fileId: asset.fileId } } };
+  }
+
+  if (asset?.url) {
+    return { $pull: { [fieldName]: { url: asset.url } } };
+  }
+
+  return { $pull: { [fieldName]: asset } };
+};
 
 // Create a new valuation report
 exports.createValuationReport = async (req, res) => {
@@ -149,11 +169,18 @@ exports.deleteImageFromValuationReport = async (req, res) => {
       return res.status(400).json({ message: "imageUrl is required" });
     }
 
-    const updatedJob = await ValuationReport.findByIdAndUpdate(
-      id,
-      { $pull: { imageUrls: imageUrl } },
-      { new: true }
-    );
+    const assetUrl = getAssetUrl(imageUrl);
+    if (assetUrl) {
+      try {
+        await deleteImage(assetUrl);
+      } catch (storageError) {
+        console.warn("Home First image storage delete failed:", storageError.message);
+      }
+    }
+
+    const updatedJob = await ValuationReport.findByIdAndUpdate(id, buildAssetPullQuery("imageUrls", imageUrl), {
+      new: true,
+    });
 
     if (!updatedJob) {
       return res.status(404).json({ message: "Job not found" });
@@ -219,9 +246,18 @@ exports.deleteDocumentFromValuationReport = async (req, res) => {
       return res.status(400).json({ message: "documentUrl is required" });
     }
 
+    const assetUrl = getAssetUrl(documentUrl);
+    if (assetUrl) {
+      try {
+        await deleteImage(assetUrl);
+      } catch (storageError) {
+        console.warn("Home First document storage delete failed:", storageError.message);
+      }
+    }
+
     const updatedJob = await ValuationReport.findByIdAndUpdate(
       id,
-      { $pull: { AttachDocuments: documentUrl } },
+      buildAssetPullQuery("AttachDocuments", documentUrl),
       { new: true }
     );
 

@@ -284,12 +284,18 @@ const QueryRaised = () => {
     },
   ];
 
+  const selectedZones = String(selectedZone || "")
+    .split(",")
+    .map((zone) => zone.trim().toLowerCase())
+    .filter(Boolean);
+
   const filteredNotes = notes.filter(note => {
-    if (!selectedZone) return true;
+    if (selectedZones.length === 0) return true;
     const caseData = caseMap[note.caseId];
     if (!caseData) return true; // Show if case data not loaded yet
     const city = getDisplayCity(caseData);
-    return city.toLowerCase().includes(selectedZone.toLowerCase());
+    const normalizedCity = city.toLowerCase();
+    return selectedZones.some((zone) => normalizedCity.includes(zone));
   });
 
   return (

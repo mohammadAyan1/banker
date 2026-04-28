@@ -1,12 +1,14 @@
 
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import FileDownload from "../../components/FileDownload";
 import { fetchHFBankById } from "../../redux/features/Banks/HFBank/HFBankThunk";
+import { finalUpdate } from "../../redux/features/case/caseThunks";
 import { ReactSortable } from "react-sortablejs";
 import moment from "moment";
 import StaticLocationMap from "../../components/StaticLocationMap";
+import toast from "react-hot-toast";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Word Doc ke 14 default remarks — DB data se auto-fill
@@ -46,9 +48,12 @@ const HFBankDetails = () => {
   const CPANEL = import.meta.env.VITE_API_URL;
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const reportRef = useRef();
   const { singleBank } = useSelector((state) => state.hfBanks);
+  const { user } = useSelector((state) => state.auth);
   const reportData = singleBank?.data ?? singleBank;
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (id) dispatch(fetchHFBankById(id));
@@ -79,6 +84,7 @@ const HFBankDetails = () => {
 
   const handleImageClick = (imageUrl) => setSelectedImage(imageUrl);
   const closeModal = () => setSelectedImage(null);
+  const canFinalSubmit = user?.role === "Admin" || user?.role === "SuperAdmin";
 
   // Helper: show value or fallback
   const val = (v, fallback = "—") =>
@@ -89,6 +95,26 @@ const HFBankDetails = () => {
     if (!d) return "—";
     const m = moment(d);
     return m.isValid() ? m.format("DD.MM.YYYY") : d;
+  };
+
+  const handleFinalSubmit = async () => {
+    if (!canFinalSubmit || !id) return;
+    if (!window.confirm("Are you sure you want to Final Submit? This will lock the report.")) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await dispatch(
+        finalUpdate({ id, bankName: "home-first", updateData: reportData })
+      ).unwrap();
+      await dispatch(fetchHFBankById(id)).unwrap();
+      toast.success("Report finalized successfully");
+    } catch (error) {
+      toast.error("Failed to final submit report");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Documents plan table rows config (matches PDF Section 5)
@@ -260,6 +286,46 @@ const HFBankDetails = () => {
           }
         `}
       </style>
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Home First Valuation Report
+          </h2>
+          <p className="text-sm text-gray-500">
+            {reportData?.customerName || reportData?.refNo || "Saved report"}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => navigate(`/bank/home-first/edit/${id}`)}
+            className="rounded-md border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+          >
+            Edit
+          </button>
+
+          {canFinalSubmit && (
+            <button
+              type="button"
+              onClick={handleFinalSubmit}
+              disabled={isSaving || reportData?.status === "FinalSubmitted"}
+              className={`rounded-md px-4 py-2 text-sm font-semibold text-white transition ${
+                isSaving || reportData?.status === "FinalSubmitted"
+                  ? "cursor-not-allowed bg-gray-400"
+                  : "bg-red-600 hover:bg-red-700"
+              }`}
+            >
+              {isSaving
+                ? "Finalizing..."
+                : reportData?.status === "FinalSubmitted"
+                  ? "Final Submitted"
+                  : "Final Submit"}
+            </button>
+          )}
+        </div>
+      </div>
 
       <FileDownload data={reportData} tableId="reportTable" />
 

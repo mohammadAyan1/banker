@@ -8,6 +8,7 @@ import {
     fetchBajajHousingById,
     updateBajajHousingDetails,
 } from "../../../redux/features/Banks/BajajHousing/BajajHousingThunk";
+import { finalUpdate } from "../../../redux/features/case/caseThunks";
 import axiosInstance from "../../../config/axios";
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -129,6 +130,7 @@ const s = {
     btnNext: { background: '#0a2540', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 28px', fontWeight: 600, cursor: 'pointer', fontSize: 14 },
     btnSave: { background: '#6c7a8e', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 24px', fontWeight: 600, cursor: 'pointer', fontSize: 14 },
     btnSubmit: { background: '#00c853', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 28px', fontWeight: 600, cursor: 'pointer', fontSize: 14 },
+    btnFinal: { background: '#d32f2f', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 28px', fontWeight: 600, cursor: 'pointer', fontSize: 14 },
     btnView: { background: '#1565c0', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 24px', fontWeight: 600, cursor: 'pointer', fontSize: 14 },
     badge: { background: '#e8f5e9', color: '#2e7d32', padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 500 },
     badgeBlue: { background: '#e3f2fd', color: '#1565c0', padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 500 },
@@ -293,6 +295,9 @@ export default function BajajHousingForm() {
     const [liveLocation, setLiveLocation] = useState({ lat: "--", lng: "--" });
     const [saving, setSaving] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
+    const isEdit = Boolean(id);
+    const canFinalSubmit =
+        isEdit && (user?.role === "Admin" || user?.role === "SuperAdmin");
 
     useEffect(() => {
         if (id || !navigator.geolocation) return;
@@ -482,6 +487,40 @@ export default function BajajHousingForm() {
         } catch (err) {
             console.error(err);
             toast.error("Error ❌");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleFinalSubmit = async () => {
+        if (!id || !canFinalSubmit) return;
+
+        try {
+            setSaving(true);
+            const sanitizeImgArr = (arr) =>
+                arr
+                    .map((img) => (typeof img === "string" ? { url: img } : img))
+                    .filter((img) => img?.url?.startsWith("http"));
+
+            const payload = {
+                ...form,
+                frontElevationImages: sanitizeImgArr(form.frontElevationImages),
+                kitchenImages: sanitizeImgArr(form.kitchenImages),
+                selfieImages: sanitizeImgArr(form.selfieImages),
+                otherImages: sanitizeImgArr(form.otherImages),
+                AttachDocuments: form.AttachDocuments.filter((d) => d?.url?.startsWith("http")),
+            };
+
+            await dispatch(updateBajajHousingDetails({ id, ...payload })).unwrap();
+            await dispatch(
+                finalUpdate({ id, bankName: "bajaj-housing", updateData: payload })
+            ).unwrap();
+
+            toast.success("Final submitted ✅");
+            navigate("/");
+        } catch (err) {
+            console.error(err);
+            toast.error("Finalization failed");
         } finally {
             setSaving(false);
         }
@@ -846,7 +885,16 @@ export default function BajajHousingForm() {
                     {currentStep < 8 ? (
                         <button style={s.btnNext} onClick={nextStep}>Next →</button>
                     ) : (
-                        <button style={s.btnSubmit} onClick={handleSubmit}>Submit</button>
+                        <>
+                            <button style={s.btnSubmit} onClick={handleSubmit} disabled={saving}>
+                                {saving ? "Saving..." : isEdit ? "Update" : "Submit"}
+                            </button>
+                            {canFinalSubmit && (
+                                <button style={s.btnFinal} onClick={handleFinalSubmit} disabled={saving}>
+                                    {saving ? "Finalizing..." : "Final Submit"}
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

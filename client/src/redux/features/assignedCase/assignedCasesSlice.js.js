@@ -9,6 +9,20 @@ import {
   fetchSummaryData,
 } from "./assignedCasesThunk";
 
+const defaultPagination = {
+  page: 1,
+  limit: 10,
+  total: 0,
+  totalPages: 0,
+  hasNext: false,
+  hasPrev: false,
+};
+
+const defaultFilterOptions = {
+  banks: [],
+  statuses: [],
+};
+
 const assignedCasesSlice = createSlice({
   name: "assignedCases",
   initialState: {
@@ -16,8 +30,18 @@ const assignedCasesSlice = createSlice({
     pendingCases: [],
     cancelledCases: [],
     final: [],
-    outOfTatCases: [], // <-- add this
-    summary: [],
+    outOfTatCases: [],
+    summary: {},
+    assignedPagination: defaultPagination,
+    pendingPagination: defaultPagination,
+    finalPagination: defaultPagination,
+    cancelledPagination: defaultPagination,
+    outOfTatPagination: defaultPagination,
+    assignedFilterOptions: defaultFilterOptions,
+    pendingFilterOptions: defaultFilterOptions,
+    finalFilterOptions: defaultFilterOptions,
+    cancelledFilterOptions: defaultFilterOptions,
+    outOfTatFilterOptions: defaultFilterOptions,
     selectedZone: "", // New state for city filtering
     loading: false,
     error: null,
@@ -49,11 +73,15 @@ const assignedCasesSlice = createSlice({
       })
       .addCase(fetchAssignedCases.fulfilled, (state, action) => {
         state.loading = false;
-        state.data = action.payload;
+        state.data = action.payload?.items || [];
+        state.assignedPagination =
+          action.payload?.pagination || defaultPagination;
+        state.assignedFilterOptions =
+          action.payload?.filterOptions || defaultFilterOptions;
       })
       .addCase(fetchAssignedCases.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload || action.error.message;
       })
       .addCase(fetchPendingCases.pending, (state) => {
         state.loading = true;
@@ -61,7 +89,11 @@ const assignedCasesSlice = createSlice({
       })
       .addCase(fetchPendingCases.fulfilled, (state, action) => {
         state.loading = false;
-        state.pendingCases = action.payload;
+        state.pendingCases = action.payload?.items || [];
+        state.pendingPagination =
+          action.payload?.pagination || defaultPagination;
+        state.pendingFilterOptions =
+          action.payload?.filterOptions || defaultFilterOptions;
       })
       .addCase(fetchPendingCases.rejected, (state, action) => {
         state.loading = false;
@@ -75,7 +107,10 @@ const assignedCasesSlice = createSlice({
       })
       .addCase(fetchTotalSubmitCase.fulfilled, (state, action) => {
         state.loading = false;
-        state.final = action.payload;
+        state.final = action.payload?.items || [];
+        state.finalPagination = action.payload?.pagination || defaultPagination;
+        state.finalFilterOptions =
+          action.payload?.filterOptions || defaultFilterOptions;
       })
       .addCase(fetchTotalSubmitCase.rejected, (state, action) => {
         state.loading = false;
@@ -89,7 +124,11 @@ const assignedCasesSlice = createSlice({
       })
       .addCase(getCancelledCases.fulfilled, (state, action) => {
         state.loading = false;
-        state.cancelledCases = action.payload;
+        state.cancelledCases = action.payload?.items || [];
+        state.cancelledPagination =
+          action.payload?.pagination || defaultPagination;
+        state.cancelledFilterOptions =
+          action.payload?.filterOptions || defaultFilterOptions;
       })
       .addCase(getCancelledCases.rejected, (state, action) => {
         state.loading = false;
@@ -102,7 +141,11 @@ const assignedCasesSlice = createSlice({
       })
       .addCase(getOutOfTatCases.fulfilled, (state, action) => {
         state.loading = false;
-        state.outOfTatCases = action.payload;
+        state.outOfTatCases = action.payload?.items || [];
+        state.outOfTatPagination =
+          action.payload?.pagination || defaultPagination;
+        state.outOfTatFilterOptions =
+          action.payload?.filterOptions || defaultFilterOptions;
       })
       .addCase(getOutOfTatCases.rejected, (state, action) => {
         state.loading = false;

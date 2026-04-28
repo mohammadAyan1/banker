@@ -203,11 +203,19 @@
 
 
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Form, Input, Button, Select, Divider } from "antd";
 import GeneralDetails from "./GeneralDetails";
 
-const LocalityDetails = ({ isEdit, onNext, onBack, extractedData }) => {
+const LocalityDetails = ({
+  isEdit,
+  onNext,
+  onBack,
+  registerSectionSubmitter,
+  sectionId,
+  showActionButtons = true,
+  extractedData,
+}) => {
   const [form] = Form.useForm();
   const [documents, setDocuments] = useState([]); // will be filled by GeneralDetails
 
@@ -247,19 +255,29 @@ const LocalityDetails = ({ isEdit, onNext, onBack, extractedData }) => {
     setDocuments(docs);
   };
 
+  const buildSectionData = (values) => ({
+    ...values,
+    documents: documents.map((doc) => ({
+      key: doc.key,
+      type: doc.type,
+      approvingAuthority: doc.selectedApprovingAuthority || "",
+      approvalDate: doc.approvalDate,
+      approvalDetails: doc.approvalDetails,
+    })),
+  });
+
+  useEffect(() => {
+    if (!registerSectionSubmitter || !sectionId) return;
+
+    registerSectionSubmitter(sectionId, async () => {
+      const values = await form.validateFields();
+      return buildSectionData(values);
+    });
+  }, [registerSectionSubmitter, sectionId, form, documents]);
+
   const handleSubmit = (values) => {
-    // Merge documents into final data
-    const fullData = {
-      ...values,
-      documents: documents.map((doc) => ({
-        key: doc.key,
-        type: doc.type,
-        approvingAuthority: doc.selectedApprovingAuthority || "",
-        approvalDate: doc.approvalDate,
-        approvalDetails: doc.approvalDetails,
-      })),
-    };
-    onNext(fullData);
+    if (!onNext) return;
+    onNext(buildSectionData(values));
   };
 
   return (
@@ -408,16 +426,18 @@ const LocalityDetails = ({ isEdit, onNext, onBack, extractedData }) => {
         </Form.Item>
 
         {/* Actions */}
-        <div className="md:col-span-2 text-right">
-          {onBack && (
-            <Button onClick={onBack} className="mr-2">
-              Back
+        {showActionButtons && (
+          <div className="md:col-span-2 text-right">
+            {onBack && (
+              <Button onClick={onBack} className="mr-2">
+                Back
+              </Button>
+            )}
+            <Button type="primary" htmlType="submit">
+              Submit
             </Button>
-          )}
-          <Button type="primary" htmlType="submit">
-            Next
-          </Button>
-        </div>
+          </div>
+        )}
       </Form>
     </div>
   );

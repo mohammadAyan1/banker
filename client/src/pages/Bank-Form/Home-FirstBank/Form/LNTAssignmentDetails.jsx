@@ -19,7 +19,15 @@ import DocumentUploader from "../../../../components/DocumentUploader";
 const { TextArea } = Input;
 const { Option } = Select;
 
-const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
+const LNTAssignmentDetails = ({
+  isEdit,
+  onNext,
+  registerSectionSubmitter,
+  sectionId,
+  showActionButtons = true,
+  extractedData,
+  fetchData,
+}) => {
   const { user } = useSelector((state) => state.auth);
   const [form] = Form.useForm();
   const [images, setImages] = useState([]);
@@ -67,8 +75,9 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
 
   useEffect(() => {
     const merged = { ...extractedData, ...isEdit };
-    setUploadedImagess(merged?.imageUrls);
-    setDocUrls(merged?.AttachDocuments);
+    setUploadedImagess(merged?.imageUrls || []);
+    setUploadedUrls(merged?.imageUrls || []);
+    setDocUrls(merged?.AttachDocuments || []);
 
     if (merged) {
       const parsedDate = merged.dateOfReport
@@ -125,19 +134,35 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
     }
   }, [user.role, uploadedUrls]);
 
+  const buildSubmissionData = (values) => ({
+    ...values,
+    imageUrls: uploadedUrls,
+    AttachDocuments: docUrls,
+  });
+
+  useEffect(() => {
+    if (!registerSectionSubmitter || !sectionId) return;
+
+    registerSectionSubmitter(sectionId, async () => {
+      if (user.role === "FieldOfficer" && uploadedUrls.length === 0) {
+        toast.error("Please upload images before submitting");
+        throw new Error("image upload required");
+      }
+
+      const values = await form.validateFields();
+      return buildSubmissionData(values);
+    });
+  }, [registerSectionSubmitter, sectionId, form, uploadedUrls, docUrls, user.role]);
+
   const handleSubmit = async (values) => {
+    if (!onNext) return;
     if (user.role === "FieldOfficer" && uploadedUrls.length === 0) {
       toast.error("Please upload images before submitting");
       return;
     }
     setLoading(true);
     try {
-      const fullData = {
-        ...values,
-        imageUrls: uploadedUrls,
-        AttachDocuments: docUrls,
-      };
-      onNext(fullData);
+      await onNext(buildSubmissionData(values));
     } catch (error) {
       console.log(error);
     } finally {
@@ -435,11 +460,13 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
           />
         </div>
 
-        <Form.Item className="col-span-2 text-end">
-          <Button type="primary" htmlType="submit" className="mt-4">
-            {user.role === "FieldOfficer" ? "Submit" : "Next"}
-          </Button>
-        </Form.Item>
+        {showActionButtons && (
+          <Form.Item className="col-span-2 text-end">
+            <Button type="primary" htmlType="submit" className="mt-4" loading={loading}>
+              Submit
+            </Button>
+          </Form.Item>
+        )}
       </Form>
     </div>
   );

@@ -1,157 +1,97 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { Select } from "antd";
+import CountUp from "react-countup";
+import { DownOutlined } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
 
-
-import React, { useEffect, useState } from "react";
 import Pending from "./Pending";
 import QueryRaised from "./Admin/QueryRaised";
 import AssignedCase from "./Admin/AssignedCase";
-// import ReportSubmitted from "./ReportSubmitted";
-import { Select } from "antd";
-import CountUp from "react-countup";
 import MyWorklist from "./MyWorklist";
-import { DownOutlined } from "@ant-design/icons";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchAssignedCases,
-  fetchPendingCases,
-  fetchTotalSubmitCase,
-  getCancelledCases,
-  getOutOfTatCases,
-} from "../../redux/features/assignedCase/assignedCasesThunk";
-import axiosInstance from "../../config/axios";
 import FinalSubmittedCase from "./Admin/FinalSubmittedCase";
-
-import { fetchFieldOfficers } from "../../redux/features/auth/authThunks";
 import CancelledCases from "./Admin/CancelledCases";
-import { fetchNotifications } from "../../redux/features/notification/notificationThunk";
-import { fetchSummaryData } from "../../redux/features/assignedCase/assignedCasesThunk";
 import OutOfTATCase from "./Admin/OutOfTatCase";
 import SummaryCard from "./Admin/SummaryCard";
-import { getDisplayCity } from "../../utils/dashboardRecord";
+import { fetchFieldOfficers } from "../../redux/features/auth/authThunks";
+import { fetchNotifications } from "../../redux/features/notification/notificationThunk";
+import { fetchSummaryData } from "../../redux/features/assignedCase/assignedCasesThunk";
 
 const { Option } = Select;
 
 const Dashboard = () => {
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeComponent, setActiveComponent] = useState("");
   const [selectedAgent, setSelectedAgent] = useState("Self");
 
-  const {
-    data: cases,
-    pendingCases,
-    final,
-    cancelledCases,
-    outOfTatCases,
-  } = useSelector((state) => state.assignedCases);
-
-  const { user } = useSelector((state) => state.auth);
-
-  const fieldOfficers = useSelector((state) => state.auth.FO) || [];
-  const summaryData = useSelector((state) => state.assignedCases.summary) || [];
+  const { user, FO: fieldOfficers = [] } = useSelector((state) => state.auth);
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
-
-  // Filter helper
-  const filterByZone = (list) => {
-    // If SuperAdmin and no zone selected, show all
-    if (user?.role === "SuperAdmin" && !selectedZone) return list || [];
-    
-    if (!selectedZone) return list || []; 
-
-    return (list || []).filter(c => {
-      const city = getDisplayCity(c);
-      return city.toLowerCase().includes(selectedZone.toLowerCase());
-    });
-  };
-
-  const filteredPending = filterByZone(pendingCases);
-  const filteredCases = filterByZone(cases);
-  const filteredFinal = filterByZone(final);
-  const filteredSummary = filterByZone(summaryData?.totalSubmissions);
-  const filteredSummaryQuery = filterByZone(summaryData?.queryRaised);
-
-  const filteredCancelled = filterByZone(cancelledCases?.cancelledCases?.flatMap(b => b.cases));
-  const filteredOutOfTat = filterByZone(outOfTatCases?.data);
-
-  const dispatch = useDispatch();
-
-  const [notes, setNotes] = useState([]);
-
-  const fetchNotes = async () => {
-    try {
-      const res = await axiosInstance.get("/notes/get");
-      setNotes(res.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const summaryData = useSelector((state) => state.assignedCases.summary) || {};
+  const counts = summaryData?.counts || {};
 
   useEffect(() => {
-    dispatch(fetchPendingCases());
-    dispatch(fetchTotalSubmitCase());
-    dispatch(getCancelledCases());
-    dispatch(fetchNotifications());
-
-
-    //!
-    dispatch(getOutOfTatCases()), fetchNotes();
-  }, []);
-
-  useEffect(() => {
-    dispatch(fetchAssignedCases());
     dispatch(fetchFieldOfficers());
-    dispatch(fetchSummaryData());
+    dispatch(fetchNotifications());
   }, [dispatch]);
 
-  const reports = [
-    {
-      title: "All Cases",
-      total: filteredSummary.length,
-      component: "Summary",
-    },
-    {
-      title: "To Be Assigned / File Generated",
-      total: filteredPending.length,
-      component: "Pending",
-    },
-    {
-      title: "Total Assigned / Work in Progress",
-      total: filteredCases.length,
-      component: "Assigned",
-    },
-    {
-      title: "Total Submission",
-      total: filteredFinal.length,
-      component: "ReportSubmitted",
-    },
-    { title: "Query Raised", total: filteredSummaryQuery.length, component: "QueryRaised" },
-    {
-      title: "Cancel Cases",
-      total: filteredCancelled.length,
-      component: "CancelCases",
-    },
-    { title: "Awaiting Approved", total: "0" },
-    { title: "Awaiting Portal Cases", total: "0" },
-    {
-      title: "Out Tat Cases",
-      total: filteredOutOfTat.length,
-      component: "Out_Tat_Cases",
-    },
-  ];
+  useEffect(() => {
+    dispatch(fetchSummaryData({ city: selectedZone || undefined }));
+  }, [dispatch, selectedZone]);
 
-  const handleSelect = (value) => {
-    setSelectedAgent(value);
-  };
+  const reports = useMemo(
+    () => [
+      {
+        title: "All Cases",
+        total: counts.allCases || 0,
+        component: "Summary",
+      },
+      {
+        title: "To Be Assigned / File Generated",
+        total: counts.pending || 0,
+        component: "Pending",
+      },
+      {
+        title: "Total Assigned / Work in Progress",
+        total: counts.working || 0,
+        component: "Assigned",
+      },
+      {
+        title: "Total Submission",
+        total: counts.finalSubmitted || 0,
+        component: "ReportSubmitted",
+      },
+      {
+        title: "Query Raised",
+        total: counts.queryRaised || 0,
+        component: "QueryRaised",
+      },
+      {
+        title: "Cancel Cases",
+        total: counts.cancelled || 0,
+        component: "CancelCases",
+      },
+      { title: "Awaiting Approved", total: "0" },
+      { title: "Awaiting Portal Cases", total: "0" },
+      {
+        title: "Out Tat Cases",
+        total: counts.outOfTat || 0,
+        component: "Out_Tat_Cases",
+      },
+    ],
+    [counts]
+  );
 
   return (
     <div className="p-4">
-      {/* Tab Navigation */}
       <div className="custom-container mb-6 mt-14 border-b border-gray-300">
         <ul className="nav nav-tabs custom-tabs flex gap-2">
           <li className="nav-item">
             <button
-              className={`nav-link px-4 py-2 rounded-t-lg font-medium ${activeTab === "dashboard"
-                ? "bg-[#B5121B] text-white"
-                : "bg-gray-100 text-gray-800"
-                }`}
+              className={`nav-link px-4 py-2 rounded-t-lg font-medium ${
+                activeTab === "dashboard"
+                  ? "bg-[#B5121B] text-white"
+                  : "bg-gray-100 text-gray-800"
+              }`}
               onClick={() => setActiveTab("dashboard")}
             >
               Dashboard
@@ -159,10 +99,11 @@ const Dashboard = () => {
           </li>
           <li className="nav-item">
             <button
-              className={`nav-link px-4 py-2 rounded-t-lg font-medium ${activeTab === "myworklist"
-                ? "bg-[#B5121B] text-white"
-                : "bg-gray-100 text-gray-800"
-                }`}
+              className={`nav-link px-4 py-2 rounded-t-lg font-medium ${
+                activeTab === "myworklist"
+                  ? "bg-[#B5121B] text-white"
+                  : "bg-gray-100 text-gray-800"
+              }`}
               onClick={() => setActiveTab("myworklist")}
             >
               My Worklist
@@ -178,14 +119,14 @@ const Dashboard = () => {
               <h5 className="text-xl font-semibold text-gray-800">All Cases</h5>
               <Select
                 value={selectedAgent}
-                onChange={handleSelect}
+                onChange={setSelectedAgent}
                 suffixIcon={<DownOutlined />}
                 className="w-64"
               >
                 <Option value="All Agents">All Agents</Option>
-                {fieldOfficers?.map((f) => (
-                  <Option key={f._id} value={f.name}>
-                    {f.name}
+                {fieldOfficers?.map((fieldOfficer) => (
+                  <Option key={fieldOfficer._id} value={fieldOfficer.name}>
+                    {fieldOfficer.name}
                   </Option>
                 ))}
               </Select>
@@ -196,20 +137,21 @@ const Dashboard = () => {
                 <div
                   key={key}
                   onClick={() => setActiveComponent(report.component)}
-                  className={`group relative flex flex-col items-center  text-center p-4 h-40 rounded-xl cursor-pointer transition-all duration-300 border-1 shadow hover:shadow-lg focus:outline-none ${activeComponent === report.component
-                    ? "border-[#B5121B] bg-[#FFF4F4]"
-                    : "border-gray-400 bg-white"
-                    }`}
+                  className={`group relative flex flex-col items-center text-center p-4 h-40 rounded-xl cursor-pointer transition-all duration-300 border-1 shadow hover:shadow-lg focus:outline-none ${
+                    activeComponent === report.component
+                      ? "border-[#B5121B] bg-[#FFF4F4]"
+                      : "border-gray-400 bg-white"
+                  }`}
                 >
                   <h6
                     style={{ fontSize: "0.8rem" }}
-                    className="uppercase text-center   relative  font-semibold text-gray-500 group-hover:text-[#B5121B] transition-colors"
+                    className="uppercase text-center relative font-semibold text-gray-500 group-hover:text-[#B5121B] transition-colors"
                   >
                     {report.title}
                   </h6>
-                  <h2 className="!text-4xl absolute bottom-6 font-semibold mt-2 border-[1px] border-gray-200   group-hover:text-[#B5121B] transition-colors px-4 p-2 rounded text-gray-800 tracking-tight">
+                  <h2 className="!text-4xl absolute bottom-6 font-semibold mt-2 border-[1px] border-gray-200 group-hover:text-[#B5121B] transition-colors px-4 p-2 rounded text-gray-800 tracking-tight">
                     <CountUp
-                      end={parseInt(report.total)}
+                      end={parseInt(report.total, 10) || 0}
                       duration={1.5}
                       separator=","
                     />
@@ -222,10 +164,10 @@ const Dashboard = () => {
               <h5 className="text-base font-medium text-gray-700">
                 Total cases:{" "}
                 <span className="font-semibold text-gray-900">
-                  <CountUp 
-                    end={(summaryData?.totalSubmissions?.length || 0)} 
-                    duration={1.5} 
-                    separator="," 
+                  <CountUp
+                    end={counts.allCases || 0}
+                    duration={1.5}
+                    separator=","
                   />
                 </span>
               </h5>

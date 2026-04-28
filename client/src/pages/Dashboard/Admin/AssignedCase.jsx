@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { Table, Button, Tag, Input, Popconfirm, Modal, Select } from "antd";
@@ -15,7 +15,6 @@ import Spinner from "../../../components/Spinner";
 import {
   getBankRoute,
   getDisplayCustomerName,
-  getDisplayCity,
 } from "../../../utils/dashboardRecord";
 
 const { Search } = Input;
@@ -23,102 +22,87 @@ const { Option } = Select;
 
 const AssignedCase = () => {
   const dispatch = useDispatch();
-  const { data: cases, loading } = useSelector((state) => state.assignedCases);
   const { user } = useSelector((state) => state.auth);
-
   const fieldOfficers = useSelector(selectFieldOfficers);
+  const {
+    data: cases,
+    assignedPagination,
+    assignedFilterOptions,
+    loading,
+    selectedZone,
+  } = useSelector((state) => state.assignedCases);
 
   const [searchText, setSearchText] = useState("");
-  const [filteredData, setFilteredData] = useState([]);
-
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedBanks, setSelectedBanks] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [selectedOfficer, setSelectedOfficer] = useState(null);
-  const [BankName, setBankName] = useState(null);
+  const [selectedBankName, setSelectedBankName] = useState(null);
 
-  // ✅ NEW: Multiple filter states
-  const [selectedBanks, setSelectedBanks] = useState([]);
-  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const bankFilter = useMemo(() => selectedBanks.join(","), [selectedBanks]);
+  const statusFilter = useMemo(
+    () => selectedStatuses.join(","),
+    [selectedStatuses]
+  );
 
-  // Fetch cases
+  const queryParams = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      city: selectedZone || undefined,
+      search: debouncedSearch || undefined,
+      bankName: bankFilter || undefined,
+      status: statusFilter || undefined,
+    }),
+    [bankFilter, currentPage, debouncedSearch, pageSize, selectedZone, statusFilter]
+  );
+
+  const fetchAssignedList = useCallback(async () => {
+    try {
+      await dispatch(fetchAssignedCases(queryParams)).unwrap();
+    } catch (error) {
+      console.error("Failed to fetch assigned cases:", error);
+      toast.error("Failed to fetch assigned cases");
+    }
+  }, [dispatch, queryParams]);
+
   useEffect(() => {
-    dispatch(fetchAssignedCases());
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText.trim());
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
+  useEffect(() => {
     dispatch(fetchFieldOfficers());
   }, [dispatch]);
 
-  const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
-
-  // ✅ NEW: Get unique banks and statuses for filter dropdowns
-  const uniqueBanks = [...new Set(cases.map(item => item.bankName).filter(Boolean))];
-  const uniqueStatuses = [...new Set(cases.map(item => item.status).filter(Boolean))];
-
-  // Filter search (updated with multiple filters)
   useEffect(() => {
-    let filtered = cases;
+    fetchAssignedList();
+  }, [fetchAssignedList]);
 
-    // Zone filter
-    if (selectedZone) {
-      filtered = filtered.filter((item) => {
-        const city = getDisplayCity(item);
-        return city.toLowerCase().includes(selectedZone.toLowerCase());
-      });
-    }
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedZone]);
 
-    // ✅ NEW: Bank multiple filter
-    if (selectedBanks.length > 0) {
-      filtered = filtered.filter((item) =>
-        selectedBanks.includes(item.bankName)
-      );
-    }
-
-    // ✅ NEW: Status multiple filter
-    if (selectedStatuses.length > 0) {
-      filtered = filtered.filter((item) =>
-        selectedStatuses.includes(item.status)
-      );
-    }
-
-    // Search text filter
-    if (searchText) {
-      const normalizedSearchText = searchText.toLowerCase();
-      filtered = filtered.filter((item) =>
-        [
-          item.bankName,
-          getDisplayCustomerName(item),
-          item?.assignedTo?.name,
-          item.status,
-        ].some((value) =>
-          String(value || "")
-            .toLowerCase()
-            .includes(normalizedSearchText)
-        )
-      );
-    }
-
-    setFilteredData(filtered);
-  }, [cases, searchText, selectedZone, selectedBanks, selectedStatuses]);
-
-  // Remove assignment
-  const handleRemoveAssignment = async (id) => {
+  const handleRemoveAssignment = async (recordId) => {
     try {
-      await axiosInstance.put(`/case/unassign-case/${id}`);
+      await axiosInstance.put(`/case/unassign-case/${recordId}`);
       toast.success("Assignment removed");
-      dispatch(fetchAssignedCases());
-    } catch {
+      await fetchAssignedList();
+    } catch (error) {
       toast.error("Failed to remove assignment");
+      console.error(error);
     }
   };
 
-  // Open modal
-  const openAssignModal = (caseId, bankName) => {
-    setSelectedCaseId(caseId);
-    setBankName(bankName);
-    setIsModalOpen(true);
-  };
-
-  // Assign officer
   const handleAssign = async () => {
-    if (!selectedOfficer) {
+    if (!selectedOfficer || !selectedCaseId) {
       toast.error("Select field officer");
       return;
     }
@@ -127,15 +111,16 @@ const AssignedCase = () => {
       await axiosInstance.put("/case/change-assignment", {
         caseId: selectedCaseId,
         officerId: selectedOfficer,
-        bankName: BankName
+        bankName: selectedBankName,
       });
 
       toast.success("Assignment updated");
       setIsModalOpen(false);
       setSelectedOfficer(null);
-      dispatch(fetchAssignedCases());
-    } catch (err) {
+      await fetchAssignedList();
+    } catch (error) {
       toast.error("Failed to update assignment");
+      console.error(error);
     }
   };
 
@@ -176,7 +161,7 @@ const AssignedCase = () => {
       title: "Customer",
       render: (record) => (
         <Link
-          to={record.route || `/bank/${getBankRoute(record)}/${record._id}`}
+          to={`/bank/${getBankRoute(record)}/${record._id}`}
           className="text-blue-600"
         >
           {getDisplayCustomerName(record)}
@@ -213,7 +198,13 @@ const AssignedCase = () => {
     {
       title: "Change Assign",
       render: (record) => (
-        <Button onClick={() => openAssignModal(record._id, record?.bankName)}>
+        <Button
+          onClick={() => {
+            setSelectedCaseId(record._id);
+            setSelectedBankName(record?.bankName);
+            setIsModalOpen(true);
+          }}
+        >
           Change Assign
         </Button>
       ),
@@ -222,14 +213,15 @@ const AssignedCase = () => {
       title: "Action",
       render: (record) => (
         <div className="flex gap-3">
-          <Link to={record.route || `/bank/${getBankRoute(record)}/edit/${record._id}`}>
+          <Link to={`/bank/${getBankRoute(record)}/edit/${record._id}`}>
             <Edit3 size={18} />
           </Link>
           <Button
             danger
-            onClick={() => {
-              dispatch(deletedCases(record._id));
+            onClick={async () => {
+              await dispatch(deletedCases(record._id));
               toast.success("Deleted");
+              await fetchAssignedList();
             }}
           >
             <Trash2 size={18} />
@@ -243,19 +235,23 @@ const AssignedCase = () => {
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Assigned Cases</h2>
 
-      {/* ✅ NEW: Filter Row with Bank & Status multiple select */}
       <div className="flex gap-4 mb-4 flex-wrap">
         <Select
           mode="multiple"
           placeholder="Filter by Bank"
           style={{ minWidth: 200 }}
           value={selectedBanks}
-          onChange={setSelectedBanks}
+          onChange={(values) => {
+            setSelectedBanks(values);
+            setCurrentPage(1);
+          }}
           allowClear
           maxTagCount={2}
         >
-          {uniqueBanks.map(bank => (
-            <Option key={bank} value={bank}>{bank}</Option>
+          {(assignedFilterOptions?.banks || []).map((bank) => (
+            <Option key={bank} value={bank}>
+              {bank}
+            </Option>
           ))}
         </Select>
 
@@ -264,12 +260,17 @@ const AssignedCase = () => {
           placeholder="Filter by Status"
           style={{ minWidth: 200 }}
           value={selectedStatuses}
-          onChange={setSelectedStatuses}
+          onChange={(values) => {
+            setSelectedStatuses(values);
+            setCurrentPage(1);
+          }}
           allowClear
           maxTagCount={2}
         >
-          {uniqueStatuses.map(status => (
-            <Option key={status} value={status}>{status}</Option>
+          {(assignedFilterOptions?.statuses || []).map((status) => (
+            <Option key={status} value={status}>
+              {status}
+            </Option>
           ))}
         </Select>
 
@@ -277,7 +278,11 @@ const AssignedCase = () => {
           placeholder="Search..."
           size="large"
           allowClear
-          onChange={(e) => setSearchText(e.target.value)}
+          value={searchText}
+          onChange={(event) => {
+            setSearchText(event.target.value);
+            setCurrentPage(1);
+          }}
           style={{ maxWidth: 300 }}
         />
       </div>
@@ -286,14 +291,29 @@ const AssignedCase = () => {
         <Spinner />
       ) : (
         <Table
-          dataSource={filteredData}
+          dataSource={cases}
           columns={columns}
           rowKey="_id"
           bordered
+          pagination={{
+            current: assignedPagination?.page || currentPage,
+            pageSize: assignedPagination?.limit || pageSize,
+            total: assignedPagination?.total || 0,
+            showSizeChanger: true,
+          }}
+          onChange={(pagination) => {
+            if (pagination.current !== currentPage) {
+              setCurrentPage(pagination.current);
+            }
+
+            if (pagination.pageSize !== pageSize) {
+              setPageSize(pagination.pageSize);
+              setCurrentPage(1);
+            }
+          }}
         />
       )}
 
-      {/* ASSIGN MODAL */}
       <Modal
         title="Change Assignment"
         open={isModalOpen}
@@ -306,9 +326,9 @@ const AssignedCase = () => {
           placeholder="Select Field Officer"
           onChange={setSelectedOfficer}
         >
-          {fieldOfficers?.map((fo) => (
-            <Option key={fo._id} value={fo._id}>
-              {fo.name}
+          {fieldOfficers?.map((fieldOfficer) => (
+            <Option key={fieldOfficer._id} value={fieldOfficer._id}>
+              {fieldOfficer.name}
             </Option>
           ))}
         </Select>

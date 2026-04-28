@@ -1,7 +1,6 @@
-import { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Table, Tag, Input, Select } from "antd";
-import { Link } from "react-router-dom";
 
 import { getCancelledCases } from "../../../redux/features/assignedCase/assignedCasesThunk";
 import getBankTagColor from "../getBankTagColor";
@@ -9,7 +8,6 @@ import Spinner from "../../../components/Spinner";
 import {
   getDisplayAddress,
   getDisplayCustomerName,
-  getDisplayCity,
 } from "../../../utils/dashboardRecord";
 
 const { Search } = Input;
@@ -17,111 +15,90 @@ const { Option } = Select;
 
 const CancelledCases = () => {
   const dispatch = useDispatch();
-  const { cancelledCases, loading, error } = useSelector(
-    (state) => state.assignedCases
-  );
+  const {
+    cancelledCases,
+    cancelledPagination,
+    cancelledFilterOptions,
+    loading,
+    error,
+    selectedZone,
+  } = useSelector((state) => state.assignedCases);
 
   const [searchText, setSearchText] = useState("");
-  
-  // ✅ NEW: Multiple filter states
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedBanks, setSelectedBanks] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const bankFilter = useMemo(() => selectedBanks.join(","), [selectedBanks]);
+  const statusFilter = useMemo(
+    () => selectedStatuses.join(","),
+    [selectedStatuses]
+  );
+
+  const queryParams = useMemo(
+    () => ({
+      page: currentPage,
+      limit: pageSize,
+      city: selectedZone || undefined,
+      search: debouncedSearch || undefined,
+      bankName: bankFilter || undefined,
+      status: statusFilter || undefined,
+    }),
+    [bankFilter, currentPage, debouncedSearch, pageSize, selectedZone, statusFilter]
+  );
+
+  const fetchCancelledList = useCallback(async () => {
+    await dispatch(getCancelledCases(queryParams));
+  }, [dispatch, queryParams]);
 
   useEffect(() => {
-    dispatch(getCancelledCases());
-  }, [dispatch]);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText.trim());
+    }, 350);
 
-  const flatCases = useMemo(() => {
-    if (!cancelledCases?.cancelledCases) return [];
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
-    return cancelledCases.cancelledCases.flatMap((group) =>
-      group.cases.map((caseItem) => ({
-        ...caseItem,
-        bankName: caseItem.bankName || group.bankName,
-        model: group.model,
-      }))
-    );
-  }, [cancelledCases]);
+  useEffect(() => {
+    fetchCancelledList();
+  }, [fetchCancelledList]);
 
-  // ✅ NEW: Get unique banks and statuses
-  const uniqueBanks = useMemo(() => {
-    return [...new Set(flatCases.map((c) => c.bankName).filter(Boolean))];
-  }, [flatCases]);
-
-  const uniqueStatuses = useMemo(() => {
-    return [...new Set(flatCases.map((c) => c.status).filter(Boolean))];
-  }, [flatCases]);
-
-  const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
-
-  const filteredCases = useMemo(() => {
-    return flatCases.filter((item) => {
-      const nameMatch = getDisplayCustomerName(item)
-        .toLowerCase()
-        .includes(searchText.toLowerCase());
-
-      const addressMatch = getDisplayAddress(item)
-        .toLowerCase()
-        .includes(searchText.toLowerCase());
-
-      // ✅ NEW: Multiple bank filter
-      const bankMatch = selectedBanks.length > 0 
-        ? selectedBanks.includes(item.bankName) 
-        : true;
-
-      // ✅ NEW: Multiple status filter
-      const statusMatch = selectedStatuses.length > 0 
-        ? selectedStatuses.includes(item.status) 
-        : true;
-
-      let zoneMatch = true;
-      if (selectedZone) {
-        const city = getDisplayCity(item);
-        zoneMatch = city.toLowerCase().includes(selectedZone.toLowerCase());
-      }
-
-      return (nameMatch || addressMatch) && bankMatch && statusMatch && zoneMatch;
-    });
-  }, [flatCases, searchText, selectedBanks, selectedStatuses, selectedZone]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedZone]);
 
   const columns = [
     {
       title: "Bank Name",
       dataIndex: "bankName",
-      sorter: (a, b) => a.bankName.localeCompare(b.bankName),
-      render: (bankName) => {
-        const color = getBankTagColor(bankName);
-        return <Tag color={color}>{bankName}</Tag>;
-      },
+      render: (bankName) => (
+        <Tag color={getBankTagColor(bankName)}>{bankName}</Tag>
+      ),
     },
     {
       title: "Customer Name",
-      dataIndex: "customerName",
-      sorter: (a, b) =>
-        getDisplayCustomerName(a).localeCompare(getDisplayCustomerName(b)),
-      render: (text, record) => {
-        return (
-          <span className='text-blue-600 hover:underline'>
-            {getDisplayCustomerName(record)}
-          </span>
-        );
-      },
+      render: (_, record) => (
+        <span className="text-blue-600 hover:underline">
+          {getDisplayCustomerName(record)}
+        </span>
+      ),
     },
     {
       title: "Address as per Legal Document",
-      dataIndex: "addressLegal",
-      render: (text, record) => getDisplayAddress(record),
+      render: (_, record) => getDisplayAddress(record),
     },
     {
       title: "Assigned To",
       dataIndex: ["assignedTo", "name"],
-      render: (text, record) => record?.assignedTo?.name || "N/A",
+      render: (_, record) => record?.assignedTo?.name || "N/A",
     },
     {
       title: "Status",
       dataIndex: "status",
       render: (status) => (
-        <span className='bg-red-600 text-white px-2 py-1 rounded font-semibold inline-block'>
+        <span className="bg-red-600 text-white px-2 py-1 rounded font-semibold inline-block">
           {status}
         </span>
       ),
@@ -129,22 +106,26 @@ const CancelledCases = () => {
   ];
 
   return (
-    <div className='p-4'>
-      <h2 className='text-xl font-bold mb-4'>All Cancelled Cases</h2>
+    <div className="p-4">
+      <h2 className="text-xl font-bold mb-4">All Cancelled Cases</h2>
 
-      {/* ✅ UPDATED: Filter Row with multiple Bank & Status select */}
-      <div className='flex flex-wrap gap-4 mb-4'>
+      <div className="flex flex-wrap gap-4 mb-4">
         <Select
           mode="multiple"
           placeholder="Filter by Bank"
           style={{ minWidth: 200 }}
           value={selectedBanks}
-          onChange={setSelectedBanks}
+          onChange={(values) => {
+            setSelectedBanks(values);
+            setCurrentPage(1);
+          }}
           allowClear
           maxTagCount={2}
         >
-          {uniqueBanks.map(bank => (
-            <Option key={bank} value={bank}>{bank}</Option>
+          {(cancelledFilterOptions?.banks || []).map((bank) => (
+            <Option key={bank} value={bank}>
+              {bank}
+            </Option>
           ))}
         </Select>
 
@@ -153,34 +134,58 @@ const CancelledCases = () => {
           placeholder="Filter by Status"
           style={{ minWidth: 200 }}
           value={selectedStatuses}
-          onChange={setSelectedStatuses}
+          onChange={(values) => {
+            setSelectedStatuses(values);
+            setCurrentPage(1);
+          }}
           allowClear
           maxTagCount={2}
         >
-          {uniqueStatuses.map(status => (
-            <Option key={status} value={status}>{status}</Option>
+          {(cancelledFilterOptions?.statuses || []).map((status) => (
+            <Option key={status} value={status}>
+              {status}
+            </Option>
           ))}
         </Select>
 
-        <Input
-          placeholder='Search by customer name or address'
+        <Search
+          placeholder="Search by customer name or address"
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+          onChange={(event) => {
+            setSearchText(event.target.value);
+            setCurrentPage(1);
+          }}
           style={{ width: 300 }}
+          allowClear
         />
       </div>
 
       {loading ? (
         <Spinner />
       ) : error ? (
-        <div className='text-red-600'>There are no records to display</div>
+        <div className="text-red-600">There are no records to display</div>
       ) : (
         <Table
-          dataSource={filteredCases}
+          dataSource={cancelledCases}
           columns={columns}
-          rowKey='_id'
+          rowKey="_id"
           bordered
-          pagination={{ pageSize: 10, showSizeChanger: true }}
+          pagination={{
+            current: cancelledPagination?.page || currentPage,
+            pageSize: cancelledPagination?.limit || pageSize,
+            total: cancelledPagination?.total || 0,
+            showSizeChanger: true,
+          }}
+          onChange={(pagination) => {
+            if (pagination.current !== currentPage) {
+              setCurrentPage(pagination.current);
+            }
+
+            if (pagination.pageSize !== pageSize) {
+              setPageSize(pagination.pageSize);
+              setCurrentPage(1);
+            }
+          }}
         />
       )}
     </div>

@@ -260,7 +260,15 @@ const RemarkEditor = ({ index, value, onChange, onRemove, canRemove }) => {
   );
 };
 
-const ValuationDetails = ({ isEdit, onNext, onBack, extractedData }) => {
+const ValuationDetails = ({
+  isEdit,
+  onNext,
+  onBack,
+  registerSectionSubmitter,
+  sectionId,
+  showActionButtons = true,
+  extractedData,
+}) => {
   const [form] = Form.useForm();
   const [remarks, setRemarks] = useState([]);
 
@@ -348,11 +356,24 @@ const ValuationDetails = ({ isEdit, onNext, onBack, extractedData }) => {
   };
 
   const handleSubmit = (values) => {
+    if (!onNext) return;
     onNext({
       ...values,
       valuationRemarks: remarks.filter((item) => item !== ""),
     });
   };
+
+  useEffect(() => {
+    if (!registerSectionSubmitter || !sectionId) return;
+
+    registerSectionSubmitter(sectionId, async () => {
+      const values = await form.validateFields();
+      return {
+        ...values,
+        valuationRemarks: remarks.filter((item) => item !== ""),
+      };
+    });
+  }, [registerSectionSubmitter, sectionId, form, remarks]);
 
   const AreaRateRow = ({ prefix, labelPrefix }) => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 p-3 bg-gray-50 rounded">
@@ -573,18 +594,20 @@ const ValuationDetails = ({ isEdit, onNext, onBack, extractedData }) => {
           </>
         )}
 
-        <Form.Item className="lg:col-span-2 text-end">
-          {onBack && (
-            <Button
-              type="default"
-              onClick={onBack}
-              className="mr-2 px-4 py-2 bg-gray-500 text-white rounded"
-            >
-              Back
-            </Button>
-          )}
-          <Button type="primary" htmlType="submit">Next</Button>
-        </Form.Item>
+        {showActionButtons && (
+          <Form.Item className="lg:col-span-2 text-end">
+            {onBack && (
+              <Button
+                type="default"
+                onClick={onBack}
+                className="mr-2 px-4 py-2 bg-gray-500 text-white rounded"
+              >
+                Back
+              </Button>
+            )}
+            <Button type="primary" htmlType="submit">Submit</Button>
+          </Form.Item>
+        )}
       </Form>
     </div>
   );

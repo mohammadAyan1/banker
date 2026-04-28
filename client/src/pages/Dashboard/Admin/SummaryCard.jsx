@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Table, Input, Select } from "antd";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchSummaryData } from "../../../redux/features/assignedCase/assignedCasesThunk";
-import { getDisplayCity } from "../../../utils/dashboardRecord";
+import { useSelector } from "react-redux";
+
+import axiosInstance from "../../../config/axios";
 
 const { Option } = Select;
 
@@ -71,7 +71,6 @@ const columns = [
     title: "Bank",
     dataIndex: "bankName",
     key: "bankName",
-    sorter: (a, b) => a.bankName.localeCompare(b.bankName),
   },
   {
     title: "Customer Name",
@@ -101,100 +100,102 @@ const columns = [
 ];
 
 const SummaryCard = () => {
-  const dispatch = useDispatch();
   const [tableData, setTableData] = useState([]);
-  
-  // ✅ NEW: Filter states
+  const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedBanks, setSelectedBanks] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
+  const [filterOptions, setFilterOptions] = useState({
+    banks: [],
+    statuses: [],
+  });
+
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
 
+  const bankFilter = useMemo(() => selectedBanks.join(","), [selectedBanks]);
+  const statusFilter = useMemo(
+    () => selectedStatuses.join(","),
+    [selectedStatuses]
+  );
+
+  const fetchSummaryTable = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get("/case/summary-data", {
+        params: {
+          page: currentPage,
+          limit: pageSize,
+          city: selectedZone || undefined,
+          search: debouncedSearch || undefined,
+          bankName: bankFilter || undefined,
+          status: statusFilter || undefined,
+        },
+      });
+
+      const items = (response.data?.tableItems || []).map(normalizeSummaryRecord);
+      setTableData(items);
+      setPagination(
+        response.data?.pagination || {
+          page: 1,
+          limit: pageSize,
+          total: items.length,
+          totalPages: items.length > 0 ? 1 : 0,
+        }
+      );
+      setFilterOptions(
+        response.data?.filterOptions || { banks: [], statuses: [] }
+      );
+    } catch (error) {
+      console.error("Failed to load summary table:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [bankFilter, currentPage, debouncedSearch, pageSize, selectedZone, statusFilter]);
+
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const response = await dispatch(fetchSummaryData()).unwrap();
-        const formattedData = (response?.totalSubmissions || []).map(
-          normalizeSummaryRecord
-        );
-        setTableData(formattedData);
-      } catch (error) {
-        console.error("Failed to load data:", error);
-      }
-    };
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText.trim());
+    }, 350);
 
-    loadData();
-  }, [dispatch]);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
-  // ✅ NEW: Get unique banks and statuses dynamically
-  const uniqueBanks = useMemo(() => {
-    return [...new Set(tableData.map(item => item.bankName).filter(Boolean))];
-  }, [tableData]);
+  useEffect(() => {
+    fetchSummaryTable();
+  }, [fetchSummaryTable]);
 
-  const uniqueStatuses = useMemo(() => {
-    return [...new Set(tableData.map(item => item.status).filter(Boolean))];
-  }, [tableData]);
-
-  // ✅ NEW: Filtered data with all filters
-  const filteredData = useMemo(() => {
-    return tableData.filter(item => {
-      // Multiple bank filter
-      if (selectedBanks.length > 0 && !selectedBanks.includes(item.bankName)) {
-        return false;
-      }
-
-      // Multiple status filter
-      if (selectedStatuses.length > 0 && !selectedStatuses.includes(item.status)) {
-        return false;
-      }
-
-      // Zone filter
-      if (selectedZone) {
-        const city = getDisplayCity(item);
-        if (!city.toLowerCase().includes(selectedZone.toLowerCase())) {
-          return false;
-        }
-      }
-
-      // Search text filter
-      if (searchText) {
-        const searchLower = searchText.toLowerCase();
-        const searchableValues = [
-          item.bankName,
-          item.customerName,
-          item.propertyAddress,
-          item.status,
-          item.constructionStage,
-          item.dateOfVisit,
-        ];
-        
-        if (!searchableValues.some(value => 
-          String(value || "").toLowerCase().includes(searchLower)
-        )) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [tableData, selectedBanks, selectedStatuses, selectedZone, searchText]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedZone]);
 
   return (
     <>
-      {/* ✅ NEW: Filter Row */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         <Select
           mode="multiple"
           placeholder="Filter by Bank"
           style={{ minWidth: 200 }}
           value={selectedBanks}
-          onChange={setSelectedBanks}
+          onChange={(values) => {
+            setSelectedBanks(values);
+            setCurrentPage(1);
+          }}
           allowClear
           maxTagCount={2}
         >
-          {uniqueBanks.map(bank => (
-            <Option key={bank} value={bank}>{bank}</Option>
+          {(filterOptions?.banks || []).map((bank) => (
+            <Option key={bank} value={bank}>
+              {bank}
+            </Option>
           ))}
         </Select>
 
@@ -203,30 +204,55 @@ const SummaryCard = () => {
           placeholder="Filter by Status"
           style={{ minWidth: 200 }}
           value={selectedStatuses}
-          onChange={setSelectedStatuses}
+          onChange={(values) => {
+            setSelectedStatuses(values);
+            setCurrentPage(1);
+          }}
           allowClear
           maxTagCount={2}
         >
-          {uniqueStatuses.map(status => (
-            <Option key={status} value={status}>{status}</Option>
+          {(filterOptions?.statuses || []).map((status) => (
+            <Option key={status} value={status}>
+              {status}
+            </Option>
           ))}
         </Select>
 
         <Input
           placeholder="Search all fields..."
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+          onChange={(event) => {
+            setSearchText(event.target.value);
+            setCurrentPage(1);
+          }}
           style={{ width: 300 }}
+          allowClear
         />
       </div>
 
       <h1>Summary</h1>
       <Table
         columns={columns}
-        dataSource={filteredData}
+        dataSource={tableData}
         showSorterTooltip={{ target: "sorter-icon" }}
         bordered
-        pagination={{ pageSize: 5 }}
+        loading={loading}
+        pagination={{
+          current: pagination.page || currentPage,
+          pageSize: pagination.limit || pageSize,
+          total: pagination.total || 0,
+          showSizeChanger: true,
+        }}
+        onChange={(tablePagination) => {
+          if (tablePagination.current !== currentPage) {
+            setCurrentPage(tablePagination.current);
+          }
+
+          if (tablePagination.pageSize !== pageSize) {
+            setPageSize(tablePagination.pageSize);
+            setCurrentPage(1);
+          }
+        }}
       />
     </>
   );

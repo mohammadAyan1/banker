@@ -41,6 +41,289 @@ const enrichCasesWithBankMeta = (cases, modelKey) => {
   }));
 };
 
+const readCasePathValue = (record, path) =>
+  String(path)
+    .split(".")
+    .reduce(
+      (accumulator, key) =>
+        accumulator && accumulator[key] !== undefined
+          ? accumulator[key]
+          : undefined,
+      record
+    );
+
+const readCaseValue = (record, paths, fallback = "") => {
+  for (const path of paths) {
+    if (!path) continue;
+
+    const value = readCasePathValue(record, path);
+    if (value !== undefined && value !== null && value !== "") {
+      return value;
+    }
+  }
+
+  return fallback;
+};
+
+const normalizeText = (value) => String(value || "").toLowerCase().trim();
+const normalizeStatusValue = (value) =>
+  normalizeText(value).replace(/\s+/g, "");
+
+const parseMultiValueParam = (value) =>
+  Array.from(
+    new Set(
+      String(value || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    )
+  );
+
+const getCaseDisplayCustomerName = (record) =>
+  readCaseValue(record, [
+    "displayCustomerName",
+    "customerName",
+    "visitedPersonName",
+    "applicantName",
+    "applicantsName",
+    "clientName",
+    "basicDetails.nameOfClient",
+    "propertyInfo.applicantName",
+    "summary.applicantName",
+    "header.contactedPerson",
+  ]);
+
+const getCaseDisplayAddress = (record) =>
+  readCaseValue(record, [
+    "displayAddress",
+    "addressLegal",
+    "legalAddress",
+    "addressSite",
+    "propertyAddress",
+    "address",
+    "locationDetails.propertyAddressAsVisit",
+    "locationDetails.propertyAddressAsDocs",
+    "locationDetails.propertyAddressAsTRF",
+    "propertyInfo.addressAtSite",
+    "propertyInfo.addressAsPerDocument",
+    "summary.propertyAddress",
+  ]);
+
+const getCaseDisplayContact = (record) =>
+  readCaseValue(record, [
+    "customerNo",
+    "contactNumber",
+    "mobileNo",
+    "personContactNo",
+    "contactPerson",
+    "contactPersonNumber",
+    "header.contactedPerson",
+  ]);
+
+const getCaseDisplayCity = (record) =>
+  readCaseValue(record, [
+    "propertyCity",
+    "city",
+    "propertyLocation",
+    "nearestCityTown",
+    "locationDetails.mainLocality",
+    "basicDetails.city",
+    "propertyInfo.city",
+    "summary.city",
+  ]);
+
+const buildRoleAwareQuery = (user, baseQuery = {}) => {
+  const query = { ...baseQuery };
+
+  if (user.role === "Coordinator" || user.role === "Admin") {
+    query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
+  } else if (user.role === "FieldOfficer") {
+    query.assignedTo = user._id;
+  }
+
+  return query;
+};
+
+const fetchCasesAcrossBanks = async ({
+  user,
+  baseQuery = {},
+  populate = "assignedTo createdBy",
+}) => {
+  const registry = modelMap.bankRegistry || [];
+
+  const results = await Promise.all(
+    registry.map(async ({ key: modelKey, model: Model }) => {
+      let mongoQuery = Model.find(buildRoleAwareQuery(user, baseQuery)).sort({
+        createdAt: -1,
+      });
+
+      if (populate) {
+        mongoQuery = mongoQuery.populate(populate);
+      }
+
+      const cases = await mongoQuery;
+      return enrichCasesWithBankMeta(cases, modelKey);
+    })
+  );
+
+  return results.flat();
+};
+
+const applyCommonCaseFilters = (cases, rawQuery = {}) => {
+  const selectedBanks = parseMultiValueParam(
+    rawQuery.bankName || rawQuery.bank || rawQuery.bankNames
+  ).map(normalizeText);
+  const selectedStatuses = parseMultiValueParam(
+    rawQuery.status || rawQuery.statuses
+  ).map(normalizeStatusValue);
+  const selectedCities = parseMultiValueParam(rawQuery.city).map(normalizeText);
+  const search = normalizeText(rawQuery.search);
+
+  return cases.filter((caseItem) => {
+    if (selectedBanks.length > 0) {
+      const bankCandidates = [
+        caseItem.bankName,
+        caseItem.bankSlug,
+        caseItem.route,
+      ].map(normalizeText);
+
+      const bankMatched = selectedBanks.some((selectedBank) =>
+        bankCandidates.some(
+          (candidate) =>
+            candidate &&
+            (candidate === selectedBank || candidate.includes(selectedBank))
+        )
+      );
+
+      if (!bankMatched) {
+        return false;
+      }
+    }
+
+    if (selectedStatuses.length > 0) {
+      const caseStatus = normalizeStatusValue(caseItem.status);
+      if (!selectedStatuses.includes(caseStatus)) {
+        return false;
+      }
+    }
+
+    if (selectedCities.length > 0) {
+      const caseCity = normalizeText(getCaseDisplayCity(caseItem));
+      const cityMatched = selectedCities.some(
+        (selectedCity) =>
+          caseCity &&
+          (caseCity === selectedCity || caseCity.includes(selectedCity))
+      );
+
+      if (!cityMatched) {
+        return false;
+      }
+    }
+
+    if (search) {
+      const searchableValues = [
+        caseItem.bankName,
+        caseItem.bankSlug,
+        getCaseDisplayCustomerName(caseItem),
+        getCaseDisplayAddress(caseItem),
+        getCaseDisplayContact(caseItem),
+        caseItem?.assignedTo?.name,
+        caseItem.status,
+      ].map(normalizeText);
+
+      const hasMatch = searchableValues.some(
+        (value) => value && value.includes(search)
+      );
+
+      if (!hasMatch) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+};
+
+const sortCasesNewestFirst = (cases) =>
+  [...cases].sort(
+    (left, right) =>
+      new Date(right?.createdAt || 0).getTime() -
+      new Date(left?.createdAt || 0).getTime()
+  );
+
+const buildFilterOptions = (cases) => ({
+  banks: [...new Set(cases.map((caseItem) => caseItem.bankName).filter(Boolean))],
+  statuses: [
+    ...new Set(cases.map((caseItem) => caseItem.status).filter(Boolean)),
+  ],
+});
+
+const paginateItems = (items, query = {}, defaultLimit = 10) => {
+  const requestedLimit = Number.parseInt(query.limit, 10);
+  const requestedPage = Number.parseInt(query.page, 10);
+  const limit =
+    Number.isFinite(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 100)
+      : defaultLimit;
+
+  const total = items.length;
+  const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+  const page =
+    Number.isFinite(requestedPage) && requestedPage > 0
+      ? Math.min(requestedPage, Math.max(totalPages, 1))
+      : 1;
+
+  const startIndex = (page - 1) * limit;
+
+  return {
+    items: items.slice(startIndex, startIndex + limit),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    },
+  };
+};
+
+const buildCaseListPayload = (cases, query = {}, defaultLimit = 10) => {
+  const filteredCases = sortCasesNewestFirst(
+    applyCommonCaseFilters(cases, query)
+  );
+  const { items, pagination } = paginateItems(
+    filteredCases,
+    query,
+    defaultLimit
+  );
+
+  return {
+    items,
+    pagination,
+    filterOptions: buildFilterOptions(filteredCases),
+  };
+};
+
+const getAssetUrl = (asset) =>
+  typeof asset === "string" ? asset : asset?.url || "";
+
+const buildAssetPullQuery = (fieldName, asset) => {
+  if (typeof asset === "string") {
+    return { $pull: { [fieldName]: asset } };
+  }
+
+  if (asset?.fileId) {
+    return { $pull: { [fieldName]: { fileId: asset.fileId } } };
+  }
+
+  if (asset?.url) {
+    return { $pull: { [fieldName]: { url: asset.url } } };
+  }
+
+  return { $pull: { [fieldName]: asset } };
+};
+
 function toPascalCase(str) {
   return str
     .replace(/\s+/g, "-")
@@ -387,28 +670,16 @@ exports.getCaseById = async (req, res) => {
 exports.getAllAssignedCases = async (req, res) => {
   const user = req.user;
   try {
-    const allCases = [];
-    let query = {
-      assignedTo: { $ne: null },
-      status: { $in: WORK_IN_PROGRESS_STATUSES },
-    };
+    const allCases = await fetchCasesAcrossBanks({
+      user,
+      baseQuery: {
+        assignedTo: { $ne: null },
+        status: { $in: WORK_IN_PROGRESS_STATUSES },
+      },
+      populate: "assignedTo createdBy",
+    });
 
-    // Role-based filtering
-    if (user.role === "Coordinator" || user.role === "Admin") {
-      query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
-    } else if (user.role === "FieldOfficer") {
-      query.assignedTo = user._id;
-    }
-
-    const bankRegistry = modelMap.bankRegistry || Object.values(modelMap);
-    for (const bankConfig of bankRegistry) {
-      const { key: modelKey, model: Model } = bankConfig;
-      const cases = await Model.find(query).populate("assignedTo", "name email");
-
-      allCases.push(...enrichCasesWithBankMeta(cases, modelKey));
-    }
-
-    res.json(allCases);
+    res.json(buildCaseListPayload(allCases, req.query));
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch assigned cases." });
@@ -418,29 +689,13 @@ exports.getAllAssignedCases = async (req, res) => {
 exports.getPendingCases = async (req, res) => {
   const user = req.user;
   try {
-    const allPendingCases = [];
-    let query = { status: "Pending" };
+    const allPendingCases = await fetchCasesAcrossBanks({
+      user,
+      baseQuery: { status: "Pending" },
+      populate: "assignedTo createdBy",
+    });
 
-    // Role-based filtering
-    if (user.role === "Coordinator" || user.role === "Admin") {
-      query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
-    } else if (user.role === "FieldOfficer") {
-      query.assignedTo = user._id;
-    }
-
-    const bankRegistry = modelMap.bankRegistry || Object.values(modelMap);
-    for (const bankConfig of bankRegistry) {
-      const { key: modelKey, model: Model } = bankConfig;
-      const pendingCases = await Model.find(query).populate(
-        "assignedTo createdBy"
-      );
-
-      if (pendingCases.length > 0) {
-        allPendingCases.push(...enrichCasesWithBankMeta(pendingCases, modelKey));
-      }
-    }
-
-    res.json(allPendingCases);
+    res.json(buildCaseListPayload(allPendingCases, req.query));
   } catch (err) {
     console.error("Error in getPendingCases:", err);
     res.status(500).json({ error: "Failed to fetch pending cases." });
@@ -567,28 +822,13 @@ exports.finalUpdate = async (req, res) => {
 exports.getFinalSubmittedCases = async (req, res) => {
   const user = req.user;
   try {
-    const finalCases = [];
-    let query = { status: "FinalSubmitted" };
+    const finalCases = await fetchCasesAcrossBanks({
+      user,
+      baseQuery: { status: "FinalSubmitted" },
+      populate: "assignedTo createdBy",
+    });
 
-    // Role-based filtering
-    if (user.role === "Coordinator" || user.role === "Admin") {
-      query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
-    } else if (user.role === "FieldOfficer") {
-      query.assignedTo = user._id;
-    }
-
-    const bankRegistry = modelMap.bankRegistry || Object.values(modelMap);
-    for (const bankConfig of bankRegistry) {
-      const { key: modelKey, model: Model } = bankConfig;
-      const cases = await Model.find(query).populate(
-        "assignedTo",
-        "name email"
-      );
-
-      finalCases.push(...enrichCasesWithBankMeta(cases, modelKey));
-    }
-
-    res.status(200).json(finalCases);
+    res.status(200).json(buildCaseListPayload(finalCases, req.query));
   } catch (err) {
     console.error("Error fetching final submitted cases:", err);
     res.status(500).json({ message: "Failed to fetch final submitted cases." });
@@ -600,40 +840,15 @@ exports.getFinalSubmittedCases = async (req, res) => {
 exports.getCancelledCases = async (req, res) => {
   const user = req.user;
   try {
-    let cancelledCases = [];
-    let totalCancelledCount = 0;
-    let query = { status: "cancelled" };
-
-    // Role-based filtering
-    if (user.role === "Coordinator" || user.role === "Admin") {
-      query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
-    } else if (user.role === "FieldOfficer") {
-      query.assignedTo = user._id;
-    }
-
-    const bankRegistry = modelMap.bankRegistry || Object.values(modelMap);
-    for (const bankConfig of bankRegistry) {
-      const { key, model: Model } = bankConfig;
-      const cases = await Model.find(query);
-
-      totalCancelledCount += cases.length;
-
-      if (cases.length > 0) {
-        const { displayName, route } = getBankMeta(key);
-        cancelledCases.push({
-          model: key,
-          bankName: displayName,
-          bankSlug: route,
-          count: cases.length,
-          cases: enrichCasesWithBankMeta(cases, key),
-        });
-      }
-    }
+    const cancelledCases = await fetchCasesAcrossBanks({
+      user,
+      baseQuery: { status: "cancelled" },
+      populate: "assignedTo createdBy",
+    });
 
     res.json({
       message: "Cancelled cases fetched successfully.",
-      totalCancelledCount,
-      cancelledCases,
+      ...buildCaseListPayload(cancelledCases, req.query),
     });
   } catch (err) {
     console.error("Error fetching cancelled cases:", err);
@@ -648,10 +863,11 @@ exports.getOutOfTATCases = async (req, res) => {
   const user = req.user;
   const now = new Date();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  const result = [];
 
   try {
-    let query = {
+    const outOfTatCases = await fetchCasesAcrossBanks({
+      user,
+      baseQuery: {
       createdAt: { $lte: twentyFourHoursAgo },
       $expr: { $eq: ["$createdAt", "$updatedAt"] },
       status: {
@@ -662,39 +878,16 @@ exports.getOutOfTATCases = async (req, res) => {
           "FinalSubmitted",
         ],
       },
-    };
+      },
+      populate: "assignedTo createdBy",
+    });
 
-    // Role-based filtering
-    if (user.role === "Coordinator" || user.role === "Admin") {
-      query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
-    } else if (user.role === "FieldOfficer") {
-      query.assignedTo = user._id;
-    }
-
-    const bankRegistry = modelMap.bankRegistry || Object.values(modelMap);
-    for (let bankConfig of bankRegistry) {
-      const { key: modelKey, model: Model } = bankConfig;
-      if (!Model) continue;
-
-      const reports = await Model.find(query);
-
-      if (reports.length > 0) {
-        const { displayName, route } = getBankMeta(modelKey);
-        result.push(
-          ...reports.map((r) => ({
-            ...r.toObject(),
-            bank: modelKey,
-            bankName: displayName,
-            bankSlug: route,
-          }))
-        );
-      }
-    }
+    const payload = buildCaseListPayload(outOfTatCases, req.query);
 
     return res.status(200).json({
       success: true,
       message: "Out of TAT reports",
-      data: result,
+      ...payload,
     });
   } catch (error) {
     console.error("OutOfTAT error:", error.message);
@@ -708,10 +901,13 @@ exports.getSummaryData = async (req, res) => {
     const pending = [];
     const working = [];
     const totalSubmissions = [];
+    const finalSubmitted = [];
     const queryRaised = [];
-
-    const { city } = req.query;
+    const cancelled = [];
+    const outOfTat = [];
     const user = req.user;
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     const bankRegistry =
       modelMap.bankRegistry ||
@@ -725,23 +921,37 @@ exports.getSummaryData = async (req, res) => {
       const { key: modelKey, displayName, model: Model } = bankConfig;
 
       // Base query for role-based ownership
-      let baseQuery = {};
-      if (user.role === "Coordinator" || user.role === "Admin") {
-        // Show cases created BY them OR assigned TO them
-        baseQuery.$or = [
-          { createdBy: user._id },
-          { assignedTo: user._id }
-        ];
-      } else if (user.role === "FieldOfficer") {
-        baseQuery.assignedTo = user._id;
-      }
+      const baseQuery = buildRoleAwareQuery(user);
 
-      const [pendingCases, workingCases, totalCases, queryCases] =
+      const [
+        pendingCases,
+        workingCases,
+        totalCases,
+        finalCases,
+        queryCases,
+        cancelledCases,
+        outOfTatCases,
+      ] =
         await Promise.all([
           Model.find({ ...baseQuery, status: "Pending" }),
           Model.find({ ...baseQuery, status: { $in: WORK_IN_PROGRESS_STATUSES } }),
           Model.find(baseQuery),
+          Model.find({ ...baseQuery, status: "FinalSubmitted" }),
           Model.find({ ...baseQuery, status: "Query Raised" }),
+          Model.find({ ...baseQuery, status: "cancelled" }),
+          Model.find({
+            ...baseQuery,
+            createdAt: { $lte: twentyFourHoursAgo },
+            $expr: { $eq: ["$createdAt", "$updatedAt"] },
+            status: {
+              $nin: [
+                "cancelled",
+                "completed",
+                ...WORK_IN_PROGRESS_STATUSES,
+                "FinalSubmitted",
+              ],
+            },
+          }),
         ]);
 
       const bankName = displayName;
@@ -760,14 +970,56 @@ exports.getSummaryData = async (req, res) => {
       pending.push(...enrich(pendingCases));
       working.push(...enrich(workingCases));
       totalSubmissions.push(...enrich(totalCases));
+      finalSubmitted.push(...enrich(finalCases));
       queryRaised.push(...enrich(queryCases));
+      cancelled.push(...enrich(cancelledCases));
+      outOfTat.push(...enrich(outOfTatCases));
     }
 
+    const filteredPending = sortCasesNewestFirst(
+      applyCommonCaseFilters(pending, req.query)
+    );
+    const filteredWorking = sortCasesNewestFirst(
+      applyCommonCaseFilters(working, req.query)
+    );
+    const filteredTotalSubmissions = sortCasesNewestFirst(
+      applyCommonCaseFilters(totalSubmissions, req.query)
+    );
+    const filteredFinalSubmitted = sortCasesNewestFirst(
+      applyCommonCaseFilters(finalSubmitted, req.query)
+    );
+    const filteredQueryRaised = sortCasesNewestFirst(
+      applyCommonCaseFilters(queryRaised, req.query)
+    );
+    const filteredCancelled = sortCasesNewestFirst(
+      applyCommonCaseFilters(cancelled, req.query)
+    );
+    const filteredOutOfTat = sortCasesNewestFirst(
+      applyCommonCaseFilters(outOfTat, req.query)
+    );
+
+    const summaryTable = buildCaseListPayload(totalSubmissions, req.query);
+
     res.json({
-      pending,
-      working,
-      totalSubmissions,
-      queryRaised,
+      counts: {
+        allCases: filteredTotalSubmissions.length,
+        pending: filteredPending.length,
+        working: filteredWorking.length,
+        finalSubmitted: filteredFinalSubmitted.length,
+        queryRaised: filteredQueryRaised.length,
+        cancelled: filteredCancelled.length,
+        outOfTat: filteredOutOfTat.length,
+      },
+      pending: filteredPending,
+      working: filteredWorking,
+      totalSubmissions: filteredTotalSubmissions,
+      finalSubmitted: filteredFinalSubmitted,
+      queryRaised: filteredQueryRaised,
+      cancelled: filteredCancelled,
+      outOfTat: filteredOutOfTat,
+      tableItems: summaryTable.items,
+      pagination: summaryTable.pagination,
+      filterOptions: summaryTable.filterOptions,
     });
   } catch (err) {
     console.error("Error fetching summary data:", err);
@@ -802,7 +1054,10 @@ exports.deleteImageFromCase = async (req, res) => {
 
     // ✅ Step 1: Delete image from storage
     try {
-      await deleteImage(imageUrl);
+      const assetUrl = getAssetUrl(imageUrl);
+      if (assetUrl) {
+        await deleteImage(assetUrl);
+      }
     } catch (err) {
       console.warn("Storage image delete failed (non-blocking):", err.message);
       // You can choose to stop here if storage delete is critical
@@ -811,7 +1066,7 @@ exports.deleteImageFromCase = async (req, res) => {
     // ✅ Step 2: Remove image URL from DB
     const updatedDoc = await Model.findByIdAndUpdate(
       id,
-      { $pull: { imageUrls: imageUrl } },
+      buildAssetPullQuery("imageUrls", imageUrl),
       { new: true }
     );
 

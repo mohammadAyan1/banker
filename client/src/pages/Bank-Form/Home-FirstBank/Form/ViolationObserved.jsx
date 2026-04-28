@@ -2,7 +2,15 @@
 import React, { useEffect } from "react";
 import { Form, Input, Button, Select, Row, Col, Divider } from "antd";
 
-const ViolationObserved = ({ isEdit, onNext, onBack, extractedData }) => {
+const ViolationObserved = ({
+  isEdit,
+  onNext,
+  onBack,
+  registerSectionSubmitter,
+  sectionId,
+  showActionButtons = true,
+  extractedData,
+}) => {
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -20,8 +28,15 @@ const ViolationObserved = ({ isEdit, onNext, onBack, extractedData }) => {
   }, [isEdit, extractedData, form]);
 
   const handleSubmit = (values) => {
+    if (!onNext) return;
     onNext(values);
   };
+
+  useEffect(() => {
+    if (!registerSectionSubmitter || !sectionId) return;
+
+    registerSectionSubmitter(sectionId, async () => form.validateFields());
+  }, [registerSectionSubmitter, sectionId, form]);
 
   const handleConditionalFields = (changedValues) => {
     if ("deviationToPlan" in changedValues && changedValues.deviationToPlan === "No") {
@@ -141,18 +156,20 @@ const ViolationObserved = ({ isEdit, onNext, onBack, extractedData }) => {
         </Row>
 
         {/* Actions */}
-        <Form.Item className="lg:col-span-2 text-end">
-          {onBack && (
-            <Button
-              type="default"
-              onClick={onBack}
-              className="mr-2 px-4 py-2 bg-gray-500 text-white rounded"
-            >
-              Back
-            </Button>
-          )}
-          <Button type="primary" htmlType="submit">Next</Button>
-        </Form.Item>
+        {showActionButtons && (
+          <Form.Item className="lg:col-span-2 text-end">
+            {onBack && (
+              <Button
+                type="default"
+                onClick={onBack}
+                className="mr-2 px-4 py-2 bg-gray-500 text-white rounded"
+              >
+                Back
+              </Button>
+            )}
+            <Button type="primary" htmlType="submit">Submit</Button>
+          </Form.Item>
+        )}
       </Form>
     </div>
   );
