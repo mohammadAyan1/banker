@@ -1,8 +1,8 @@
 // pages/Case/FinalSubmittedCases.jsx
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Table, Tag } from "antd";
+import { Button, Table, Tag, Input, Select } from "antd";
 import { Link } from "react-router-dom";
 import { fetchTotalSubmitCase } from "../../../redux/features/assignedCase/assignedCasesThunk";
 import Spinner from "../../../components/Spinner";
@@ -15,19 +15,71 @@ import {
   getDisplayCity,
 } from "../../../utils/dashboardRecord";
 
+const { Search } = Input;
+const { Option } = Select;
+
 const FinalSubmittedCases = () => {
   const dispatch = useDispatch();
   const { final, loading, selectedZone } = useSelector((state) => state.assignedCases);
+
+  // ✅ NEW: Filter states
+  const [searchText, setSearchText] = useState("");
+  const [selectedBanks, setSelectedBanks] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
 
   useEffect(() => {
     dispatch(fetchTotalSubmitCase());
   }, [dispatch]);
 
-  const filteredFinal = (final || []).filter(item => {
-    if (!selectedZone) return true;
-    const city = getDisplayCity(item);
-    return city.toLowerCase().includes(selectedZone.toLowerCase());
-  });
+  // ✅ NEW: Get unique banks and statuses
+  const uniqueBanks = useMemo(() => {
+    return [...new Set((final || []).map(item => item.bankName).filter(Boolean))];
+  }, [final]);
+
+  const uniqueStatuses = useMemo(() => {
+    return [...new Set((final || []).map(item => item.status).filter(Boolean))];
+  }, [final]);
+
+  // ✅ UPDATED: Filtered data with multiple filters
+  const filteredFinal = useMemo(() => {
+    return (final || []).filter(item => {
+      // Zone filter
+      if (selectedZone) {
+        const city = getDisplayCity(item);
+        if (!city.toLowerCase().includes(selectedZone.toLowerCase())) {
+          return false;
+        }
+      }
+
+      // Multiple bank filter
+      if (selectedBanks.length > 0 && !selectedBanks.includes(item.bankName)) {
+        return false;
+      }
+
+      // Multiple status filter
+      if (selectedStatuses.length > 0 && !selectedStatuses.includes(item.status)) {
+        return false;
+      }
+
+      // Search text filter
+      if (searchText) {
+        const searchLower = searchText.toLowerCase();
+        const customerName = getDisplayCustomerName(item).toLowerCase();
+        const address = getDisplayAddress(item).toLowerCase();
+        const assignedTo = (item?.assignedTo?.name || "").toLowerCase();
+        
+        if (
+          !customerName.includes(searchLower) &&
+          !address.includes(searchLower) &&
+          !assignedTo.includes(searchLower)
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [final, selectedZone, selectedBanks, selectedStatuses, searchText]);
 
   const columns = [
     {
@@ -103,6 +155,45 @@ const FinalSubmittedCases = () => {
   return (
     <div className='p-4'>
       <h2 className='text-xl font-bold mb-4'>Final Submitted Cases</h2>
+
+      {/* ✅ NEW: Filter Row */}
+      <div className='flex flex-wrap gap-4 mb-4'>
+        <Select
+          mode="multiple"
+          placeholder="Filter by Bank"
+          style={{ minWidth: 200 }}
+          value={selectedBanks}
+          onChange={setSelectedBanks}
+          allowClear
+          maxTagCount={2}
+        >
+          {uniqueBanks.map(bank => (
+            <Option key={bank} value={bank}>{bank}</Option>
+          ))}
+        </Select>
+
+        <Select
+          mode="multiple"
+          placeholder="Filter by Status"
+          style={{ minWidth: 200 }}
+          value={selectedStatuses}
+          onChange={setSelectedStatuses}
+          allowClear
+          maxTagCount={2}
+        >
+          {uniqueStatuses.map(status => (
+            <Option key={status} value={status}>{status}</Option>
+          ))}
+        </Select>
+
+        <Input
+          placeholder='Search by customer, address or assignee'
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 300 }}
+        />
+      </div>
+
       {loading ? (
         <Spinner />
       ) : (

@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { Table } from "antd";
+import React, { useEffect, useState, useMemo } from "react";
+import { Table, Input, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSummaryData } from "../../../redux/features/assignedCase/assignedCasesThunk";
 import { getDisplayCity } from "../../../utils/dashboardRecord";
+
+const { Option } = Select;
 
 const readValue = (record, paths) => {
   for (const path of paths) {
@@ -85,13 +87,6 @@ const columns = [
     title: "Status",
     dataIndex: "status",
     key: "status",
-    filters: [
-      { text: "Pending", value: "Pending" },
-      { text: "Approved", value: "Approved" },
-      { text: "Work in Progress", value: "Work in Progress" },
-      { text: "FinalSubmitted", value: "FinalSubmitted" },
-    ],
-    onFilter: (value, record) => record.status === value,
   },
   {
     title: "Construction Stage",
@@ -108,23 +103,21 @@ const columns = [
 const SummaryCard = () => {
   const dispatch = useDispatch();
   const [tableData, setTableData] = useState([]);
+  
+  // ✅ NEW: Filter states
+  const [searchText, setSearchText] = useState("");
+  const [selectedBanks, setSelectedBanks] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const response = await dispatch(fetchSummaryData()).unwrap();
-        let formattedData = (response?.totalSubmissions || []).map(
+        const formattedData = (response?.totalSubmissions || []).map(
           normalizeSummaryRecord
         );
-
-        if (selectedZone) {
-          formattedData = formattedData.filter(item => {
-            const city = getDisplayCity(item);
-            return city.toLowerCase().includes(selectedZone.toLowerCase());
-          });
-        }
-
         setTableData(formattedData);
       } catch (error) {
         console.error("Failed to load data:", error);
@@ -132,14 +125,105 @@ const SummaryCard = () => {
     };
 
     loadData();
-  }, [dispatch, selectedZone]);
+  }, [dispatch]);
+
+  // ✅ NEW: Get unique banks and statuses dynamically
+  const uniqueBanks = useMemo(() => {
+    return [...new Set(tableData.map(item => item.bankName).filter(Boolean))];
+  }, [tableData]);
+
+  const uniqueStatuses = useMemo(() => {
+    return [...new Set(tableData.map(item => item.status).filter(Boolean))];
+  }, [tableData]);
+
+  // ✅ NEW: Filtered data with all filters
+  const filteredData = useMemo(() => {
+    return tableData.filter(item => {
+      // Multiple bank filter
+      if (selectedBanks.length > 0 && !selectedBanks.includes(item.bankName)) {
+        return false;
+      }
+
+      // Multiple status filter
+      if (selectedStatuses.length > 0 && !selectedStatuses.includes(item.status)) {
+        return false;
+      }
+
+      // Zone filter
+      if (selectedZone) {
+        const city = getDisplayCity(item);
+        if (!city.toLowerCase().includes(selectedZone.toLowerCase())) {
+          return false;
+        }
+      }
+
+      // Search text filter
+      if (searchText) {
+        const searchLower = searchText.toLowerCase();
+        const searchableValues = [
+          item.bankName,
+          item.customerName,
+          item.propertyAddress,
+          item.status,
+          item.constructionStage,
+          item.dateOfVisit,
+        ];
+        
+        if (!searchableValues.some(value => 
+          String(value || "").toLowerCase().includes(searchLower)
+        )) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [tableData, selectedBanks, selectedStatuses, selectedZone, searchText]);
 
   return (
     <>
+      {/* ✅ NEW: Filter Row */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <Select
+          mode="multiple"
+          placeholder="Filter by Bank"
+          style={{ minWidth: 200 }}
+          value={selectedBanks}
+          onChange={setSelectedBanks}
+          allowClear
+          maxTagCount={2}
+        >
+          {uniqueBanks.map(bank => (
+            <Option key={bank} value={bank}>{bank}</Option>
+          ))}
+        </Select>
+
+        <Select
+          mode="multiple"
+          placeholder="Filter by Status"
+          style={{ minWidth: 200 }}
+          value={selectedStatuses}
+          onChange={setSelectedStatuses}
+          allowClear
+          maxTagCount={2}
+        >
+          {uniqueStatuses.map(status => (
+            <Option key={status} value={status}>{status}</Option>
+          ))}
+        </Select>
+
+        <Input
+          placeholder="Search all fields..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 300 }}
+        />
+      </div>
+
       <h1>Summary</h1>
       <Table
         columns={columns}
-        dataSource={tableData}
+        dataSource={filteredData}
         showSorterTooltip={{ target: "sorter-icon" }}
         bordered
         pagination={{ pageSize: 5 }}

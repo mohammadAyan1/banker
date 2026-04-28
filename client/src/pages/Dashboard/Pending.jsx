@@ -81,7 +81,13 @@ import ImageUploader from "../../components/ImageUploader";
 
 const Pending = () => {
   const [search, setSearch] = useState("");
-  const [selectedBank, setSelectedBank] = useState("All");
+  
+  // ✅ UPDATED: Converted to multiple select array
+  const [selectedBanks, setSelectedBanks] = useState([]);
+  
+  // ✅ NEW: Multiple status filter
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  
   const [reportData, setReportData] = useState([]);
   const [images, setImages] = useState([]);
   const [uploadedUrls, setUploadedUrls] = useState([]);
@@ -96,7 +102,6 @@ const Pending = () => {
   // --- Use memoized selectors to get data from Redux state ---
   // const icici = useSelector(selectIciciData);
   const hfBanks = useSelector(selectHfBanksData);
-
   const aditya = useSelector(selectAdityaData);
   // const primal = useSelector(selectPrimalData);
   // const sundaram = useSelector(selectSundaramData);
@@ -157,11 +162,9 @@ const Pending = () => {
     fetchAllBankData();
   }, [fetchAllBankData]);
 
-
   useEffect(() => {
     console.log(aditya)
   }, [aditya, dispatch])
-
 
   const handleDelete = async ({ id }) => {
     try {
@@ -242,27 +245,6 @@ const Pending = () => {
       "contactPerson"
     );
 
-    // const iciciHFCWithBank = normalizeData(
-    //   iciciHFC,
-    //   "ICICI HFC Bank",
-    //   "icici-hfc",
-    //   "applicantName",
-    //   "contactPerson"
-    // );
-    // const DmiFinanceWithBank = normalizeData(
-    //   DmiFinance,
-    //   "DmiFinance Bank",
-    //   "dmi-finance",
-    //   "applicantName",
-    //   "contactPerson"
-    // );
-    // const BajajAWithBank = normalizeData(
-    //   BajajAmeriya,
-    //   "Bajaj Ameriya Bank",
-    //   "bajaj-ameriya-bank",
-    //   "applicantName",
-    //   "contactPerson"
-    // );
     const BajajWithBank = normalizeData(
       Bajaj,
       "Bajaj Bank",
@@ -270,55 +252,7 @@ const Pending = () => {
       "applicantName",
       "contactPerson"
     );
-    // const idfcWithBank = normalizeData(
-    //   IDFCbank,
-    //   "IDFC Bank",
-    //   "idfc-first-bank",
-    //   "applicantNames",
-    //   "contactPerson"
-    // );
-    // const agriwiseWithBank = normalizeData(
-    //   agriwise,
-    //   "Agriwise Bank",
-    //   "agriwise",
-    //   "customerName",
-    //   "contactPerson"
-    // );
-    // const protiumWithBank = normalizeData(
-    //   protium,
-    //   "Protium Bank",
-    //   "protium",
-    //   "nameOfApplicant",
-    //   "contactPerson"
-    // );
-    // const ProfectusWithBank = normalizeData(
-    //   Profectus,
-    //   "Profectus Bank",
-    //   "profectus",
-    //   "developerName",
-    //   "contactPerson"
-    // );
-    // const FedralWithBank = normalizeData(
-    //   Fedral,
-    //   "Fedral Bank",
-    //   "federal-bank",
-    //   "customerName",
-    //   "contactPerson"
-    // );
-    // const SamstaWithBank = normalizeData(
-    //   Samsta,
-    //   "Samasta Bank",
-    //   "samasta",
-    //   "applicantsName",
-    //   "contactPerson"
-    // );
-    // const piramalNPAWithBank = normalizeData(
-    //   piramalNPA,
-    //   "piramalNPA Bank",
-    //   "piramalnpa-form",
-    //   "environmentExposureCondition",
-    //   "contactPerson"
-    // );
+
     const manapuramWithBank = normalizeData(
       mannapuram,
       "Manappuram Bank",
@@ -326,27 +260,7 @@ const Pending = () => {
       "applicantsName",
       "contactPerson"
     );
-    // const chholaWithBank = normalizeData(
-    //   chola,
-    //   "Chola Bank",
-    //   "chola",
-    //   "propertyOwner",
-    //   "contactPerson"
-    // );
-    // const sundaramWithBank = normalizeData(
-    //   sundaram,
-    //   "Sundaram Bank",
-    //   "sundaram",
-    //   "propertyIdentifiedBy",
-    //   "contactPerson"
-    // );
-    // const heroWithFinCorp = normalizeData(
-    //   heroFinCorp,
-    //   "HeroFinCorp Bank",
-    //   "hero-fincorp",
-    //   "applicantName",
-    //   "contactPerson"
-    // );
+
     const hfWithBank = normalizeData(
       hfBanks,
       "Home First Bank",
@@ -354,13 +268,7 @@ const Pending = () => {
       "customerName",
       "customerNo"
     );
-    // const iciciWithBank = normalizeData(
-    //   icici,
-    //   "ICICI Bank",
-    //   "icici",
-    //   "verifiedBy",
-    //   "contactPerson"
-    // );
+
     const adityaWithBank = normalizeData(
       aditya,
       "Aditya Bank",
@@ -368,56 +276,19 @@ const Pending = () => {
       "clientName",
       "contactPerson"
     );
-    // const primalWithBank = normalizeData(
-    //   primal,
-    //   "Primal Bank",
-    //   "piramal",
-    //   "applicantName",
-    //   "contactPerson"
-    // );
 
     return [
       ...hfWithBank,
       ...HFTrenchWithBank,
-      // ...iciciWithBank,
       ...adityaWithBank,
-      // ...primalWithBank,
-      // ...heroWithFinCorp,
-      // ...sundaramWithBank,
-      // ...chholaWithBank,
       ...manapuramWithBank,
-      // ...piramalNPAWithBank,
-      // ...SamstaWithBank,
-      // ...FedralWithBank,
-      // ...ProfectusWithBank,
-      // ...protiumWithBank,
-      // ...agriwiseWithBank,
-      // ...idfcWithBank,
       ...BajajWithBank,
-      // ...BajajAWithBank,
-      // ...DmiFinanceWithBank,
-      // ...iciciHFCWithBank,
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [
-    // iciciHFC,
-    // DmiFinance,
-    // BajajAmeriya,
     Bajaj,
-    // IDFCbank,
-    // agriwise,
-    // protium,
-    // Profectus,
-    // Fedral,
-    // Samsta,
-    // piramalNPA,
     mannapuram,
-    // chola,
-    // sundaram,
-    // heroFinCorp,
     hfBanks,
-    // icici,
     aditya,
-    // primal,
     homeTrenchReport,
   ]);
 
@@ -425,20 +296,32 @@ const Pending = () => {
     setReportData(memoizedReportData);
   }, [memoizedReportData]);
 
-
-
-
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
+
+  // ✅ NEW: Get unique banks and statuses dynamically from reportData
+  const uniqueBanks = useMemo(() => {
+    return [...new Set(reportData.map(item => item.bankName).filter(Boolean))];
+  }, [reportData]);
+
+  const uniqueStatuses = useMemo(() => {
+    return [...new Set(reportData.map(item => item.status).filter(Boolean))];
+  }, [reportData]);
 
   const filteredData = useMemo(() => {
     if (!reportData || reportData.length === 0) {
       return [];
     }
 
-    // First filter by bank if selected
     let data = reportData;
-    if (selectedBank !== "All") {
-      data = reportData.filter((item) => item.bankName === selectedBank);
+
+    // ✅ UPDATED: Multiple bank filter
+    if (selectedBanks.length > 0) {
+      data = data.filter((item) => selectedBanks.includes(item.bankName));
+    }
+
+    // ✅ NEW: Multiple status filter
+    if (selectedStatuses.length > 0) {
+      data = data.filter((item) => selectedStatuses.includes(item.status));
     }
 
     // Filter by Zone/City if selected
@@ -465,32 +348,9 @@ const Pending = () => {
           .includes(lowerCaseSearch)
       );
     });
-  }, [search, reportData, selectedBank, selectedZone]);
+  }, [search, reportData, selectedBanks, selectedStatuses, selectedZone]);
 
-
-  const bankOptions = [
-    { value: "All", label: "All Banks" },
-    { value: "HFFC Bank", label: "HFFC Bank" },
-    { value: "HomeFirstTrench", label: "HomeFirstTrench" },
-    { value: "ICICI Bank", label: "ICICI Bank" },
-    { value: "Aditya Bank", label: "Aditya Bank" },
-    { value: "Primal Bank", label: "Primal Bank" },
-    { value: "HeroFinCorp Bank", label: "HeroFinCorp Bank" },
-    { value: "Sundaram Bank", label: "Sundaram Bank" },
-    { value: "Chola Bank", label: "Chola Bank" },
-    { value: "Manappuram Bank", label: "Manappuram Bank" },
-    { value: "piramalNPA Bank", label: "PiramalNPA Bank" },
-    { value: "Samasta Bank", label: "Samasta Bank" },
-    { value: "Fedral Bank", label: "Fedral Bank" },
-    { value: "Profectus Bank", label: "Profectus Bank" },
-    { value: "Protium Bank", label: "Protium Bank" },
-    { value: "Agriwise Bank", label: "Agriwise Bank" },
-    { value: "IDFC Bank", label: "IDFC Bank" },
-    { value: "Bajaj Bank", label: "Bajaj Bank" },
-    { value: "Bajaj Ameriya Bank", label: "Bajaj Ameriya Bank" },
-    { value: "DmiFinance Bank", label: "DmiFinance Bank" },
-    { value: "ICICI HFC Bank", label: "ICICI HFC Bank" },
-  ];
+  // ✅ REMOVED: old bankOptions array - ab dynamic use karenge
 
   const columns = [
     {
@@ -553,23 +413,6 @@ const Pending = () => {
         );
       },
     },
-    // {
-    //   title: "Status",
-    //   key: "status",
-    //   render: (record) => (
-    //     <span
-    //       className={`px-2 py-1 rounded text-white text-xs ${
-    //         record.status === "Pending"
-    //           ? "!bg-yellow-500"
-    //           : record.status === "Assigned"
-    //           ? "!bg-blue-500"
-    //           : "!bg-green-600"
-    //       }`}
-    //     >
-    //       {record.status}
-    //     </span>
-    //   ),
-    // },
     {
       title: "Action",
       key: "action",
@@ -599,7 +442,6 @@ const Pending = () => {
           setImages={setImages}
           setUploadedUrls={setUploadedUrls}
           caseId={record._id}
-          // bankName={hfBanks[0]?.bankName || "Bank"}
           bankName={record.bankName}
           fetchData={fetchAllBankData}
           uploadedUrls={uploadedUrls}
@@ -639,25 +481,38 @@ const Pending = () => {
     },
   ];
 
-  // if (overallLoading) {
-  //   return (
-  //     <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-50 z-50">
-  //       <Spin size="large" />
-  //       {/* <h1>sdfghjk</h1> */}
-  //     </div>
-  //   );
-  // }
-
   return (
     <div className="bg-gray-100 p-6 rounded-xl shadow-md min-h-screen">
-      <div className="flex items-center gap-2 mb-4">
+      {/* ✅ UPDATED: Filter Row with multiple bank & status select */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
         <Select
-          style={{ width: 200 }}
-          placeholder="Select Bank"
-          value={selectedBank}
-          onChange={setSelectedBank}
-          options={bankOptions}
-        />
+          mode="multiple"
+          style={{ minWidth: 200 }}
+          placeholder="Filter by Bank"
+          value={selectedBanks}
+          onChange={setSelectedBanks}
+          allowClear
+          maxTagCount={2}
+        >
+          {uniqueBanks.map(bank => (
+            <Option key={bank} value={bank}>{bank}</Option>
+          ))}
+        </Select>
+
+        <Select
+          mode="multiple"
+          style={{ minWidth: 200 }}
+          placeholder="Filter by Status"
+          value={selectedStatuses}
+          onChange={setSelectedStatuses}
+          allowClear
+          maxTagCount={2}
+        >
+          {uniqueStatuses.map(status => (
+            <Option key={status} value={status}>{status}</Option>
+          ))}
+        </Select>
+
         <AntSearch
           placeholder="Search customer names, addresses..."
           allowClear

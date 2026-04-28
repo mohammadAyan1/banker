@@ -1,8 +1,6 @@
-
 import { Home, List, LogOut } from "lucide-react";
-
 import { useLocation, useNavigate } from "react-router-dom";
-import { App } from "antd";
+import { App, Select } from "antd";
 import { MdAdminPanelSettings } from "react-icons/md";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,9 +8,10 @@ import { logoutThunk } from "../../redux/features/auth/authThunks";
 import { setZone } from "../../redux/features/assignedCase/assignedCasesSlice.js.js";
 import { useState, useEffect } from "react";
 
+const { Option } = Select;
+
 const MenuItems = () => {
-  // const [selectCity, setselectCity] = useState("")
-  const selectedCity = useSelector((state) => state.assignedCases.selectedZone);
+  const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
   const dispatch = useDispatch();
 
   const cities = ["Bhopal", "Indore", "Jabalpur", "Gwalior", "Dehradun"];
@@ -22,10 +21,21 @@ const MenuItems = () => {
   const currentPath = location.pathname;
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    dispatch(setZone(e.target.value));
+  // ✅ NEW: Multiple zone selection state
+  const [selectedZones, setSelectedZones] = useState([]);
+
+  const handleChange = (values) => {
+    setSelectedZones(values);
+    // ✅ UPDATED: Join multiple zones with comma for Redux store
+    dispatch(setZone(values.join(",")));
   };
 
+  // ✅ Sync Redux zone back to local state on mount
+  useEffect(() => {
+    if (selectedZone) {
+      setSelectedZones(selectedZone.split(",").filter(Boolean));
+    }
+  }, []);
 
   const openInvoice = () => {
     window.open(
@@ -34,6 +44,7 @@ const MenuItems = () => {
       "noopener,noreferrer"
     );
   };
+
   const adminMenu = [
     {
       name: "Dashboard",
@@ -47,18 +58,11 @@ const MenuItems = () => {
       icon: <Home size={iconSize} />,
       isActive: currentPath === "/bank-logo",
     },
-    // {
-    //   name: "Invoice All",
-    //   path: "#",
-    //   icon: <List size={iconSize} />,
-    //   isActive: currentPath.includes("#"),
-    // },
     {
       name: "Invoice All",
       action: openInvoice,
       icon: <List size={iconSize} />,
     },
-
     {
       name: "Manage Employees",
       path: "/admin/employees",
@@ -99,8 +103,8 @@ const MenuItems = () => {
     <div className='h-full w-full'>
       {/* User Avatar Section */}
       <div className='flex-col items-center gap-3 mb-6'>
-        <div className='flex gap-2 relative left-2  '>
-          <div className='h-12 w-12 uppercase bg-gray-400 rounded-full flex items-center justify-center i text-white font-semibold text-lg shadow-md'>
+        <div className='flex gap-2 relative left-2'>
+          <div className='h-12 w-12 uppercase bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md'>
             <p>{user?.name.slice(0, 1)}</p>
           </div>
           <div className='mt-1'>
@@ -113,31 +117,33 @@ const MenuItems = () => {
           </div>
         </div>
 
-        {/* <p className='text-xs text-gray-500'>Administrator</p> */}
-
         {user?.role === "SuperAdmin" ? (
           <>
-            <div className='w-full max-w-sm mx-auto p-2 '>
+            <div className='w-full max-w-sm mx-auto p-2'>
               <label
                 htmlFor='city'
                 className='block text-sm font-medium text-gray-200 mb-1'
               >
                 {/* Select City */}
               </label>
-              <select
+              
+              {/* ✅ UPDATED: Multiple Select for Zones */}
+              <Select
+                mode="multiple"
                 id='city'
-                name='city'
-                value={selectedCity}
+                value={selectedZones}
                 onChange={handleChange}
-                className='w-52 px-3  p-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-gray-100'
+                placeholder="--Select Zones--"
+                className='w-52'
+                maxTagCount={2}
+                allowClear
               >
-                <option value=''>--Select Zone--</option>
                 {cities.map((city, index) => (
-                  <option key={index} value={city}>
+                  <Option key={index} value={city}>
                     {city}
-                  </option>
+                  </Option>
                 ))}
-              </select>
+              </Select>
             </div>
           </>
         ) : (
@@ -163,10 +169,11 @@ const MenuItems = () => {
                 navigate(item.path);
               }
             }}
-            className={`flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ${item.isActive
-              ? "bg-[#C40C0C] text-white shadow-md"
-              : "text-gray-700 hover:bg-gray-100"
-              }`}
+            className={`flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
+              item.isActive
+                ? "bg-[#C40C0C] text-white shadow-md"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
           >
             {item.icon}
             <span className='text-sm font-medium'>{item.name}</span>

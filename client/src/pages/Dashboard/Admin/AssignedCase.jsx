@@ -1,5 +1,3 @@
-
-
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
@@ -38,6 +36,10 @@ const AssignedCase = () => {
   const [selectedOfficer, setSelectedOfficer] = useState(null);
   const [BankName, setBankName] = useState(null);
 
+  // ✅ NEW: Multiple filter states
+  const [selectedBanks, setSelectedBanks] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+
   // Fetch cases
   useEffect(() => {
     dispatch(fetchAssignedCases());
@@ -46,10 +48,15 @@ const AssignedCase = () => {
 
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
 
-  // Filter search
+  // ✅ NEW: Get unique banks and statuses for filter dropdowns
+  const uniqueBanks = [...new Set(cases.map(item => item.bankName).filter(Boolean))];
+  const uniqueStatuses = [...new Set(cases.map(item => item.status).filter(Boolean))];
+
+  // Filter search (updated with multiple filters)
   useEffect(() => {
     let filtered = cases;
 
+    // Zone filter
     if (selectedZone) {
       filtered = filtered.filter((item) => {
         const city = getDisplayCity(item);
@@ -57,6 +64,21 @@ const AssignedCase = () => {
       });
     }
 
+    // ✅ NEW: Bank multiple filter
+    if (selectedBanks.length > 0) {
+      filtered = filtered.filter((item) =>
+        selectedBanks.includes(item.bankName)
+      );
+    }
+
+    // ✅ NEW: Status multiple filter
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter((item) =>
+        selectedStatuses.includes(item.status)
+      );
+    }
+
+    // Search text filter
     if (searchText) {
       const normalizedSearchText = searchText.toLowerCase();
       filtered = filtered.filter((item) =>
@@ -74,7 +96,7 @@ const AssignedCase = () => {
     }
 
     setFilteredData(filtered);
-  }, [cases, searchText, selectedZone]);
+  }, [cases, searchText, selectedZone, selectedBanks, selectedStatuses]);
 
   // Remove assignment
   const handleRemoveAssignment = async (id) => {
@@ -116,14 +138,6 @@ const AssignedCase = () => {
       toast.error("Failed to update assignment");
     }
   };
-
-
-  useEffect(() => {
-    console.log("this is loadinng ");
-    console.log(loading);
-
-
-  }, [loading])
 
   const columns = [
     {
@@ -229,19 +243,47 @@ const AssignedCase = () => {
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Assigned Cases</h2>
 
-      <Search
-        placeholder="Search..."
-        size="large"
-        allowClear
-        onChange={(e) => setSearchText(e.target.value)}
-        className="mb-4"
-      />
+      {/* ✅ NEW: Filter Row with Bank & Status multiple select */}
+      <div className="flex gap-4 mb-4 flex-wrap">
+        <Select
+          mode="multiple"
+          placeholder="Filter by Bank"
+          style={{ minWidth: 200 }}
+          value={selectedBanks}
+          onChange={setSelectedBanks}
+          allowClear
+          maxTagCount={2}
+        >
+          {uniqueBanks.map(bank => (
+            <Option key={bank} value={bank}>{bank}</Option>
+          ))}
+        </Select>
+
+        <Select
+          mode="multiple"
+          placeholder="Filter by Status"
+          style={{ minWidth: 200 }}
+          value={selectedStatuses}
+          onChange={setSelectedStatuses}
+          allowClear
+          maxTagCount={2}
+        >
+          {uniqueStatuses.map(status => (
+            <Option key={status} value={status}>{status}</Option>
+          ))}
+        </Select>
+
+        <Search
+          placeholder="Search..."
+          size="large"
+          allowClear
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ maxWidth: 300 }}
+        />
+      </div>
 
       {loading ? (
-        <>
-          <Spinner />
-
-        </>
+        <Spinner />
       ) : (
         <Table
           dataSource={filteredData}
@@ -251,7 +293,7 @@ const AssignedCase = () => {
         />
       )}
 
-      {/* ✅ ASSIGN MODAL */}
+      {/* ASSIGN MODAL */}
       <Modal
         title="Change Assignment"
         open={isModalOpen}

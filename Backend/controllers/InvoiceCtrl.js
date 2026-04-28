@@ -28,6 +28,49 @@ exports.saveInvoice = async (req, res) => {
   }
 };
 
+
+
+
+
+exports.updateInvoice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { bankName, invoiceNo, invoiceDate, billMonth, totalAmount, rows, meta } = req.body;
+
+    // Convert DD.MM.YYYY to Date (same as save)
+    const parsedDate = new Date(invoiceDate.split('.').reverse().join('-'));
+
+    const updatedInvoice = await Invoice.findByIdAndUpdate(
+      id,
+      {
+        bankName,
+        invoiceNo,
+        invoiceDate: parsedDate,
+        billMonth,
+        totalAmount,
+        rows,
+        meta
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedInvoice) {
+      return res.status(404).json({ success: false, message: "Invoice not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Invoice updated successfully", data: updatedInvoice });
+  } catch (error) {
+    console.error("Update Invoice Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+
+
+
+
 exports.getAllInvoices = async (req, res) => {
   try {
     const { bank, month, year, status } = req.query;

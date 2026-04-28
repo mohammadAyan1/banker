@@ -12,7 +12,7 @@ const server = http.createServer(app);
 const allowedOrigins = [
   "http://localhost:5173", // Local frontend
   "https://bank-one-phi.vercel.app",
-    "http://localhost:5174", // Production frontend
+  "http://localhost:5174", // Production frontend
 ];
 
 const io = new Server(server, {

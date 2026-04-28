@@ -1,11 +1,10 @@
 // pages/Case/OutOfTATCases.jsx
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Table, Tag } from "antd";
+import { Table, Tag, Input, Select } from "antd";
 import { Link } from "react-router-dom";
 import Spinner from "../../../components/Spinner";
-// import { fetchOutOfTATCases } from "../../../redux/features/assignedCase/assignedCasesThunk";
 import getBankTagColor from "../getBankTagColor";
 import {
   getBankRoute,
@@ -14,11 +13,15 @@ import {
   getDisplayCity,
 } from "../../../utils/dashboardRecord";
 
+const { Option } = Select;
+
 const OutOfTATCase = () => {
   const dispatch = useDispatch();
-  // const { outOfTATCases, loading } = useSelector(
-  //   (state) => state.assignedCases
-  // );
+  
+  // ✅ NEW: Filter states
+  const [searchText, setSearchText] = useState("");
+  const [selectedBanks, setSelectedBanks] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
 
   const {
     data: cases,
@@ -26,14 +29,63 @@ const OutOfTATCase = () => {
     final,
     cancelledCases,
     loading,
+    outOfTatCases,
     selectedZone,
   } = useSelector((state) => state.assignedCases);
 
-  const OUTCase = (outOfTatCases?.data || []).filter(item => {
-    if (!selectedZone) return true;
-    const city = getDisplayCity(item);
-    return city.toLowerCase().includes(selectedZone.toLowerCase());
-  });
+  // ✅ NEW: Get unique banks and statuses dynamically
+  const uniqueBanks = useMemo(() => {
+    const rawData = outOfTatCases?.data || [];
+    return [...new Set(rawData.map(item => item.bank).filter(Boolean))];
+  }, [outOfTatCases]);
+
+  const uniqueStatuses = useMemo(() => {
+    const rawData = outOfTatCases?.data || [];
+    return [...new Set(rawData.map(item => item.status).filter(Boolean))];
+  }, [outOfTatCases]);
+
+  // ✅ UPDATED: Filtered data with multiple filters
+  const OUTCase = useMemo(() => {
+    let filtered = (outOfTatCases?.data || []);
+
+    // Multiple bank filter
+    if (selectedBanks.length > 0) {
+      filtered = filtered.filter(item => selectedBanks.includes(item.bank));
+    }
+
+    // Multiple status filter
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter(item => selectedStatuses.includes(item.status));
+    }
+
+    // Zone filter
+    if (selectedZone) {
+      filtered = filtered.filter(item => {
+        const city = getDisplayCity(item);
+        return city.toLowerCase().includes(selectedZone.toLowerCase());
+      });
+    }
+
+    // Search text filter
+    if (searchText) {
+      const searchLower = searchText.toLowerCase();
+      filtered = filtered.filter(item => {
+        const customerName = getDisplayCustomerName(item).toLowerCase();
+        const address = getDisplayAddress(item).toLowerCase();
+        const bank = (item.bank || "").toLowerCase();
+        const status = (item.status || "").toLowerCase();
+
+        return (
+          customerName.includes(searchLower) ||
+          address.includes(searchLower) ||
+          bank.includes(searchLower) ||
+          status.includes(searchLower)
+        );
+      });
+    }
+
+    return filtered;
+  }, [outOfTatCases, selectedBanks, selectedStatuses, selectedZone, searchText]);
 
   const columns = [
     {
@@ -91,6 +143,45 @@ const OutOfTATCase = () => {
   return (
     <div className='p-4'>
       <h2 className='text-xl font-bold mb-4'>⏰ Out of TAT Cases</h2>
+
+      {/* ✅ NEW: Filter Row */}
+      <div className='flex flex-wrap gap-4 mb-4'>
+        <Select
+          mode="multiple"
+          placeholder="Filter by Bank"
+          style={{ minWidth: 200 }}
+          value={selectedBanks}
+          onChange={setSelectedBanks}
+          allowClear
+          maxTagCount={2}
+        >
+          {uniqueBanks.map(bank => (
+            <Option key={bank} value={bank}>{bank}</Option>
+          ))}
+        </Select>
+
+        <Select
+          mode="multiple"
+          placeholder="Filter by Status"
+          style={{ minWidth: 200 }}
+          value={selectedStatuses}
+          onChange={setSelectedStatuses}
+          allowClear
+          maxTagCount={2}
+        >
+          {uniqueStatuses.map(status => (
+            <Option key={status} value={status}>{status}</Option>
+          ))}
+        </Select>
+
+        <Input
+          placeholder="Search by customer, address, bank or status"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 300 }}
+        />
+      </div>
+
       {loading ? (
         <Spinner />
       ) : (

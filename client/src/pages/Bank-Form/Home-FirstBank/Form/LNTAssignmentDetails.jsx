@@ -1,5 +1,3 @@
-
-
 import dayjs from "dayjs";
 import React, { useEffect, useState, useRef } from "react";
 import {
@@ -8,8 +6,6 @@ import {
   Button,
   DatePicker,
   Select,
-  Row,
-  Col,
   Spin,
 } from "antd";
 import GeoLocationInput from "../../../../components/GeoLocationInput";
@@ -32,6 +28,9 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
   const [uploadedUrls, setUploadedUrls] = useState([]);
   const [loading, setLoading] = useState(false);
   const [docUrls, setDocUrls] = useState([]);
+  
+  // Active section - sirf ek khulega
+  const [activeSection, setActiveSection] = useState(1);
 
   const initialValues = {
     customerName: "",
@@ -65,8 +64,6 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
     usageOfProperty: "Residential",
     propertyEasilyIdentifiable: "YES",
   };
-
-  const CPANEL = import.meta.env.VITE_CPANEL_DOMAIN;
 
   useEffect(() => {
     const merged = { ...extractedData, ...isEdit };
@@ -148,19 +145,47 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
     }
   };
 
-
   useEffect(() => {
     console.log(docUrls);
+  }, [docUrls]);
 
-  }, [docUrls])
-
+  // Sections for the circle buttons
+  const sections = [
+    { key: 1, number: "1", label: "GENERAL DETAILS" },
+    { key: 2, number: "2", label: "Property Overview" },
+    { key: 3, number: "3", label: "Visit Details" },
+  ];
 
   if (loading) return <Spin />;
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-6 text-red-600">GENERAL DETAILS</h2>
+      
+      {/* ── CIRCLE BUTTONS ROW - Bilkul image jaisa ── */}
+      <div className="flex items-center justify-center gap-3 mb-6 pb-4 border-b border-gray-200">
+        {sections.map((sec, index) => (
+          <React.Fragment key={sec.key}>
+            <button
+              onClick={() => setActiveSection(sec.key)}
+              className={`
+                flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold
+                transition-all duration-200
+                ${activeSection === sec.key 
+                  ? "bg-blue-600 text-white shadow-md" 
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                }
+              `}
+            >
+              {sec.number}
+            </button>
+            {index < sections.length - 1 && (
+              <div className="w-8 h-0.5 bg-gray-300"></div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
 
+      {/* ── FORM ── */}
       <Form
         layout="vertical"
         form={form}
@@ -168,192 +193,204 @@ const LNTAssignmentDetails = ({ isEdit, onNext, extractedData, fetchData }) => {
         onFinish={handleSubmit}
         className="grid grid-cols-2 gap-4"
       >
-        {/* ── Section 1: Vendor / Assignment ── */}
-        <div className="col-span-2">
-          <h3 className="text-lg font-semibold text-blue-700 mb-2 border-b pb-1">Assignment Info</h3>
-        </div>
+        {/* ── SECTION 1: GENERAL DETAILS ── */}
+        {activeSection === 1 && (
+          <>
+            <div className="col-span-2">
+              <h2 className="text-2xl font-bold mb-6 text-red-600">GENERAL DETAILS</h2>
+              <h3 className="text-lg font-semibold text-blue-700 mb-2 border-b pb-1">Assignment Info</h3>
+            </div>
 
-        <Form.Item name="refNo" label="Loan Account No. (LAI)">
-          <Input />
-        </Form.Item>
+            <Form.Item name="refNo" label="Loan Account No. (LAI)">
+              <Input />
+            </Form.Item>
 
-        <Form.Item name="dateOfReport" label="Date">
-          <DatePicker className="w-full" format="DD.MM.YYYY" />
-        </Form.Item>
+            <Form.Item name="dateOfReport" label="Date">
+              <DatePicker className="w-full" format="DD.MM.YYYY" />
+            </Form.Item>
 
-        <Form.Item name="projectPinCode" label="Pin Code">
-          <Input />
-        </Form.Item>
+            <Form.Item name="projectPinCode" label="Pin Code">
+              <Input />
+            </Form.Item>
+          </>
+        )}
 
-        {/* ── Section 2: Property Overview ── */}
-        <div className="col-span-2 mt-2">
-          <h3 className="  text-2xl font-bold  mb-2 border-b pb-1 text-red-600">Property Overview</h3>
-        </div>
+        {/* ── SECTION 2: Property Overview ── */}
+        {activeSection === 2 && (
+          <>
+            <div className="col-span-2">
+              <h2 className="text-2xl font-bold mb-6 text-red-600">Property Overview</h2>
+            </div>
 
-        <Form.Item name="propertyCategory" label="Property Category (Project / Individual)">
-          <Select allowClear className="w-full">
-            <Option value="INDIVIDUAL">Individual</Option>
-            <Option value="PROJECT">Project</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="propertyCategory" label="Property Category (Project / Individual)">
+              <Select allowClear className="w-full">
+                <Option value="INDIVIDUAL">Individual</Option>
+                <Option value="PROJECT">Project</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="unitType" label="Property Type">
-          <Select allowClear className="w-full">
-            <Option value="Apartment">Apartment</Option>
-            <Option value="Row House">Row House</Option>
-            <Option value="Individual House">Individual House</Option>
-            <Option value="Shop">Shop</Option>
-            <Option value="Office">Office</Option>
-            <Option value="Industrial">Industrial</Option>
-            <Option value="OPEN PLOT">Open Plot</Option>
-            <Option value="Flat">Flat</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="unitType" label="Property Type">
+              <Select allowClear className="w-full">
+                <Option value="Apartment">Apartment</Option>
+                <Option value="Row House">Row House</Option>
+                <Option value="Individual House">Individual House</Option>
+                <Option value="Shop">Shop</Option>
+                <Option value="Office">Office</Option>
+                <Option value="Industrial">Industrial</Option>
+                <Option value="OPEN PLOT">Open Plot</Option>
+                <Option value="Flat">Flat</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="typeOfLoan" label="Type of Loan">
-          <Input />
-        </Form.Item>
+            <Form.Item name="typeOfLoan" label="Type of Loan">
+              <Input />
+            </Form.Item>
 
-        <Form.Item name="propertyLocation" label="Property Location">
-          <Select allowClear className="w-full">
-            <Option value="Town">Town</Option>
-            <Option value="Village">Village</Option>
-            <Option value="City">City</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="propertyLocation" label="Property Location">
+              <Select allowClear className="w-full">
+                <Option value="Town">Town</Option>
+                <Option value="Village">Village</Option>
+                <Option value="City">City</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="populationCensus2011" label="Population as per Census 2011">
-          <Select allowClear className="w-full">
-            <Option value="Less than 10000">Less than 10000</Option>
-            <Option value="Btw 10000 to 1.0 Lac">Btw 10000 to 1.0 Lac</Option>
-            <Option value="Above 1.0 Lac">Above 1.0 Lac</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="populationCensus2011" label="Population as per Census 2011">
+              <Select allowClear className="w-full">
+                <Option value="Less than 10000">Less than 10000</Option>
+                <Option value="Btw 10000 to 1.0 Lac">Btw 10000 to 1.0 Lac</Option>
+                <Option value="Above 1.0 Lac">Above 1.0 Lac</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="ruralUrban" label="Rural / Urban (>10k = Urban)">
-          <Select allowClear className="w-full">
-            <Option value="URBAN">Urban</Option>
-            <Option value="RURAL">Rural</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="ruralUrban" label="Rural / Urban (>10k = Urban)">
+              <Select allowClear className="w-full">
+                <Option value="URBAN">Urban</Option>
+                <Option value="RURAL">Rural</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="zone" label="Zone">
-          <Select allowClear className="w-full">
-            <Option value="Residential">Residential</Option>
-            <Option value="Commercial">Commercial</Option>
-            <Option value="Industrial">Industrial</Option>
-            <Option value="Agricultural">Agricultural</Option>
-            <Option value="Mixed">Mixed</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="zone" label="Zone">
+              <Select allowClear className="w-full">
+                <Option value="Residential">Residential</Option>
+                <Option value="Commercial">Commercial</Option>
+                <Option value="Industrial">Industrial</Option>
+                <Option value="Agricultural">Agricultural</Option>
+                <Option value="Mixed">Mixed</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="propertyAreaLimits" label="Property Area Limits">
-          <Select allowClear className="w-full">
-            <Option value="Municipal">Municipal</Option>
-            <Option value="Gram Panchayat">Gram Panchayat</Option>
-            <Option value="Town Planning">Town Planning</Option>
-            <Option value="Collector">Collector</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="propertyAreaLimits" label="Property Area Limits">
+              <Select allowClear className="w-full">
+                <Option value="Municipal">Municipal</Option>
+                <Option value="Gram Panchayat">Gram Panchayat</Option>
+                <Option value="Town Planning">Town Planning</Option>
+                <Option value="Collector">Collector</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="eraApplicable" label="RERA No. (If applicable)">
-          <Input />
-        </Form.Item>
+            <Form.Item name="eraApplicable" label="RERA No. (If applicable)">
+              <Input />
+            </Form.Item>
+          </>
+        )}
 
-        {/* ── Section 3: Visit Details ── */}
-        <div className="col-span-2 mt-2">
-          <h3 className="text-2xl font-bold text-red-600 mb-2 border-b pb-1">Visit Details</h3>
-        </div>
+        {/* ── SECTION 3: Visit Details ── */}
+        {activeSection === 3 && (
+          <>
+            <div className="col-span-2">
+              <h2 className="text-2xl font-bold mb-6 text-red-600">Visit Details</h2>
+            </div>
 
-        <Form.Item name="customerName" label="Applicant Name">
-          <Input />
-        </Form.Item>
+            <Form.Item name="customerName" label="Applicant Name">
+              <Input />
+            </Form.Item>
 
-        <Form.Item name="customerNo" label="Mobile No.">
-          <Input />
-        </Form.Item>
+            <Form.Item name="customerNo" label="Mobile No.">
+              <Input />
+            </Form.Item>
 
-        <Form.Item name="personMetDuringVisit" label="Person Met At Site">
-          <Input />
-        </Form.Item>
+            <Form.Item name="personMetDuringVisit" label="Person Met At Site">
+              <Input />
+            </Form.Item>
 
-        <Form.Item name="relationshipOfPersonMet" label="Relationship of Person Met and Property">
-          <Select allowClear className="w-full">
-            <Option value="SELF">Self</Option>
-            <Option value="Owner">Owner</Option>
-            <Option value="Tenant">Tenant</Option>
-            <Option value="Caretaker">Caretaker</Option>
-            <Option value="Neighbor">Neighbor</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="relationshipOfPersonMet" label="Relationship of Person Met and Property">
+              <Select allowClear className="w-full">
+                <Option value="SELF">Self</Option>
+                <Option value="Owner">Owner</Option>
+                <Option value="Tenant">Tenant</Option>
+                <Option value="Caretaker">Caretaker</Option>
+                <Option value="Neighbor">Neighbor</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="propertyOwnerName" label="Property Owner's Name" className="col-span-2">
-          <TextArea rows={2} />
-        </Form.Item>
+            <Form.Item name="propertyOwnerName" label="Property Owner's Name" className="col-span-2">
+              <TextArea rows={2} />
+            </Form.Item>
 
-        <Form.Item name="howFoundOwnerName" label="How did you find out property owner's name?">
-          <Select allowClear className="w-full">
-            <Option value="SALE DEED">Sale Deed</Option>
-            <Option value="Neighbor">Neighbor</Option>
-            <Option value="Self">Self</Option>
-            <Option value="Municipal Records">Municipal Records</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="howFoundOwnerName" label="How did you find out property owner's name?">
+              <Select allowClear className="w-full">
+                <Option value="SALE DEED">Sale Deed</Option>
+                <Option value="Neighbor">Neighbor</Option>
+                <Option value="Self">Self</Option>
+                <Option value="Municipal Records">Municipal Records</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="documentsAvailable" label="Property Documents Available?">
-          <Select allowClear className="w-full">
-            <Option value="YES">Yes</Option>
-            <Option value="NO">No</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="documentsAvailable" label="Property Documents Available?">
+              <Select allowClear className="w-full">
+                <Option value="YES">Yes</Option>
+                <Option value="NO">No</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="nameOnSocietyBoard" label="Name on Society Board / Signage">
-          <Input />
-        </Form.Item>
+            <Form.Item name="nameOnSocietyBoard" label="Name on Society Board / Signage">
+              <Input />
+            </Form.Item>
 
-        <Form.Item name="addressLegal" label="Address as per Legal Document" className="col-span-2">
-          <TextArea rows={3} />
-        </Form.Item>
+            <Form.Item name="addressLegal" label="Address as per Legal Document" className="col-span-2">
+              <TextArea rows={3} />
+            </Form.Item>
 
-        <Form.Item name="addressSite" label="Address of Property (As per Site)" className="col-span-2">
-          <TextArea rows={3} />
-        </Form.Item>
+            <Form.Item name="addressSite" label="Address of Property (As per Site)" className="col-span-2">
+              <TextArea rows={3} />
+            </Form.Item>
 
-        <Form.Item name="nameOnDoor" label="Name on Door of the Premises">
-          <Input />
-        </Form.Item>
+            <Form.Item name="nameOnDoor" label="Name on Door of the Premises">
+              <Input />
+            </Form.Item>
 
-        <Form.Item name="nearbyLandmark" label="Nearby Landmark (within 500m)">
-          <Input />
-        </Form.Item>
+            <Form.Item name="nearbyLandmark" label="Nearby Landmark (within 500m)">
+              <Input />
+            </Form.Item>
 
-        <Form.Item name="statusOfOccupancy" label="Occupancy">
-          <Select allowClear className="w-full">
-            <Option value="Vacant">Vacant</Option>
-            <Option value="Occupied">Occupied</Option>
-            <Option value="Partially Occupied">Partially Occupied</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="statusOfOccupancy" label="Occupancy">
+              <Select allowClear className="w-full">
+                <Option value="Vacant">Vacant</Option>
+                <Option value="Occupied">Occupied</Option>
+                <Option value="Partially Occupied">Partially Occupied</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="occupiedBy" label="Occupied By">
-          <Input />
-        </Form.Item>
+            <Form.Item name="occupiedBy" label="Occupied By">
+              <Input />
+            </Form.Item>
 
-        <Form.Item name="
-        " label="Usage">
-          <Select allowClear className="w-full">
-            <Option value="Residential">Residential</Option>
-            <Option value="Commercial">Commercial</Option>
-            <Option value="Mixed">Mixed</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="usageOfProperty" label="Usage">
+              <Select allowClear className="w-full">
+                <Option value="Residential">Residential</Option>
+                <Option value="Commercial">Commercial</Option>
+                <Option value="Mixed">Mixed</Option>
+              </Select>
+            </Form.Item>
 
-        <Form.Item name="propertyEasilyIdentifiable" label="Property Easily Identifiable?">
-          <Select allowClear className="w-full">
-            <Option value="YES">Yes</Option>
-            <Option value="NO">No</Option>
-          </Select>
-        </Form.Item>
+            <Form.Item name="propertyEasilyIdentifiable" label="Property Easily Identifiable?">
+              <Select allowClear className="w-full">
+                <Option value="YES">Yes</Option>
+                <Option value="NO">No</Option>
+              </Select>
+            </Form.Item>
+          </>
+        )}
 
         {/* ── Geo Location ── */}
         <div className="col-span-2">
