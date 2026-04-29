@@ -79,6 +79,7 @@ const BajajSchema = new mongoose.Schema(
     floorNo: String,
     propertyState: String,
     propertyCity: String,
+    city: { type: String, default: "" },
     propertyPinCode: String,
     addressMatching: String,
 

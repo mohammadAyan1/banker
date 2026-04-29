@@ -26,6 +26,7 @@ const AddressAndGeneralDetailsSchema = new mongoose.Schema(
     landmarks: { type: String, default: "" },
     villageLocation: { type: String, default: "" },
     cityTalukaTown: { type: String, required: true, default: DEFAULTS.CITY },
+    city: { type: String, default: DEFAULTS.CITY },
     district: { type: String, default: DEFAULTS.CITY },
     state: { type: String, default: DEFAULTS.STATE },
     country: { type: String, default: DEFAULTS.COUNTRY },

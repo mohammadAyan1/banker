@@ -47,6 +47,7 @@ const FedralSchema = new mongoose.Schema({
   landUse: { type: String },
   propertyAddress: { type: String },
   legalAddress: { type: String },
+  city: { type: String, default: "" },
   pinCode: { type: String },
   nearbyLandmark: { type: String },
   coordinates: { type: String },

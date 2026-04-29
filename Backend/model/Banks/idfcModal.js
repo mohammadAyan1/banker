@@ -29,6 +29,7 @@ const IdfcSchema = new mongoose.Schema({
   railwayStationDistance: { type: String },
   busStopDistance: { type: String },
   landmark: { type: String },
+  city: { type: String, default: "" },
   cityCentreDistance: { type: String },
   approachRoad: { type: String, enum: ["More than 10 ft", "Less than 10 ft"] },
 

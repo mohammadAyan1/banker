@@ -6,9 +6,17 @@ const BASE_URL = "/agriwise"; // Base URL for Agriwise valuation API
 // Create Valuation
 export const createValuation = createAsyncThunk(
   "propertyValuation/createValuation",
-  async (formData, { rejectWithValue }) => {
+  async (formData, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.post(BASE_URL, formData);
+      const selectedZone = getState().assignedCases.savedCity;
+      let dataToSend = formData;
+      if (formData instanceof FormData) {
+        formData.set("city", selectedZone || "");
+        dataToSend = formData;
+      } else {
+        dataToSend = { ...formData, city: selectedZone || "" };
+      }
+      const response = await axios.post(BASE_URL, dataToSend);
 
       return response.data.savedValuation;
     } catch (err) {

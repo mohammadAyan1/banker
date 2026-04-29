@@ -3,9 +3,17 @@ import axios from "../../../../config/axios";
 
 export const createDmiFinanceReport = createAsyncThunk(
   "dmiFinanceReport/create",
-  async (reportData, { rejectWithValue }) => {
+  async (reportData, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.post("/dmi-finance-reports", reportData);
+      const selectedZone = getState().assignedCases.savedCity;
+      let dataToSend = reportData;
+      if (reportData instanceof FormData) {
+        reportData.set("city", selectedZone || "");
+        dataToSend = reportData;
+      } else {
+        dataToSend = { ...reportData, city: selectedZone || "" };
+      }
+      const response = await axios.post("/dmi-finance-reports", dataToSend);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data.error);

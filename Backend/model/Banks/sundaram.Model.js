@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const sundaramSchema = new mongoose.Schema(
   {
     layoutApproval: String,
+    city: { type: String, default: "" },
     approvedNumber1: String,
     approvedDate1: String,
     approvedAuthority1: String,

@@ -836,6 +836,9 @@ const Trench = () => {
   const [form] = Form.useForm();
   const [openSections, setOpenSections] = useState({ 0: true }); // 0 = auto-fill
 
+  // const [createdDate, setCreatedDate] = useState(null)
+
+
   const [formData, setFormData] = useState({
     dateOfVisit: "",
     dateOfReport: "",
@@ -863,6 +866,7 @@ const Trench = () => {
     declaration3:
       "information furnished in the report is true & correct to the best of our knowledge & as per the documents provided by financial Institution or Property Owner.",
     sitePics: [],
+    createdAt: ""
   });
 
   const [autoFilledFields, setAutoFilledFields] = useState([]);
@@ -984,6 +988,7 @@ const Trench = () => {
         dateOfVisit: values.dateOfVisit ? values.dateOfVisit.format("YYYY-MM-DD") : "",
         dateOfReport: values.dateOfReport ? values.dateOfReport.format("YYYY-MM-DD") : "",
         imageUrls: uploadedUrls,
+
       };
       if (isEdit) {
         await dispatch(updateHomeTrenchReport({ id, fullData })).unwrap();
@@ -1006,6 +1011,10 @@ const Trench = () => {
       const values = await form.validateFields();
       const finalData = {
         ...values,
+        createdAt: values.createdAt
+          ? values.createdAt.format("YYYY-MM-DD")
+          : "",
+
         dateOfVisit: values.dateOfVisit ? values.dateOfVisit.format("YYYY-MM-DD") : "",
         dateOfReport: values.dateOfReport ? values.dateOfReport.format("YYYY-MM-DD") : "",
         imageUrls: uploadedUrls,
@@ -1127,6 +1136,9 @@ const Trench = () => {
                 {step.id === 1 && (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Form.Item label="created Date" name="createdAt">
+                        <DatePicker className="w-full" format="YYYY-MM-DD" />
+                      </Form.Item>
                       <Form.Item label="LAI No" name="laiNo">
                         <Input />
                       </Form.Item>

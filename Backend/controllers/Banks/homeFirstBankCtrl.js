@@ -29,6 +29,14 @@ exports.createValuationReport = async (req, res) => {
     if (req.user) {
       body.createdBy = req.user._id;
     }
+
+
+
+    if (req.body.createdAt) {
+      body.createdAt = new Date(req.body.createdAt);
+    }
+
+
     const newReport = new ValuationReport(body);
     const savedReport = await newReport.save();
     res.status(201).json({

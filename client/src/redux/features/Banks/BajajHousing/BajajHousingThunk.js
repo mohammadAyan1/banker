@@ -7,9 +7,17 @@ const BASE = "/bajaj-housing";
 // CREATE
 export const createBajajHousing = createAsyncThunk(
     "bajajHousing/create",
-    async (data, { rejectWithValue }) => {
+    async (data, { rejectWithValue, getState }) => {
         try {
-            const res = await axiosInstance.post(BASE, data);
+            const savedCity = getState().assignedCases?.savedCity || "";
+            const payload = {
+                ...(data || {}),
+                locationDetails: {
+                    ...(data?.locationDetails || {}),
+                    city: savedCity
+                }
+            };
+            const res = await axiosInstance.post(BASE, payload);
             return res.data?.data ?? res.data;
         } catch (err) {
             return rejectWithValue(err.response?.data);

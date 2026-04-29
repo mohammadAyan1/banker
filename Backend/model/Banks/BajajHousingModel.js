@@ -43,6 +43,7 @@ const BajajHousingSchema = new mongoose.Schema(
         locationDetails: {
             propertyPincode: String,
             propertyCity: String,
+            city: { type: String, default: "" },
             propertyState: String,
             addressAsPerSite: String,
             localityName: String,

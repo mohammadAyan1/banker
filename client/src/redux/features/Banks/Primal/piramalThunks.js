@@ -5,7 +5,15 @@ export const createDetails = createAsyncThunk(
   "piramal/create",
   async (formData, thunkAPI) => {
     try {
-      const res = await axios.post(`/piramal/create`, formData);
+      const selectedZone = thunkAPI.getState().assignedCases.savedCity;
+      let dataToSend = formData;
+      if (formData instanceof FormData) {
+        formData.set("city", selectedZone || "");
+        dataToSend = formData;
+      } else {
+        dataToSend = { ...formData, city: selectedZone || "" };
+      }
+      const res = await axios.post(`/piramal/create`, dataToSend);
       return res.data.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response.data.message);

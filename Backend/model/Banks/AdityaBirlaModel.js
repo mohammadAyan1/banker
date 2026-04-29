@@ -8,6 +8,7 @@ const AdityaBirlaSchema = new mongoose.Schema(
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     route: { type: String },
     propertyCity: { type: String, default: "" }, // For dashboard filtering
+    city: { type: String, default: "" },
 
     timeline: [
       {

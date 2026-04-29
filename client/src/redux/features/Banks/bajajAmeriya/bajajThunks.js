@@ -7,9 +7,17 @@ const BASE_URL = "/bajajA";
 // 📌 Create
 export const createReport = createAsyncThunk(
   "property/createReport",
-  async (data, { rejectWithValue }) => {
+  async (data, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.post(BASE_URL, data);
+      const selectedZone = getState().assignedCases.savedCity;
+      let dataToSend = data;
+      if (data instanceof FormData) {
+        data.set("city", selectedZone || "");
+        dataToSend = data;
+      } else {
+        dataToSend = { ...data, city: selectedZone || "" };
+      }
+      const response = await axios.post(BASE_URL, dataToSend);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response.data);

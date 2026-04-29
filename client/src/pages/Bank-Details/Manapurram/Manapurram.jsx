@@ -63,8 +63,8 @@ const normalizeRemarks = (remarks = []) => {
 };
 
 if (!document.getElementById("mnfl-print-style")) {
-   const s = document.createElement("style");
-s.textContent = `
+    const s = document.createElement("style");
+    s.textContent = `
 @media print {
 
   html, body {
@@ -110,7 +110,7 @@ s.textContent = `
 
 }
 `;
-document.head.appendChild(s);
+    document.head.appendChild(s);
 }
 
 /* ─── INITIAL STATE ─────────────────────────────────────────────────────────── */
@@ -693,7 +693,7 @@ function PrintArea({ form }) {
                     </table>
 
 
-<div className="page-break"></div>
+                    <div className="page-break"></div>
 
                     {/* 14 Site Boundaries */}
                     <table style={ps}>
@@ -1080,7 +1080,7 @@ function PrintArea({ form }) {
             </div>
         </div>
     );
-}                   
+}
 
 /* ─── MAIN COMPONENT ────────────────────────────────────────────────────────── */
 export default function ManappuramForm() {
@@ -1436,6 +1436,8 @@ export default function ManappuramForm() {
             setSaving(true);
             const payload = {
                 ...form,
+                createdAt: form.header?.createdAt || "",
+
                 remarks: normalizeRemarks(form.remarks),
                 imageUrls: form.imageUrls
                     .map((img) => (typeof img === "string" ? { url: img } : img))
@@ -1549,6 +1551,18 @@ export default function ManappuramForm() {
                 </button>
             </div>
 
+            <div>
+                <input
+                    className={inp}
+                    value={H.createdAt}
+                    type="date"
+                    onChange={(e) =>
+                        set("header", "createdAt", e.target.value)
+                    }
+                    placeholder="06.03.2021"
+                />
+            </div>
+
             <div className="p-4">
                 <div className="border-2 border-black flex items-start p-2">
                     <div className="w-full text-center py-2">
@@ -1601,6 +1615,7 @@ export default function ManappuramForm() {
                                 <input
                                     className={inp}
                                     value={H.dateOfVisit}
+                                    type="date"
                                     onChange={(e) =>
                                         set("header", "dateOfVisit", e.target.value)
                                     }
@@ -1616,6 +1631,8 @@ export default function ManappuramForm() {
                                 <input
                                     className={inp}
                                     value={H.dateOfReport}
+                                    type="date"
+
                                     onChange={(e) =>
                                         set("header", "dateOfReport", e.target.value)
                                     }

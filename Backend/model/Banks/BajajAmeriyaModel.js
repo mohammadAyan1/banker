@@ -301,6 +301,7 @@ const BajajAmeriyaSchema = new mongoose.Schema(
     demolitionList: String,
     negativeArea: String,
     remarks: String,
+      city: { type: String, default: "" },
   },
   {
     timestamps: true,

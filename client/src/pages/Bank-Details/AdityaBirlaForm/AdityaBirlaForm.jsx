@@ -551,6 +551,8 @@ export default function AdityaBirlaForm() {
             setSaving(true);
             const payload = {
                 ...form,
+                createdAt: form?.basicDetails?.createdAt || "",
+
                 imageUrls: form.imageUrls
                     .map(img => (typeof img === "string" ? { url: img } : img))
                     .filter(img => img?.url?.startsWith("http")),
@@ -659,6 +661,10 @@ export default function AdityaBirlaForm() {
                 >
                     📄 Download PDF
                 </button>
+            </div>
+
+            <div className="w-full outline-none bg-transparent text-xs">
+                <input className="w-full outline-none bg-transparent text-xs" type="date" value={B.createdAt} onChange={e => set("basicDetails", "createdAt", e.target.value)} placeholder="Created Date" />
             </div>
 
             {/* Report Content */}

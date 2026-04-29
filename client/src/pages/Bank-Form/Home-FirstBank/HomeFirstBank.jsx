@@ -86,6 +86,7 @@ const HomeFirstBank = () => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.hfBanks);
   const user = useSelector((state) => state.auth.user);
+  const savedCity = useSelector((state) => state.assignedCases.savedCity);
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -94,6 +95,10 @@ const HomeFirstBank = () => {
   const [isEdit, setIsEdit] = useState({});
   const [extractedData, setExtractedData] = useState({});
   const sectionSubmittersRef = useRef({});
+
+
+
+  const [createdDate, setCreatedDate] = useState(null)
 
   const isFieldOfficer = user?.role === "FieldOfficer";
 
@@ -272,30 +277,42 @@ const HomeFirstBank = () => {
   const handlePrimaryAction = async () => {
     try {
       const latestSections = await collectSectionData();
+
+
+
+
       const finalData = buildFinalData(latestSections);
+      let finalPayload = { ...finalData, city: savedCity };
+
+      if (createdDate) {
+        finalPayload = { ...finalData, createdAt: createdDate };
+      }
 
       if (isFieldOfficer) {
         if (id) {
-          await dispatch(updateDetails({ id, ...finalData })).unwrap();
+          await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
         } else {
-          await dispatch(createHFBanks(finalData)).unwrap();
+
+
+
+          await dispatch(createHFBanks(finalPayload)).unwrap();
         }
 
         toast.success("Form submitted successfully");
-        navigate("/field/dashboard");
+        navigate("/");
         return;
       }
 
       if (!id) {
-        const response = await dispatch(createHFBanks(finalData)).unwrap();
+        const response = await dispatch(createHFBanks(finalPayload)).unwrap();
         toast.success("Form submitted successfully");
-        navigate(`/bank/home-first/${response._id}`);
+        navigate(`/`);
         return;
       }
 
-      const response = await dispatch(updateDetails({ id, ...finalData })).unwrap();
+      const response = await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
       toast.success("Form updated successfully");
-      navigate(`/bank/home-first/${response?._id || id}`);
+      navigate(`/`);
     } catch (submitError) {
       if (submitError?.errorFields) {
         toast.error("Please complete the required fields");
@@ -308,6 +325,9 @@ const HomeFirstBank = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
+
+      <input type="date" onChange={(e) => setCreatedDate(e.target.value)} />
+
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30 px-4 sm:px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-br from-blue-900 to-blue-600 rounded-lg flex items-center justify-center">
@@ -346,11 +366,10 @@ const HomeFirstBank = () => {
             type="button"
             onClick={handlePrimaryAction}
             disabled={loading}
-            className={`rounded-lg px-6 py-3 text-sm font-semibold text-white transition ${
-              loading
-                ? "cursor-not-allowed bg-gray-400"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
+            className={`rounded-lg px-6 py-3 text-sm font-semibold text-white transition ${loading
+              ? "cursor-not-allowed bg-gray-400"
+              : "bg-blue-600 hover:bg-blue-700"
+              }`}
           >
             {loading ? "Processing..." : primaryActionLabel}
           </button>

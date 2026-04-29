@@ -9,9 +9,11 @@ import {
 // CREATE
 export const createManappuramReport = createAsyncThunk(
     "manappuram/create",
-    async (data, { rejectWithValue }) => {
+    async (data, { rejectWithValue, getState }) => {
         try {
-            const res = await createManappuram(data);
+            const savedCity = getState().assignedCases?.savedCity || "";
+            const payload = { ...(data || {}), city: savedCity };
+            const res = await createManappuram(payload);
             return res?.data ?? res;
         } catch (err) {
             return rejectWithValue(err.response?.data);

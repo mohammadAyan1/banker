@@ -291,6 +291,11 @@ export default function BajajHousingForm() {
     const { id } = useParams();
     const navigate = useNavigate();
 
+
+    ///////////////////////////////////////
+    const [createdDate, setCreatedDate] = useState(null)
+
+
     const [form, setForm] = useState(INIT);
     const [liveLocation, setLiveLocation] = useState({ lat: "--", lng: "--" });
     const [saving, setSaving] = useState(false);
@@ -472,8 +477,16 @@ export default function BajajHousingForm() {
                 selfieImages: sanitizeImgArr(form.selfieImages),
                 otherImages: sanitizeImgArr(form.otherImages),
                 AttachDocuments: form.AttachDocuments.filter((d) => d?.url?.startsWith("http")),
+
+
+                // dynamic field add
+                ...(createdDate != null && {
+                    createdAt: createdDate
+                })
+
             };
 
+            // createdDate
             if (id) {
                 await dispatch(updateBajajHousingDetails({ id, ...payload })).unwrap();
                 toast.success("Updated ✅");
@@ -576,6 +589,10 @@ export default function BajajHousingForm() {
                 {currentStep === 1 && (
                     <div style={s.card}>
                         <div style={s.cardHeader}>📋 Applicant Details</div>
+                        <div style={s.cardHeader}>📋<input type="date" onChange={(e) => setCreatedDate(e.target.value)} />
+                        </div>
+
+
                         <div style={s.cardBody}>
                             <div style={s.grid4}>
                                 <div style={s.field}><label style={s.label}>File No.</label><input style={s.input} value={AD.fileNo} onChange={e => set('applicantDetails', 'fileNo', e.target.value)} placeholder="H430HLP1807425" /></div>

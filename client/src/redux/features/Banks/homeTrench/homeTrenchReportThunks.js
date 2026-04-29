@@ -3,9 +3,11 @@ import axios from "../../../../config/axios";
 
 export const createHomeTrenchReport = createAsyncThunk(
   "homeTrenchReport/create",
-  async (reportData, { rejectWithValue }) => {
+  async (reportData, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.post("/home-trench-reports", reportData);
+      const savedCity = getState().assignedCases?.savedCity || "";
+      const payload = { ...(reportData || {}), city: savedCity };
+      const response = await axios.post("/home-trench-reports", payload);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data.error);

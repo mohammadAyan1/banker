@@ -113,9 +113,17 @@ exports.createReport = async (req, res) => {
       body.createdBy = req.user._id;
     }
 
+
+
     if (body.imageUrls) {
       body.imageUrls = sanitizeImages(body.imageUrls).map((url) => ({ url }));
     }
+
+    // if admin sends createdAt manually
+    if (body.createdAt) {
+      body.createdAt = new Date(req.body.createdAt);
+    }
+
 
     const newReport = new Manappuram(body);
     const saved = await newReport.save();

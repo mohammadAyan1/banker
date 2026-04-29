@@ -216,6 +216,7 @@ const ICICIModelSchema = new mongoose.Schema({
   propertyLocation: { type: String, default: 'DEVELOPMENT/LATENDER' },
   propertyType: { type: String, default: 'LABOR/SERIENING' },
   propertyArea: { type: String },
+  city: { type: String, default: "" },
   costOfConstruction: { type: String },
   carpetAreaMeasured: { type: String, default: 'No' },
   billingCriteria: { type: String, default: 'BELS' },

@@ -6,9 +6,17 @@ const API_URL = "/fedral";
 // CREATE
 export const createFedralBank = createAsyncThunk(
   "FedralBank/create",
-  async (formData, { rejectWithValue }) => {
+  async (formData, { rejectWithValue, getState }) => {
     try {
-      const response = await axios.post(API_URL, formData);
+      const selectedZone = getState().assignedCases.savedCity;
+      let dataToSend = formData;
+      if (formData instanceof FormData) {
+        formData.set("city", selectedZone || "");
+        dataToSend = formData;
+      } else {
+        dataToSend = { ...formData, city: selectedZone || "" };
+      }
+      const response = await axios.post(API_URL, dataToSend);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);

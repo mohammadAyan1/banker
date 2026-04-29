@@ -83,6 +83,7 @@ const projectValuationSchema = new mongoose.Schema(
   {
     // Step 1 - ProfecutsDetails
     amenities: { type: String },
+    city: { type: String, default: "" },
     approvalAuthority: { type: String },
     buildingUnderConsideration: { type: String },
     completionStatus: { type: String },

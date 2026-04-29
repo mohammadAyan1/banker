@@ -21,8 +21,16 @@ export const fetchDetailsById = createAsyncThunk(
 
 export const createDetails = createAsyncThunk(
   "/aditya/createDetails",
-  async (data) => {
-    const response = await axios.post(API_URL, data);
+  async (data, { getState }) => {
+    const selectedZone = getState().assignedCases.savedCity;
+    let dataToSend = data;
+    if (data instanceof FormData) {
+      data.set("city", selectedZone || "");
+      dataToSend = data;
+    } else {
+      dataToSend = { ...data, city: selectedZone || "" };
+    }
+    const response = await axios.post(API_URL, dataToSend);
     return response.data;
   }
 );

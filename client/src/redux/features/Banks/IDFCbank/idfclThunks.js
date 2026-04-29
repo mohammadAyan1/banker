@@ -5,7 +5,15 @@ export const createDetails = createAsyncThunk(
   "idfc/create",
   async (formData, thunkAPI) => {
     try {
-      const response = await axios.post(`/idfc/create`, formData);
+      const selectedZone = thunkAPI.getState().assignedCases.savedCity;
+      let dataToSend = formData;
+      if (formData instanceof FormData) {
+        formData.set("city", selectedZone || "");
+        dataToSend = formData;
+      } else {
+        dataToSend = { ...formData, city: selectedZone || "" };
+      }
+      const response = await axios.post(`/idfc/create`, dataToSend);
       return response.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response.data.message);

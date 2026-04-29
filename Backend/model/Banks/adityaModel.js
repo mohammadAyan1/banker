@@ -40,6 +40,7 @@ const adityaSchema = new mongoose.Schema(
     ],
     route: { type: String },
     bankName: { type: String, default: "HomeFirst" },
+    city: { type: String, default: "" },
     approvalStatus: { type: String, default: "Pending" },
     isReportSubmitted: { type: Boolean, default: false },
 

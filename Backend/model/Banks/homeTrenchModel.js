@@ -124,6 +124,7 @@ const homeTrenchSchema = new mongoose.Schema({
   ],
   route: { type: String },
   bankName: { type: String, default: "HomeFirstTrench" },
+  city: { type: String, default: "" },
 
   approvalStatus: { type: String, default: "Pending" },
   isReportSubmitted: { type: Boolean, default: false },
@@ -181,7 +182,7 @@ const homeTrenchSchema = new mongoose.Schema({
       date: String,
     },
   ],
-});
+}, { timestamps: true });
 
 const HomeFirstTrench = mongoose.model("HomeTrenchReport", homeTrenchSchema);
 

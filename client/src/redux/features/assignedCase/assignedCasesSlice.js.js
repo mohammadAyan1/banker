@@ -42,13 +42,17 @@ const assignedCasesSlice = createSlice({
     finalFilterOptions: defaultFilterOptions,
     cancelledFilterOptions: defaultFilterOptions,
     outOfTatFilterOptions: defaultFilterOptions,
-    selectedZone: "", // New state for city filtering
+    selectedZone: "", // Used by dashboard filters
+    savedCity: "", // City selected in MenuItems for saving reports
     loading: false,
     error: null,
   },
   reducers: {
     setZone: (state, action) => {
       state.selectedZone = action.payload;
+    },
+    setSavedCity: (state, action) => {
+      state.savedCity = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -154,5 +158,5 @@ const assignedCasesSlice = createSlice({
   },
 });
 
-export const { setZone } = assignedCasesSlice.actions;
+export const { setZone, setSavedCity } = assignedCasesSlice.actions;
 export default assignedCasesSlice.reducer;

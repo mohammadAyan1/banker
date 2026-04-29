@@ -23,6 +23,7 @@ const commentSchema = new mongoose.Schema(
 const HeroFinCopSchema = new mongoose.Schema(
   {
     bankName: { type: String },
+    city: { type: String, default: "" },
     bankRefNo: { type: String },
     businessDivision: { type: String },
     internalRef: { type: String },

@@ -139,6 +139,7 @@ const ManappuramSchema = new mongoose.Schema(
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     route: { type: String },
+    city: { type: String, default: "" },
 
     timeline: [
       {

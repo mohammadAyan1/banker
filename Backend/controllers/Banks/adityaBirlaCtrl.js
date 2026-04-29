@@ -23,6 +23,11 @@ exports.createReport = async (req, res) => {
       }
     }
 
+
+    if (body.createdAt) {
+      body.createdAt = new Date(body.createdAt);
+    }
+
     // Clean images before save (remove any base64 that slipped through)
     if (body.imageUrls) {
       body.imageUrls = sanitizeImages(body.imageUrls).map((url) => ({ url }));

@@ -9,9 +9,11 @@ import {
 // CREATE
 export const createAditya = createAsyncThunk(
     "aditya/create",
-    async (data, { rejectWithValue }) => {
+    async (data, { rejectWithValue, getState }) => {
         try {
-            const res = await createAdityaBirla(data);
+            const savedCity = getState().assignedCases?.savedCity || "";
+            const payload = { ...(data || {}), city: savedCity };
+            const res = await createAdityaBirla(payload);
             return res?.data ?? res;
         } catch (err) {
             return rejectWithValue(err.response.data);

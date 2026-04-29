@@ -5,7 +5,7 @@ import { MdAdminPanelSettings } from "react-icons/md";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutThunk } from "../../redux/features/auth/authThunks";
-import { setZone } from "../../redux/features/assignedCase/assignedCasesSlice.js.js";
+import { setZone, setSavedCity } from "../../redux/features/assignedCase/assignedCasesSlice.js.js";
 import { useState, useEffect } from "react";
 
 const { Option } = Select;
@@ -21,21 +21,21 @@ const MenuItems = () => {
   const currentPath = location.pathname;
   const navigate = useNavigate();
 
-  // ✅ NEW: Multiple zone selection state
-  const [selectedZones, setSelectedZones] = useState([]);
+  // Zone selection state (single select)
+  const [selectedZoneLocal, setSelectedZoneLocal] = useState("--Select Zone--");
 
-  const handleChange = (values) => {
-    setSelectedZones(values);
-    // ✅ UPDATED: Join multiple zones with comma for Redux store
-    dispatch(setZone(values.join(",")));
+  const handleChange = (value) => {
+    setSelectedZoneLocal(value);
+    // Save selected city for report creation only (do NOT change dashboard filter)
+    dispatch(setSavedCity(value));
   };
 
-  // ✅ Sync Redux zone back to local state on mount
+  // Sync Redux zone back to local state on mount
   useEffect(() => {
     if (selectedZone) {
-      setSelectedZones(selectedZone.split(",").filter(Boolean));
+      setSelectedZoneLocal(selectedZone);
     }
-  }, []);
+  }, [selectedZone]);
 
   const openInvoice = () => {
     window.open(
@@ -129,13 +129,11 @@ const MenuItems = () => {
               
               {/* ✅ UPDATED: Multiple Select for Zones */}
               <Select
-                mode="multiple"
                 id='city'
-                value={selectedZones}
+                value={selectedZoneLocal}
                 onChange={handleChange}
-                placeholder="--Select Zones--"
+                placeholder="--Select Zone--"
                 className='w-52'
-                maxTagCount={2}
                 allowClear
               >
                 {cities.map((city, index) => (

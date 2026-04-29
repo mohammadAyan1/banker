@@ -8,6 +8,7 @@ const ProtiumSchema = new mongoose.Schema({
   nameOfPropertyOwner: { type: String },
   propertyAddressSite: { type: String },
   legalAddress: { type: String },
+  city: { type: String, default: "" },
   contactNoOfOwner: { type: String },
   landmark: { type: String },
   dateOfTechnicalVisit: { type: Date },

@@ -119,6 +119,12 @@ exports.createValuationReport = async (req, res) => {
       ];
     }
 
+
+    if (req.body.createdAt) {
+      body.createdAt = new Date(req.body.createdAt);
+    }
+
+
     const report = await Bajaj.create(body);
     res.status(201).json(report);
   } catch (error) {

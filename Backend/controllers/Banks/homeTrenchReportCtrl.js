@@ -3,8 +3,12 @@ const HomeTrenchReport = require("../../model/Banks/homeTrenchModel");
 // Create a new Home Trench Report
 exports.createHomeTrenchReport = async (req, res) => {
   try {
+    const body = { ...req.body };
+    if (req.body.createdAt) {
+      body.createdAt = new Date(req.body.createdAt);
+    }
 
-    const report = new HomeTrenchReport(req.body);
+    const report = new HomeTrenchReport(body);
     await report.save();
     res.status(201).json(report);
   } catch (error) {

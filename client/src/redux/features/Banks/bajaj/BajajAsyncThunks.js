@@ -54,8 +54,15 @@ export const updateValuationReport = createAsyncThunk(
 export const deleteValuationReport = createAsyncThunk(
   "valuationReport/delete",
   async (id, { rejectWithValue }) => {
+    const selectedZone = getState().assignedCases.savedCity;
     try {
-      await axios.delete(`/bajaj/${id}`);
+      let dataToSend = reportData;
+      if (reportData instanceof FormData) {
+        reportData.set("city", selectedZone || "");
+        dataToSend = reportData;
+      } else {
+        dataToSend = { ...reportData, city: selectedZone || "" };
+      }
       return id;
     } catch (error) {
       return rejectWithValue(error.response.data.error);

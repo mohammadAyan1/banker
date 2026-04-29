@@ -13,6 +13,7 @@ const boundariesSchema = new mongoose.Schema(
 const agriwiseSchema = new mongoose.Schema(
   {
     valuationAgency: { type: String, required: true },
+    city: { type: String, default: "" },
     dateOfValuation: { type: String, required: true },
     proposalNo: { type: String, required: true },
     caseType: { type: String, required: true },

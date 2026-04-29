@@ -26,6 +26,7 @@ const dmiFinanceSchema = new mongoose.Schema({
   villageLocation: String,
   district: String,
   state: String,
+  city: { type: String, default: "" },
   cityTehsilTalukaTown: String,
   pincode: String,
   distanceFromNearestDmiBranch: String,
