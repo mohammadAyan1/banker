@@ -19,212 +19,220 @@ import axiosInstance from "../../config/axios";
 
 const { Option } = Select;
 
-// Helper to read nested values
 const readValue = (record, paths) => {
   for (const path of paths) {
-    const value = path
-      .split(".")
-      .reduce(
-        (accumulator, key) =>
-          accumulator && accumulator[key] !== undefined
-            ? accumulator[key]
-            : undefined,
-        record
-      );
+    const value = path.split(".").reduce((acc, key) => {
+      return acc && acc[key] !== undefined ? acc[key] : undefined;
+    }, record);
 
-    if (value !== undefined && value !== null && value !== "") {
-      return value;
-    }
+    if (value !== undefined && value !== null && value !== "") return value;
   }
-  return "N/A";
+  return "";
 };
 
-// Normalize record for All Cases table
-const normalizeAllCaseRecord = (record, index) => ({
-  ...record,
-  key: record._id || index,
-  customerName: readValue(record, [
-    "customerName",
-    "visitedPersonName",
-    "applicantName",
-    "basicDetails.nameOfClient",
-    "propertyInfo.applicantName",
-    "summary.applicantName",
-    "header.contactedPerson",
-  ]),
-  propertyAddress: readValue(record, [
-    "addressLegal",
-    "legalAddress",
-    "addressSite",
-    "propertyAddress",
-    "address",
-    "locationDetails.propertyAddressAsVisit",
-    "locationDetails.propertyAddressAsDocs",
-    "propertyInfo.addressAtSite",
-    "propertyInfo.addressAsPerDocument",
-    "summary.propertyAddress",
-  ]),
-  constructionStage: readValue(record, [
-    "constructionStage",
-    "constructionStatus",
-    "propertyStatus",
-    "percentCompleted",
-    "technicalDetails.percentCompletion",
-    "valuationDetails.percentageCompletion",
-  ]),
-  dateOfVisit: readValue(record, [
-    "dateOfVisit",
-    "dateOfReport",
-    "basicDetails.visitDate",
-    "header.dateOfVisit",
-  ]),
-  city: readValue(record, [
-    "city",
-    "location",
-    "propertyCity",
-    "locationDetails.city",
-  ]),
-  status: readValue(record, [
-    "status",
-    "caseStatus",
-  ]),
-  createdAt: readValue(record, [
-    "createdAt",
-    "createdDate",
-    "submissionDate",
-  ]),
-});
+const normalizeStatus = (status = "") => status.toString().toLowerCase().trim();
 
-// Get row color based on status and created date
-const getRowColor = (status, createdAt) => {
-  if (!status) return { backgroundColor: "transparent", className: "" };
+const getCurrentMonthValue = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+};
 
-  const statusLower = status.toLowerCase();
+const isSameMonth = (date, monthValue) => {
+  if (!date || !monthValue) return false;
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return false;
+  const yyyyMm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return yyyyMm === monthValue;
+};
 
-  // Check if pending and older than 48 hours
-  if (
-    (statusLower === "pending") &&
-    createdAt
-  ) {
-    const created = new Date(createdAt);
-    const now = new Date();
-    const hoursDiff = (now - created) / (1000 * 60 * 60);
+const normalizeAllCaseRecord = (record, index) => {
+  const engineer =
+    readValue(record, [
+      "engineer",
+      "engineerName",
+      "assignedTo.name",
+      "fieldOfficer.name",
+      "employee.name",
+      "assignedEngineer",
+    ]) || "N/A";
 
-    if (hoursDiff > 48) {
-      return { 
-        backgroundColor: "#FEE2E2", 
-        className: "blink-row",
-        animation: true 
+  const status =
+    readValue(record, ["status", "caseStatus", "portalStatus"]) || "Pending";
+
+  return {
+    ...record,
+    key: record._id || index,
+    bankName: readValue(record, ["bankName", "bank", "bankDetails.bankName"]) || "N/A",
+    customerName:
+      readValue(record, [
+        "customerName",
+        "visitedPersonName",
+        "applicantName",
+        "basicDetails.nameOfClient",
+        "propertyInfo.applicantName",
+        "summary.applicantName",
+        "header.contactedPerson",
+      ]) || "N/A",
+    city:
+      readValue(record, [
+        "city",
+        "location",
+        "propertyCity",
+        "locationDetails.city",
+        "propertyInfo.city",
+      ]) || "N/A",
+    engineer,
+    status,
+   remark:
+  readValue(record, [
+    // "remarks",
+    "remark",
+    // "adminRemark",
+    // "statusRemark",
+    // "summary.remarks",
+  ]) || "",
+    createdAt:
+      readValue(record, ["createdAt", "createdDate", "submissionDate", "dateOfVisit"]) ||
+      "",
+  };
+};
+
+const getRowStyle = (status, createdAt) => {
+  const s = normalizeStatus(status);
+
+  if (s.includes("submitted") || s.includes("done") || s.includes("final")) {
+    return { backgroundColor: "#dcfce7", className: "" };
+  }
+
+  if (s.includes("working") || s.includes("assigned") || s.includes("progress")) {
+    return { backgroundColor: "#fef9c3", className: "" };
+  }
+
+  if (s.includes("pending")) {
+    let isOld = false;
+    if (createdAt) {
+      const d = new Date(createdAt);
+      if (!isNaN(d.getTime())) {
+        const hours = (new Date() - d) / (1000 * 60 * 60);
+        isOld = hours > 48;
+      }
+    }
+
+    return {
+      backgroundColor: isOld ? "#fee2e2" : "#fff7ed",
+      className: isOld ? "blink-row" : "",
+    };
+  }
+
+  if (s.includes("query")) {
+    return { backgroundColor: "#ffe4e6", className: "" };
+  }
+
+  return { backgroundColor: "white", className: "" };
+};
+
+const formatDateTime = (date) => {
+  if (!date) return "N/A";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return date;
+  return d.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const getBankStats = (data) => {
+  const map = {};
+
+  data.forEach((item) => {
+    const bank = item.bankName || "N/A";
+
+    if (!map[bank]) {
+      map[bank] = {
+        bank,
+        total: 0,
+        done: 0,
+        pending: 0,
+        query: 0,
+        working: 0,
       };
     }
-  }
 
-  if (
-    statusLower === "final submitted" ||
-    statusLower === "finalsubmitted" ||
-    statusLower === "submitted"
-  ) {
-    return { backgroundColor: "#DCFCE7", className: "" };
-  }
+    const s = normalizeStatus(item.status);
+    map[bank].total += 1;
 
-  if (
-    statusLower === "work in progress" ||
-    statusLower === "assigned" ||
-    statusLower === "working"
-  ) {
-    return { backgroundColor: "#FEF9C3", className: "" };
-  }
+    if (s.includes("submitted") || s.includes("done") || s.includes("final")) {
+      map[bank].done += 1;
+    } else if (s.includes("query")) {
+      map[bank].query += 1;
+    } else if (s.includes("working") || s.includes("assigned") || s.includes("progress")) {
+      map[bank].working += 1;
+    } else {
+      map[bank].pending += 1;
+    }
+  });
 
-  if (statusLower === "cancelled") {
-    return { backgroundColor: "#F3F4F6", className: "" };
-  }
-
-  return { backgroundColor: "transparent", className: "" };
+  return Object.values(map).sort((a, b) => b.total - a.total);
 };
 
-// Columns for All Cases Table
-const allCasesColumns = [
-  {
-    title: "Bank",
-    dataIndex: "bankName",
-    key: "bankName",
-  },
-  {
-    title: "Customer Name",
-    dataIndex: "customerName",
-    key: "customerName",
-  },
-  {
-    title: "Address",
-    dataIndex: "propertyAddress",
-    key: "propertyAddress",
-  },
-  {
-    title: "City",
-    dataIndex: "city",
-    key: "city",
-  },
-  {
-    title: "Status",
-    dataIndex: "status",
-    key: "status",
-  },
-  {
-    title: "Construction Stage",
-    dataIndex: "constructionStage",
-    key: "constructionStage",
-  },
-  {
-    title: "Created Date",
-    dataIndex: "createdAt",
-    key: "createdAt",
-    render: (date) => {
-      if (!date) return "N/A";
-      const d = new Date(date);
-      return isNaN(d.getTime())
-        ? date
-        : d.toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          });
-    },
-  },
-];
+const Pagination = ({ page, totalPages, onPrev, onNext }) => {
+  return (
+    <div className="flex justify-between items-center px-4 py-3 border-t bg-gray-50">
+      <span className="text-sm text-gray-600">
+        Page <b>{page}</b> of <b>{totalPages}</b>
+      </span>
+
+      <div className="flex gap-2">
+        <button
+          disabled={page <= 1}
+          onClick={onPrev}
+          className="px-3 py-1 rounded border bg-white disabled:opacity-50 hover:bg-gray-100"
+        >
+          Prev
+        </button>
+
+        <button
+          disabled={page >= totalPages}
+          onClick={onNext}
+          className="px-3 py-1 rounded border bg-white disabled:opacity-50 hover:bg-gray-100"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const dispatch = useDispatch();
+
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeComponent, setActiveComponent] = useState("");
-  const [selectedAgent, setSelectedAgent] = useState("Self");
+  const [selectedAgent, setSelectedAgent] = useState("All Agents");
 
-  // All Cases table states
   const [allCasesData, setAllCasesData] = useState([]);
+  const [queryRaisedCount, setQueryRaisedCount] = useState(0);
   const [allCasesLoading, setAllCasesLoading] = useState(false);
-  const [allCasesPagination, setAllCasesPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0,
-  });
 
-  // Filter states
+  const [selectedBankView, setSelectedBankView] = useState(null);
+
   const [searchText, setSearchText] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [selectedBanks, setSelectedBanks] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
-  const [selectedCities, setSelectedCities] = useState([]);
-  const [selectedMonths, setSelectedMonths] = useState([]);
-  const [selectedBackMonth, setSelectedBackMonth] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [filterOptions, setFilterOptions] = useState({
-    banks: [],
-    statuses: [],
-    cities: [],
-  });
+  const [selectedEngineers, setSelectedEngineers] = useState([]);
 
-  const { user, FO: fieldOfficers = [] } = useSelector((state) => state.auth);
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(500);
+
+  const [bankSummaryPage, setBankSummaryPage] = useState(1);
+  const [bankCasesPage, setBankCasesPage] = useState(1);
+  const rowsPerPage = 10;
+
+  const { FO: fieldOfficers = [] } = useSelector((state) => state.auth);
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
   const summaryData = useSelector((state) => state.assignedCases.summary) || {};
   const counts = summaryData?.counts || {};
@@ -238,222 +246,235 @@ const Dashboard = () => {
     dispatch(fetchSummaryData({ city: selectedZone || undefined }));
   }, [dispatch, selectedZone]);
 
-  // Memoized filter values
-  const bankFilter = useMemo(() => selectedBanks.join(","), [selectedBanks]);
-  const statusFilter = useMemo(
-    () => selectedStatuses.join(","),
-    [selectedStatuses]
-  );
-  const monthFilter = useMemo(() => selectedMonths.join(","), [selectedMonths]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText.trim().toLowerCase());
+    }, 300);
 
-  // Fetch All Cases Table Data
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
   const fetchAllCasesTable = useCallback(async () => {
     try {
       setAllCasesLoading(true);
+
       const response = await axiosInstance.get("/case/summary-data", {
         params: {
           page: currentPage,
           limit: pageSize,
           city: selectedZone || undefined,
-          search: debouncedSearch || undefined,
-          bankName: bankFilter || undefined,
-          status: statusFilter || undefined,
-          months: monthFilter || undefined,
         },
       });
 
       const items = (response.data?.tableItems || []).map(normalizeAllCaseRecord);
       setAllCasesData(items);
-      setAllCasesPagination(
-        response.data?.pagination || {
-          page: 1,
-          limit: pageSize,
-          total: items.length,
-          totalPages: items.length > 0 ? 1 : 0,
-        }
-      );
-      setFilterOptions(
-        response.data?.filterOptions || { banks: [], statuses: [], cities: [] }
-      );
     } catch (error) {
-      console.error("Failed to load all cases table:", error);
+      console.error("Failed to load cases:", error);
     } finally {
       setAllCasesLoading(false);
     }
-  }, [
-    bankFilter,
-    currentPage,
-    debouncedSearch,
-    pageSize,
-    selectedZone,
-    statusFilter,
-    monthFilter,
-  ]);
+  }, [currentPage, pageSize, selectedZone]);
 
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchText.trim());
-    }, 350);
 
-    return () => clearTimeout(timer);
-  }, [searchText]);
 
-  // Fetch data when filters change
+  const fetchQueryRaisedCount = useCallback(async () => {
+  try {
+    const res = await axiosInstance.get("/notes/get");
+    const notes = res.data || [];
+
+    const count = notes.filter((note) =>
+      isSameMonth(note.createdAt, selectedMonth)
+    ).length;
+
+    setQueryRaisedCount(count);
+  } catch (error) {
+    console.error("Failed to load query raised count:", error);
+    setQueryRaisedCount(0);
+  }
+}, [selectedMonth]);
+
   useEffect(() => {
     fetchAllCasesTable();
   }, [fetchAllCasesTable]);
 
-  // Reset page when zone changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedZone]);
+useEffect(() => {
+  fetchQueryRaisedCount();
+}, [fetchQueryRaisedCount]);
 
-  // Month options
-  const monthOptions = useMemo(
-    () => [
-      { label: "January", value: "January" },
-      { label: "February", value: "February" },
-      { label: "March", value: "March" },
-      { label: "April", value: "April" },
-      { label: "May", value: "May" },
-      { label: "June", value: "June" },
-      { label: "July", value: "July" },
-      { label: "August", value: "August" },
-      { label: "September", value: "September" },
-      { label: "October", value: "October" },
-      { label: "November", value: "November" },
-      { label: "December", value: "December" },
-    ],
-    []
-  );
-
-  // Back month options (1 month back logic)
-  const backMonthOptions = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    const options = [];
-
-    monthOptions.forEach((month, index) => {
-      let backMonth;
-      let backYear = currentYear;
-
-      if (index >= 1) {
-        backMonth = monthOptions[index - 1];
-      } else {
-        backMonth = monthOptions[11];
-        backYear = currentYear - 1;
-      }
-
-      options.push({
-        label: `${month.label} (shows ${backMonth.label} ${backYear})`,
-        value: month.value,
-        backValue: backMonth.value,
-        backYear: backYear,
-      });
-    });
-
-    return options;
-  }, [monthOptions]);
-
-  // Extract unique cities from allCasesData for filter dropdown
-  const cityOptions = useMemo(() => {
-    const cities = allCasesData
-      .map(record => record.city)
-      .filter(city => city && city !== "N/A" && city !== "—");
-    return [...new Set(cities)].sort();
+  const statusOptions = useMemo(() => {
+    return [...new Set(allCasesData.map((x) => x.status).filter(Boolean))].sort();
   }, [allCasesData]);
 
-  // Filter data on FRONTEND - City filter + BackMonth filter
-  const filteredData = useMemo(() => {
-    let data = allCasesData;
+  const engineerOptions = useMemo(() => {
+    const fromData = allCasesData.map((x) => x.engineer).filter((x) => x && x !== "N/A");
+    const fromFO = fieldOfficers.map((x) => x.name).filter(Boolean);
+    return [...new Set([...fromData, ...fromFO])].sort();
+  }, [allCasesData, fieldOfficers]);
 
-    // Apply City filter (frontend)
-    if (selectedCities.length > 0) {
-      data = data.filter((record) => {
-        if (!record.city || record.city === "N/A") return false;
-        return selectedCities.includes(record.city);
-      });
+  const monthFilteredData = useMemo(() => {
+    return allCasesData.filter((item) => isSameMonth(item.createdAt, selectedMonth));
+  }, [allCasesData, selectedMonth]);
+
+  const filteredCases = useMemo(() => {
+    let data = [...monthFilteredData];
+
+    if (selectedAgent !== "All Agents") {
+      data = data.filter((item) => item.engineer === selectedAgent);
     }
 
-    // Apply Back Month filter (frontend)
-    if (selectedBackMonth) {
-      const selectedBackMonthOption = backMonthOptions.find(
-        (opt) => opt.value === selectedBackMonth
-      );
+    if (selectedBankView) {
+      data = data.filter((item) => item.bankName === selectedBankView);
+    }
 
-      if (selectedBackMonthOption) {
-        const targetMonth = selectedBackMonthOption.backValue;
-        const targetYear = selectedBackMonthOption.backYear;
+    if (selectedStatuses.length > 0) {
+      data = data.filter((item) => selectedStatuses.includes(item.status));
+    }
 
-        data = data.filter((record) => {
-          if (!record.createdAt) return false;
+    if (selectedEngineers.length > 0) {
+      data = data.filter((item) => selectedEngineers.includes(item.engineer));
+    }
 
-          const createdDate = new Date(record.createdAt);
-          if (isNaN(createdDate.getTime())) return false;
+    if (debouncedSearch) {
+      data = data.filter((item) => {
+        const text = [
+          item.bankName,
+          item.customerName,
+          item.city,
+          item.engineer,
+          item.status,
+          item.remark,
+        ]
+          .join(" ")
+          .toLowerCase();
 
-          const recordMonth = createdDate.toLocaleString("en-US", { month: "long" });
-          const recordYear = createdDate.getFullYear();
-
-          return recordMonth === targetMonth && recordYear === targetYear;
-        });
-      }
+        return text.includes(debouncedSearch);
+      });
     }
 
     return data;
-  }, [allCasesData, selectedCities, selectedBackMonth, backMonthOptions]);
+  }, [
+    monthFilteredData,
+    selectedAgent,
+    selectedBankView,
+    selectedStatuses,
+    selectedEngineers,
+    debouncedSearch,
+  ]);
+
+  const bankSummary = useMemo(() => getBankStats(filteredCases), [filteredCases]);
+
+  const paginatedBankSummary = useMemo(() => {
+    const start = (bankSummaryPage - 1) * rowsPerPage;
+    return bankSummary.slice(start, start + rowsPerPage);
+  }, [bankSummary, bankSummaryPage]);
+
+  const bankSummaryTotalPages = Math.ceil(bankSummary.length / rowsPerPage) || 1;
+
+  const paginatedBankCases = useMemo(() => {
+    const start = (bankCasesPage - 1) * rowsPerPage;
+    return filteredCases.slice(start, start + rowsPerPage);
+  }, [filteredCases, bankCasesPage]);
+
+  const bankCasesTotalPages = Math.ceil(filteredCases.length / rowsPerPage) || 1;
+
+  useEffect(() => {
+    setBankSummaryPage(1);
+    setBankCasesPage(1);
+  }, [selectedMonth, selectedBankView, searchText, selectedStatuses, selectedEngineers]);
+
+  const dashboardCounts = useMemo(() => {
+  const data = monthFilteredData.filter((item) => {
+    if (selectedAgent !== "All Agents") return item.engineer === selectedAgent;
+    return true;
+  });
+
+  const total = data.length;
+  let done = 0;
+  let pending = 0;
+  let working = 0;
+  let outOfTat = 0;
+
+  data.forEach((item) => {
+    const s = normalizeStatus(item.status);
+
+    if (s.includes("submitted") || s.includes("done") || s.includes("final")) {
+      done++;
+    } else if (s.includes("working") || s.includes("assigned") || s.includes("progress")) {
+      working++;
+    } else {
+      pending++;
+    }
+
+    // 👉 OUT OF TAT LOGIC FIX
+    if (s.includes("pending") && item.createdAt) {
+      const d = new Date(item.createdAt);
+      if (!isNaN(d.getTime())) {
+        const hours = (new Date() - d) / (1000 * 60 * 60);
+        if (hours > 48) outOfTat++;
+      }
+    }
+  });
+
+  return { total, done, pending, working, outOfTat };
+}, [monthFilteredData, selectedAgent]);
 
   const reports = useMemo(
     () => [
       {
+        
         title: "To Be Assigned / File Generated",
-        total: counts.pending || 0,
+        total: dashboardCounts.pending || 0,
         component: "Pending",
       },
       {
+        
         title: "Total Assigned / Work in Progress",
-        total: counts.working || 0,
+        total: dashboardCounts.working || 0,
         component: "Assigned",
       },
       {
+        
         title: "Total Submission",
-        total: counts.finalSubmitted || 0,
+        total: dashboardCounts.done || 0,
         component: "ReportSubmitted",
       },
       {
-        title: "Query Raised",
-        total: counts.queryRaised || 0,
+  title: "Query Raised",
+  total: queryRaisedCount || 0,
         component: "QueryRaised",
       },
       {
+        
         title: "Cancel Cases",
         total: counts.cancelled || 0,
         component: "CancelCases",
       },
-      { title: "Awaiting Approved", total: "0" },
-      { title: "Awaiting Portal Cases", total: "0" },
-      {
-        title: "Out Tat Cases",
-        total: counts.outOfTat || 0,
+     {
+  title: "Out Tat Cases",
+  total: dashboardCounts.outOfTat || 0,
         component: "Out_Tat_Cases",
       },
       {
+        
         title: "All Cases",
-        total: counts.allCases || 0,
+        total: dashboardCounts.total || 0,
         component: "Summary",
       },
     ],
-    [counts]
+    [counts, dashboardCounts, queryRaisedCount]
   );
 
-  // Handle card click - hide table, show component
-  const handleCardClick = (component) => {
-    setActiveComponent(component);
+  const clearBankView = () => {
+    setSelectedBankView(null);
+    setSearchText("");
+    setSelectedStatuses([]);
+    setSelectedEngineers([]);
   };
 
-  // Handle Dashboard tab click - reset to show dashboard
-  const handleDashboardTabClick = () => {
-    setActiveTab("dashboard");
-    setActiveComponent("");
+  const resetBankCaseFilters = () => {
+    setSearchText("");
+    setSelectedStatuses([]);
+    setSelectedEngineers([]);
   };
 
   return (
@@ -461,10 +482,51 @@ const Dashboard = () => {
       <style>{`
         @keyframes blink {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+          50% { opacity: .45; }
         }
         .blink-row {
           animation: blink 1s ease-in-out infinite;
+        }
+        .bank-summary-card {
+          border: 1px solid #d1d5db;
+          border-radius: 14px;
+          background: #fff;
+          overflow: hidden;
+          box-shadow: 0 4px 14px rgba(0,0,0,.08);
+        }
+        .bank-summary-table th {
+          font-size: 12px;
+          color: #6b7280;
+          letter-spacing: 1.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          background: #f9fafb;
+          padding: 11px 14px;
+          border-bottom: 1px solid #d1d5db;
+          white-space: nowrap;
+        }
+        .bank-summary-table td {
+          padding: 10px 14px;
+          border-bottom: 1px solid #e5e7eb;
+          font-size: 15px;
+        }
+        .bank-summary-table tr:hover {
+          background: #f8fafc;
+        }
+        .rate-bar {
+          height: 5px;
+          width: 70px;
+          background: #e5e7eb;
+          border-radius: 999px;
+          overflow: hidden;
+          display: inline-block;
+          margin-left: 8px;
+          vertical-align: middle;
+        }
+        .rate-fill {
+          height: 100%;
+          background: #16a34a;
+          border-radius: 999px;
         }
       `}</style>
 
@@ -477,11 +539,16 @@ const Dashboard = () => {
                   ? "bg-[#B5121B] text-white"
                   : "bg-gray-100 text-gray-800"
               }`}
-              onClick={handleDashboardTabClick}
+              onClick={() => {
+                setActiveTab("dashboard");
+                setActiveComponent("");
+                clearBankView();
+              }}
             >
-              Dashboard
+              📊 Dashboard
             </button>
           </li>
+
           <li className="nav-item">
             <button
               className={`nav-link px-4 py-2 rounded-t-lg font-medium ${
@@ -492,9 +559,10 @@ const Dashboard = () => {
               onClick={() => {
                 setActiveTab("myworklist");
                 setActiveComponent("");
+                clearBankView();
               }}
             >
-              My Worklist
+              📋 My Worklist
             </button>
           </li>
         </ul>
@@ -502,326 +570,349 @@ const Dashboard = () => {
 
       {activeTab === "dashboard" && (
         <>
-          {/* Cards Section - ALWAYS visible on dashboard */}
-          <div className="mb-6 mt-1 mr-3 p-6 border border-[#B5121B] rounded-2xl bg-white shadow-lg">
-            <div className="flex justify-between items-center mb-6">
-              <h5 className="text-xl font-semibold text-gray-800">All Cases</h5>
-              <Select
-                value={selectedAgent}
-                onChange={setSelectedAgent}
-                suffixIcon={<DownOutlined />}
-                className="w-64"
-              >
-                <Option value="All Agents">All Agents</Option>
-                {fieldOfficers?.map((fieldOfficer) => (
-                  <Option key={fieldOfficer._id} value={fieldOfficer.name}>
-                    {fieldOfficer.name}
-                  </Option>
-                ))}
-              </Select>
-            </div>
+          {!selectedBankView && (
+            <div className="mb-6 mt-1 mr-3 p-6 border border-[#B5121B] rounded-2xl bg-white shadow-lg">
+              <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
+               
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-              {reports.map((report, key) => (
-                <div
-                  key={key}
-                  onClick={() => handleCardClick(report.component)}
-                  className={`group relative flex flex-col items-center text-center p-4 h-40 rounded-xl cursor-pointer transition-all duration-300 border-1 shadow hover:shadow-lg focus:outline-none ${
-                    activeComponent === report.component
-                      ? "border-[#B5121B] bg-[#FFF4F4]"
-                      : "border-gray-400 bg-white"
-                  }`}
-                >
-                  <h6
-                    style={{ fontSize: "0.8rem" }}
-                    className="uppercase text-center relative font-semibold text-gray-500 group-hover:text-[#B5121B] transition-colors"
-                  >
-                    {report.title}
-                  </h6>
-                  <h2 className="!text-4xl absolute bottom-6 font-semibold mt-2 border-[1px] border-gray-200 group-hover:text-[#B5121B] transition-colors px-4 p-2 rounded text-gray-800 tracking-tight">
-                    <CountUp
-                      end={parseInt(report.total, 10) || 0}
-                      duration={1.5}
-                      separator=","
-                    />
-                  </h2>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-              <h5 className="text-base font-medium text-gray-700">
-                Total cases:{" "}
-                <span className="font-semibold text-gray-900">
-                  <CountUp
-                    end={counts.allCases || 0}
-                    duration={1.5}
-                    separator=","
+                <div className="flex flex-wrap gap-2 items-center">
+                  <label className="text-sm font-semibold text-gray-700">📅 Month</label>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => {
+                      setSelectedMonth(e.target.value);
+                      setActiveComponent("");
+                      clearBankView();
+                    }}
+                    className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#B5121B]"
                   />
+
+                  <Select
+                    value={selectedAgent}
+                    onChange={setSelectedAgent}
+                    suffixIcon={<DownOutlined />}
+                    className="w-64"
+                  >
+                    <Option value="All Agents">All Agents</Option>
+                    {fieldOfficers?.map((fieldOfficer) => (
+                      <Option key={fieldOfficer._id} value={fieldOfficer.name}>
+                        {fieldOfficer.name}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4 mb-6">
+                {reports.map((report, key) => (
+                  <div
+                    key={key}
+                    onClick={() => setActiveComponent(report.component)}
+                    className={`group relative flex flex-col items-center text-center p-4 h-36 rounded-xl cursor-pointer transition-all duration-300 border shadow hover:shadow-lg ${
+                      activeComponent === report.component
+                        ? "border-[#B5121B] bg-[#FFF4F4]"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    
+
+                    <h6 className="text-[12px] uppercase font-semibold text-gray-500 group-hover:text-[#B5121B]">
+                      {report.title}
+                    </h6>
+
+                    <h2 className="!text-4xl absolute bottom-5 font-semibold border border-gray-200 px-4 py-2 rounded text-gray-800 group-hover:text-[#B5121B]">
+                      <CountUp
+                        end={parseInt(report.total, 10) || 0}
+                        duration={1.2}
+                        separator=","
+                      />
+                    </h2>
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-base font-medium text-gray-700">
+                
+                <span className="font-semibold text-gray-900">
+                  <CountUp end={dashboardCounts.total} duration={1.2} separator="," />
                 </span>
-              </h5>
-              <div className="flex flex-col sm:flex-row sm:space-x-8 mt-2 sm:mt-0">
-                <h5 className="text-base font-medium text-gray-700">
-                  Denied cases:{" "}
-                  <span className="font-semibold text-red-600">
-                    <CountUp end={0} duration={1.5} separator="," />
-                  </span>
-                </h5>
-                <h5 className="text-base font-medium text-gray-700">
-                  Token Back Requests:{" "}
-                  <span className="font-semibold text-green-600">
-                    <CountUp end={0} duration={1.5} separator="," />
-                  </span>
-                </h5>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Show Table ONLY when no component selected */}
-          {!activeComponent && (
-            <div className="mb-6 p-6 border border-gray-300 rounded-2xl bg-white shadow-lg">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                All Cases
-              </h2>
+          {!activeComponent && !selectedBankView && (
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-3 mb-4 items-center justify-between">
+               
 
-              {/* Filters Row */}
-              <div className="flex items-center gap-2 mb-4 flex-wrap">
-                {/* Bank Filter */}
-                <Select
-                  mode="multiple"
-                  placeholder="Filter by Bank"
-                  style={{ minWidth: 200 }}
-                  value={selectedBanks}
-                  onChange={(values) => {
-                    setSelectedBanks(values);
-                    setCurrentPage(1);
-                  }}
-                  allowClear
-                  maxTagCount="responsive"
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-semibold text-gray-700">📅 Month</label>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => {
+                      setSelectedMonth(e.target.value);
+                      setSelectedBankView(null);
+                    }}
+                    className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#B5121B]"
+                  />
+                </div>
+              </div>
+
+              <div className="bank-summary-card">
+                <div className="px-4 py-3 text-xs font-bold tracking-[4px] text-gray-500 uppercase">
+                  🏦 Bank Summary
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bank-summary-table">
+                    <thead>
+                      <tr>
+                        <th className="text-left">🏦 Bank</th>
+                        <th>📦 Total</th>
+                        <th className="text-green-700">✅ Done</th>
+                        <th className="text-orange-600">⏳ Pend</th>
+                        <th className="text-red-600">❓ Query</th>
+                        <th>📈 Rate</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {allCasesLoading ? (
+                        <tr>
+                          <td colSpan="6" className="text-center text-gray-500 py-8">
+                            Loading...
+                          </td>
+                        </tr>
+                      ) : bankSummary.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" className="text-center text-gray-500 py-8">
+                            No records found
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedBankSummary.map((bank) => {
+                          const rate =
+                            bank.total > 0 ? Math.round((bank.done / bank.total) * 100) : 0;
+
+                          return (
+                            <tr
+                              key={bank.bank}
+                              onClick={() => setSelectedBankView(bank.bank)}
+                              className="cursor-pointer"
+                            >
+                              <td className="font-bold text-gray-900">{bank.bank}</td>
+                              <td className="text-center">{bank.total}</td>
+                              <td className="text-center text-green-700">{bank.done}</td>
+                              <td className="text-center text-orange-600">{bank.pending}</td>
+                              <td className="text-center text-red-600">{bank.query}</td>
+                              <td className="font-bold text-green-700">
+                                {rate}%
+                                <span className="rate-bar">
+                                  <span
+                                    className="rate-fill"
+                                    style={{ width: `${rate}%` }}
+                                  />
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <Pagination
+                  page={bankSummaryPage}
+                  totalPages={bankSummaryTotalPages}
+                  onPrev={() => setBankSummaryPage((p) => Math.max(1, p - 1))}
+                  onNext={() =>
+                    setBankSummaryPage((p) => Math.min(bankSummaryTotalPages, p + 1))
+                  }
+                />
+              </div>
+            </div>
+          )}
+
+          {!activeComponent && selectedBankView && (
+            <div className="mb-6 p-4 border border-gray-300 rounded-2xl bg-white shadow-lg">
+              <div className="flex flex-wrap gap-3 items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    🏦 {selectedBankView} Cases
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    📅 Selected Month Rows: {filteredCases.length}
+                  </p>
+                </div>
+
+                <button
+                  onClick={clearBankView}
+                  className="px-4 py-2 rounded-md bg-[#B5121B] text-white hover:bg-red-800"
                 >
-                  {(filterOptions?.banks || []).map((bank) => (
-                    <Option key={bank} value={bank}>
-                      {bank}
-                    </Option>
-                  ))}
-                </Select>
+                  ← Back To Bank Summary
+                </button>
+              </div>
 
-                {/* Status Filter */}
+              <div className="flex flex-wrap gap-2 mb-4 items-center">
+                <input
+                  type="text"
+                  placeholder="Search name, location, engineer, remark..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 w-[320px]"
+                />
+
                 <Select
                   mode="multiple"
-                  placeholder="Filter by Status"
+                  placeholder="All Status"
                   style={{ minWidth: 200 }}
                   value={selectedStatuses}
-                  onChange={(values) => {
-                    setSelectedStatuses(values);
-                    setCurrentPage(1);
-                  }}
+                  onChange={setSelectedStatuses}
                   allowClear
                   maxTagCount="responsive"
                 >
-                  {(filterOptions?.statuses || []).map((status) => (
+                  {statusOptions.map((status) => (
                     <Option key={status} value={status}>
                       {status}
                     </Option>
                   ))}
                 </Select>
 
-                {/* City Filter - Using frontend extracted cities */}
                 <Select
                   mode="multiple"
-                  placeholder="Filter by City"
-                  style={{ minWidth: 200 }}
-                  value={selectedCities}
-                  onChange={(values) => {
-                    setSelectedCities(values);
-                    setCurrentPage(1);
-                  }}
+                  placeholder="All Engineers"
+                  style={{ minWidth: 220 }}
+                  value={selectedEngineers}
+                  onChange={setSelectedEngineers}
                   allowClear
                   maxTagCount="responsive"
                 >
-                  {cityOptions.map((city) => (
-                    <Option key={city} value={city}>
-                      {city}
+                  {engineerOptions.map((engineer) => (
+                    <Option key={engineer} value={engineer}>
+                      {engineer}
                     </Option>
                   ))}
                 </Select>
 
-                {/* Month Filter (Multiple) */}
-                <Select
-                  mode="multiple"
-                  placeholder="Filter by Month"
-                  style={{ minWidth: 200 }}
-                  value={selectedMonths}
-                  onChange={(values) => {
-                    setSelectedMonths(values);
-                    setCurrentPage(1);
-                  }}
-                  allowClear
-                  maxTagCount="responsive"
-                >
-                  {monthOptions.map((month) => (
-                    <Option key={month.value} value={month.value}>
-                      {month.label}
-                    </Option>
-                  ))}
-                </Select>
-
-                {/* Back Month Filter (Single) */}
-                <Select
-                  placeholder="Back Month"
-                  style={{ minWidth: 250 }}
-                  value={selectedBackMonth}
-                  onChange={(value) => {
-                    setSelectedBackMonth(value);
-                    setCurrentPage(1);
-                  }}
-                  allowClear
-                >
-                  {backMonthOptions.map((option) => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
-                  ))}
-                </Select>
-
-                {/* Search Input */}
                 <input
-                  type="text"
-                  placeholder="Search all fields..."
-                  value={searchText}
-                  onChange={(event) => {
-                    setSearchText(event.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-[#B5121B]"
-                  style={{ width: 300 }}
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2"
                 />
+
+                <button
+                  onClick={resetBankCaseFilters}
+                  className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100"
+                >
+                  Reset Filters
+                </button>
               </div>
 
-              {/* All Cases Table */}
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto border rounded-xl">
                 <table className="min-w-full border-collapse">
                   <thead>
                     <tr className="bg-gray-100">
-                      {allCasesColumns.map((col) => (
-                        <th
-                          key={col.key}
-                          className="border border-gray-300 px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
-                        >
-                          {col.title}
-                        </th>
-                      ))}
+                      <th className="border px-3 py-3 text-left text-xs uppercase text-gray-600">
+                        #
+                      </th>
+                      <th className="border px-3 py-3 text-left text-xs uppercase text-gray-600">
+                        📅 Date & Time
+                      </th>
+                      <th className="border px-3 py-3 text-left text-xs uppercase text-gray-600">
+                        👤 Customer Name
+                      </th>
+                      <th className="border px-3 py-3 text-left text-xs uppercase text-gray-600">
+                        📍 Location
+                      </th>
+                      <th className="border px-3 py-3 text-left text-xs uppercase text-gray-600">
+                        🧑‍💼 Engineer
+                      </th>
+                      <th className="border px-3 py-3 text-left text-xs uppercase text-gray-600">
+                        📌 Status
+                      </th>
+                      <th className="border px-3 py-3 text-left text-xs uppercase text-gray-600">
+                        📝 Remark
+                      </th>
                     </tr>
                   </thead>
+
                   <tbody>
                     {allCasesLoading ? (
                       <tr>
-                        <td
-                          colSpan={allCasesColumns.length}
-                          className="border border-gray-300 px-4 py-8 text-center text-gray-500"
-                        >
+                        <td colSpan="7" className="text-center py-8 text-gray-500">
                           Loading...
                         </td>
                       </tr>
-                    ) : filteredData.length === 0 ? (
+                    ) : filteredCases.length === 0 ? (
                       <tr>
-                        <td
-                          colSpan={allCasesColumns.length}
-                          className="border border-gray-300 px-4 py-8 text-center text-gray-500"
-                        >
+                        <td colSpan="7" className="text-center py-8 text-gray-500">
                           No records found
                         </td>
                       </tr>
                     ) : (
-                      filteredData.map((record) => {
-                        const rowColor = getRowColor(record.status, record.createdAt);
+                      paginatedBankCases.map((record, index) => {
+                        const row = getRowStyle(record.status, record.createdAt);
+                        const srNo = (bankCasesPage - 1) * rowsPerPage + index + 1;
+
                         return (
-                          <tr 
-                            key={record.key} 
-                            className={`hover:bg-opacity-80 ${rowColor.className}`}
-                            style={{ 
-                              backgroundColor: rowColor.backgroundColor,
-                              transition: "background-color 0.3s"
-                            }}
+                          <tr
+                            key={record.key}
+                            className={`${row.className} hover:brightness-95`}
+                            style={{ backgroundColor: row.backgroundColor }}
                           >
-                            {allCasesColumns.map((col) => (
-                              <td
-                                key={col.key}
-                                className="border border-gray-300 px-4 py-3 text-sm text-gray-700"
-                              >
-                                {col.render
-                                  ? col.render(record[col.dataIndex], record)
-                                  : record[col.dataIndex] || "N/A"}
-                              </td>
-                            ))}
+                            <td className="border px-3 py-3 text-sm">{srNo}</td>
+                            <td className="border px-3 py-3 text-sm whitespace-nowrap">
+                              {formatDateTime(record.createdAt)}
+                            </td>
+                            <td className="border px-3 py-3 text-sm font-semibold">
+                              {record.customerName}
+                            </td>
+                            <td className="border px-3 py-3 text-sm">{record.city}</td>
+                            <td className="border px-3 py-3 text-sm text-blue-700 font-semibold">
+                              {record.engineer}
+                            </td>
+                            <td className="border px-3 py-3 text-sm">
+                              <span className="px-2 py-1 rounded border bg-white text-xs font-semibold">
+                                {record.status}
+                              </span>
+                            </td>
+                            <td className="border px-3 py-3 text-sm">{record.remark}</td>
                           </tr>
                         );
                       })
                     )}
                   </tbody>
                 </table>
-              </div>
 
-              {/* Pagination */}
-              {!allCasesLoading && filteredData.length > 0 && (
-                <div className="flex justify-between items-center mt-4">
-                  <div className="text-sm text-gray-600">
-                    Showing {filteredData.length} results
-                    {selectedCities.length > 0 && " (filtered by city)"}
-                    {selectedBackMonth && " (filtered by back month)"}
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        if (allCasesPagination.page > 1) {
-                          setCurrentPage(allCasesPagination.page - 1);
-                        }
-                      }}
-                      disabled={allCasesPagination.page === 1}
-                      className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                    >
-                      Previous
-                    </button>
-                    <span className="px-3 py-1 border border-gray-300 rounded bg-gray-100">
-                      {allCasesPagination.page}
-                    </span>
-                    <button
-                      onClick={() => {
-                        if (
-                          allCasesPagination.page < allCasesPagination.totalPages
-                        ) {
-                          setCurrentPage(allCasesPagination.page + 1);
-                        }
-                      }}
-                      disabled={
-                        allCasesPagination.page >= allCasesPagination.totalPages
-                      }
-                      className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
+                <Pagination
+                  page={bankCasesPage}
+                  totalPages={bankCasesTotalPages}
+                  onPrev={() => setBankCasesPage((p) => Math.max(1, p - 1))}
+                  onNext={() =>
+                    setBankCasesPage((p) => Math.min(bankCasesTotalPages, p + 1))
+                  }
+                />
+              </div>
             </div>
           )}
 
-          {/* Show ONLY the selected component when card is clicked */}
-          {activeComponent === "Pending" && <Pending />}
-          {activeComponent === "Assigned" && <AssignedCase />}
-          {activeComponent === "QueryRaised" && <QueryRaised />}
-          {activeComponent === "ReportSubmitted" && <FinalSubmittedCase />}
-          {activeComponent === "CancelCases" && <CancelledCases />}
-          {activeComponent === "Out_Tat_Cases" && <OutOfTATCase />}
-          {activeComponent === "Summary" && <SummaryCard />}
+      {activeComponent === "Pending" && <Pending selectedMonth={selectedMonth} />}
+{activeComponent === "Assigned" && <AssignedCase selectedMonth={selectedMonth} />}
+{activeComponent === "QueryRaised" && <QueryRaised selectedMonth={selectedMonth} />}
+{activeComponent === "ReportSubmitted" && <FinalSubmittedCase selectedMonth={selectedMonth} />}
+{activeComponent === "CancelCases" && <CancelledCases selectedMonth={selectedMonth} />}
+{activeComponent === "Out_Tat_Cases" && <OutOfTATCase selectedMonth={selectedMonth} />}
+{activeComponent === "Summary" && <SummaryCard selectedMonth={selectedMonth} />}
         </>
       )}
 
       {activeTab === "myworklist" && (
         <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-md">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            My Worklist
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">📋 My Worklist</h2>
           <MyWorklist />
         </div>
       )}

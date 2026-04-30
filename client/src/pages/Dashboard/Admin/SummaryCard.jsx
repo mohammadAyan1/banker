@@ -26,6 +26,16 @@ const readValue = (record, paths) => {
   return "N/A";
 };
 
+const isSameMonth = (date, monthValue) => {
+  if (!date || !monthValue) return true;
+
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return false;
+
+  const yyyyMm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return yyyyMm === monthValue;
+};
+
 const normalizeSummaryRecord = (record, index) => ({
   ...record,
   key: record._id || index,
@@ -64,6 +74,15 @@ const normalizeSummaryRecord = (record, index) => ({
     "basicDetails.visitDate",
     "header.dateOfVisit",
   ]),
+  createdAt: readValue(record, [
+    "createdAt",
+    "createdDate",
+    "submissionDate",
+    "dateOfVisit",
+    "dateOfReport",
+    "basicDetails.createdAt",
+    "header.createdAt",
+  ]),
 });
 
 const columns = [
@@ -99,7 +118,7 @@ const columns = [
   },
 ];
 
-const SummaryCard = () => {
+const SummaryCard = ({ selectedMonth }) => {
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -108,12 +127,6 @@ const SummaryCard = () => {
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0,
-  });
   const [filterOptions, setFilterOptions] = useState({
     banks: [],
     statuses: [],
@@ -130,10 +143,11 @@ const SummaryCard = () => {
   const fetchSummaryTable = useCallback(async () => {
     try {
       setLoading(true);
+
       const response = await axiosInstance.get("/case/summary-data", {
         params: {
-          page: currentPage,
-          limit: pageSize,
+          page: 1,
+          limit: 1000,
           city: selectedZone || undefined,
           search: debouncedSearch || undefined,
           bankName: bankFilter || undefined,
@@ -142,15 +156,8 @@ const SummaryCard = () => {
       });
 
       const items = (response.data?.tableItems || []).map(normalizeSummaryRecord);
+
       setTableData(items);
-      setPagination(
-        response.data?.pagination || {
-          page: 1,
-          limit: pageSize,
-          total: items.length,
-          totalPages: items.length > 0 ? 1 : 0,
-        }
-      );
       setFilterOptions(
         response.data?.filterOptions || { banks: [], statuses: [] }
       );
@@ -159,7 +166,7 @@ const SummaryCard = () => {
     } finally {
       setLoading(false);
     }
-  }, [bankFilter, currentPage, debouncedSearch, pageSize, selectedZone, statusFilter]);
+  }, [bankFilter, debouncedSearch, selectedZone, statusFilter]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -175,7 +182,11 @@ const SummaryCard = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedZone]);
+  }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
+
+  const monthFilteredData = useMemo(() => {
+    return tableData.filter((item) => isSameMonth(item.createdAt, selectedMonth));
+  }, [tableData, selectedMonth]);
 
   return (
     <>
@@ -231,16 +242,18 @@ const SummaryCard = () => {
       </div>
 
       <h1>Summary</h1>
+
       <Table
         columns={columns}
-        dataSource={tableData}
+        dataSource={monthFilteredData}
         showSorterTooltip={{ target: "sorter-icon" }}
         bordered
         loading={loading}
+        rowKey="key"
         pagination={{
-          current: pagination.page || currentPage,
-          pageSize: pagination.limit || pageSize,
-          total: pagination.total || 0,
+          current: currentPage,
+          pageSize: pageSize,
+          total: monthFilteredData.length,
           showSizeChanger: true,
         }}
         onChange={(tablePagination) => {

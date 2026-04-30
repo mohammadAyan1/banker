@@ -663,9 +663,16 @@ export default function AdityaBirlaForm() {
                 </button>
             </div>
 
-            <div className="w-full outline-none bg-transparent text-xs">
-                <input className="w-full outline-none bg-transparent text-xs" type="date" value={B.createdAt} onChange={e => set("basicDetails", "createdAt", e.target.value)} placeholder="Created Date" />
-            </div>
+           <div className="w-full flex justify-end">
+  <div className="bg-[#fff4f4] border border-[#B5121B] px-3 py-1.5 rounded-lg shadow-sm">
+    <input
+      className="outline-none bg-transparent text-xs text-[#B5121B] font-medium text-right"
+      type="datetime-local"
+      value={B.createdAt}
+      onChange={e => set("basicDetails", "createdAt", e.target.value)}
+    />
+  </div>
+</div>
 
             {/* Report Content */}
             <div className="p-4 print:p-0">

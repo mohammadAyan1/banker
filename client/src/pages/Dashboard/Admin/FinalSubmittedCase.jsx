@@ -16,13 +16,35 @@ import {
 const { Search } = Input;
 const { Option } = Select;
 
-const FinalSubmittedCases = () => {
+const getCaseDate = (item) =>
+  item.createdAt ||
+  item.createdDate ||
+  item.submissionDate ||
+  item.dateOfVisit ||
+  item.dateOfReport ||
+  item.basicDetails?.createdAt ||
+  item.header?.createdAt ||
+  "";
+
+const isSameMonth = (date, monthValue) => {
+  if (!date || !monthValue) return false;
+
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return false;
+
+  return (
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` ===
+    monthValue
+  );
+};
+
+const FinalSubmittedCases = ({ selectedMonth }) => {
   const dispatch = useDispatch();
+
   const {
     final,
     loading,
     selectedZone,
-    finalPagination,
     finalFilterOptions,
   } = useSelector((state) => state.assignedCases);
 
@@ -41,14 +63,14 @@ const FinalSubmittedCases = () => {
 
   const queryParams = useMemo(
     () => ({
-      page: currentPage,
-      limit: pageSize,
+      page: 1,
+      limit: 1000,
       city: selectedZone || undefined,
       search: debouncedSearch || undefined,
       bankName: bankFilter || undefined,
       status: statusFilter || undefined,
     }),
-    [bankFilter, currentPage, debouncedSearch, pageSize, selectedZone, statusFilter]
+    [bankFilter, debouncedSearch, selectedZone, statusFilter]
   );
 
   const fetchFinalList = useCallback(async () => {
@@ -69,7 +91,13 @@ const FinalSubmittedCases = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedZone]);
+  }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
+
+  const monthFilteredFinal = useMemo(() => {
+    return (final || []).filter((item) =>
+      isSameMonth(getCaseDate(item), selectedMonth)
+    );
+  }, [final, selectedMonth]);
 
   const columns = [
     {
@@ -81,17 +109,14 @@ const FinalSubmittedCases = () => {
     },
     {
       title: "Customer Name",
-      render: (_, record) => {
-        const displayName = getDisplayCustomerName(record);
-        return (
-          <Link
-            to={`/bank/${getBankRoute(record)}/${record._id}`}
-            className="text-blue-600 hover:underline"
-          >
-            {displayName}
-          </Link>
-        );
-      },
+      render: (_, record) => (
+        <Link
+          to={`/bank/${getBankRoute(record)}/${record._id}`}
+          className="text-blue-600 hover:underline"
+        >
+          {getDisplayCustomerName(record)}
+        </Link>
+      ),
     },
     {
       title: "Address as per Legal Document",
@@ -100,6 +125,7 @@ const FinalSubmittedCases = () => {
     {
       title: "Assigned To",
       dataIndex: ["assignedTo", "name"],
+      render: (_, record) => record?.assignedTo?.name || "N/A",
     },
     {
       title: "Action",
@@ -128,7 +154,9 @@ const FinalSubmittedCases = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Final Submitted Cases</h2>
+      <h2 className="text-xl font-bold mb-4">
+        Final Submitted Cases ({monthFilteredFinal.length})
+      </h2>
 
       <div className="flex flex-wrap gap-4 mb-4">
         <Select
@@ -185,14 +213,14 @@ const FinalSubmittedCases = () => {
         <Spinner />
       ) : (
         <Table
-          dataSource={final}
+          dataSource={monthFilteredFinal}
           columns={columns}
           rowKey="_id"
           bordered
           pagination={{
-            current: finalPagination?.page || currentPage,
-            pageSize: finalPagination?.limit || pageSize,
-            total: finalPagination?.total || 0,
+            current: currentPage,
+            pageSize,
+            total: monthFilteredFinal.length,
             showSizeChanger: true,
           }}
           onChange={(pagination) => {

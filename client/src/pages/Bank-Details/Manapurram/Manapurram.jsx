@@ -1551,17 +1551,15 @@ export default function ManappuramForm() {
                 </button>
             </div>
 
-            <div>
-                <input
-                    className={inp}
-                    value={H.createdAt}
-                    type="date"
-                    onChange={(e) =>
-                        set("header", "createdAt", e.target.value)
-                    }
-                    placeholder="06.03.2021"
-                />
-            </div>
+          <div className="w-full flex justify-end">
+  <div className="bg-[#fff4f4] border border-[#B5121B] px-3 py-1.5 rounded-lg shadow-sm">
+    <input
+      type="datetime-local"
+      onChange={(e) => setCreatedDate(e.target.value)}
+      className="outline-none bg-transparent text-xs text-[#B5121B] font-medium text-right"
+    />
+  </div>
+</div>
 
             <div className="p-4">
                 <div className="border-2 border-black flex items-start p-2">

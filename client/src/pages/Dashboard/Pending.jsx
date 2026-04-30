@@ -22,12 +22,33 @@ import {
 const { Search } = Input;
 const { Option } = Select;
 
-const Pending = () => {
+const getCaseDate = (item) =>
+  item.createdAt ||
+  item.createdDate ||
+  item.submissionDate ||
+  item.dateOfVisit ||
+  item.basicDetails?.createdAt ||
+  item.header?.createdAt ||
+  "";
+
+const isSameMonth = (date, monthValue) => {
+  if (!date || !monthValue) return false;
+
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return false;
+
+  return (
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` ===
+    monthValue
+  );
+};
+
+const Pending = ({ selectedMonth }) => {
   const dispatch = useDispatch();
   const fieldOfficers = useSelector(selectFieldOfficers);
+
   const {
     pendingCases,
-    pendingPagination,
     pendingFilterOptions,
     loading,
     selectedZone,
@@ -44,21 +65,18 @@ const Pending = () => {
   const [selectedFO, setSelectedFO] = useState(null);
 
   const bankFilter = useMemo(() => selectedBanks.join(","), [selectedBanks]);
-  const statusFilter = useMemo(
-    () => selectedStatuses.join(","),
-    [selectedStatuses]
-  );
+  const statusFilter = useMemo(() => selectedStatuses.join(","), [selectedStatuses]);
 
   const queryParams = useMemo(
     () => ({
-      page: currentPage,
-      limit: pageSize,
+      page: 1,
+      limit: 1000,
       city: selectedZone || undefined,
       search: debouncedSearch || undefined,
       bankName: bankFilter || undefined,
       status: statusFilter || undefined,
     }),
-    [bankFilter, currentPage, debouncedSearch, pageSize, selectedZone, statusFilter]
+    [bankFilter, debouncedSearch, selectedZone, statusFilter]
   );
 
   const fetchPendingList = useCallback(async () => {
@@ -88,7 +106,13 @@ const Pending = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedZone]);
+  }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
+
+  const monthFilteredPendingCases = useMemo(() => {
+    return (pendingCases || []).filter((item) =>
+      isSameMonth(getCaseDate(item), selectedMonth)
+    );
+  }, [pendingCases, selectedMonth]);
 
   const handleDelete = async (recordId) => {
     try {
@@ -160,9 +184,11 @@ const Pending = () => {
     },
     {
       title: "Date Added",
-      dataIndex: "createdAt",
       key: "createdAt",
-      render: (date) => dayjs(date).format("DD/MM/YYYY hh:mm A"),
+      render: (_, record) => {
+        const date = getCaseDate(record);
+        return date ? dayjs(date).format("DD/MM/YYYY hh:mm A") : "N/A";
+      },
     },
     {
       title: "Assigned",
@@ -177,12 +203,14 @@ const Pending = () => {
             Assigned to: {assignedFO?.name || "Unknown"}
           </div>
         ) : (
-          <Button type="primary" onClick={() => {
-            setCurrentCase(record);
-            setIsModalVisible(true);
-          }}>
-            Assign
-            <Plus size={20} />
+          <Button
+            type="primary"
+            onClick={() => {
+              setCurrentCase(record);
+              setIsModalVisible(true);
+            }}
+          >
+            Assign <Plus size={20} />
           </Button>
         );
       },
@@ -198,6 +226,7 @@ const Pending = () => {
           >
             <Edit3 size={38} />
           </Link>
+
           <Button
             onClick={() => handleDelete(record._id)}
             className="!text-red-600 hover:underline"
@@ -224,9 +253,7 @@ const Pending = () => {
       render: (record) => {
         const attachments = record.AttachDocuments;
 
-        if (!attachments || attachments.length === 0) {
-          return "No Attachments";
-        }
+        if (!attachments || attachments.length === 0) return "No Attachments";
 
         return (
           <div className="flex gap-1">
@@ -309,25 +336,23 @@ const Pending = () => {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">All Bank Valuation Reports</h2>
         <span className="text-sm text-gray-500">
-          Showing {pendingPagination?.total || 0} records (newest first)
+          Showing {monthFilteredPendingCases.length} records (newest first)
         </span>
       </div>
 
       <Table
         columns={columns}
-        dataSource={pendingCases}
+        dataSource={monthFilteredPendingCases}
         rowKey="_id"
         loading={loading}
         pagination={{
-          current: pendingPagination?.page || currentPage,
-          pageSize: pendingPagination?.limit || pageSize,
-          total: pendingPagination?.total || 0,
+          current: currentPage,
+          pageSize,
+          total: monthFilteredPendingCases.length,
           showSizeChanger: true,
         }}
         onChange={(pagination) => {
-          if (pagination.current !== currentPage) {
-            setCurrentPage(pagination.current);
-          }
+          if (pagination.current !== currentPage) setCurrentPage(pagination.current);
 
           if (pagination.pageSize !== pageSize) {
             setPageSize(pagination.pageSize);
@@ -354,9 +379,7 @@ const Pending = () => {
           <p className="font-semibold">
             Case: {currentCase ? getDisplayCustomerName(currentCase) : "N/A"}
           </p>
-          <p className="text-gray-600">
-            Bank: {currentCase?.bankName || "N/A"}
-          </p>
+          <p className="text-gray-600">Bank: {currentCase?.bankName || "N/A"}</p>
         </div>
 
         <Select

@@ -641,7 +641,7 @@ export default function BajajHousingForm() {
                                 <div style={s.field}><label style={s.label}>State</label><input style={s.input} value={LD.propertyState} onChange={e => set("locationDetails", "propertyState", e.target.value)} /></div>
                                 <div style={s.field}><label style={s.label}>Floor No.</label><input style={s.input} value={LD.floorNo} onChange={e => set("locationDetails", "floorNo", e.target.value)} /></div>
                             </div>
-                            <div style={s.field} style={{ marginBottom: 20 }}><label style={s.label}>Address as per Site</label><input style={s.input} value={LD.addressAsPerSite} onChange={e => set("locationDetails", "addressAsPerSite", e.target.value)} /></div>
+                            <div style={{ ...s.field, marginBottom: 20 }}><label style={s.label}>Address as per Site</label><input style={s.input} value={LD.addressAsPerSite} onChange={e => set("locationDetails", "addressAsPerSite", e.target.value)} /></div>
                             <div style={s.grid3}>
                                 <div style={s.field}><label style={s.label}>Locality Name</label><input style={s.input} value={LD.localityName} onChange={e => set("locationDetails", "localityName", e.target.value)} /></div>
                                 <div style={s.field}><label style={s.label}>Landmark Near By</label><input style={s.input} value={LD.landmarkNearBy} onChange={e => set("locationDetails", "landmarkNearBy", e.target.value)} /></div>
@@ -695,7 +695,7 @@ export default function BajajHousingForm() {
                                     </tbody>
                                 </table>
                             </div>
-                            <div style={s.grid2} style={{ marginTop: 20 }}>
+                            <div style={{ ...s.grid2, marginTop: 20 }}>
                                 <div style={s.field}><label style={s.label}>Boundaries Matching</label><select style={s.select} value={BD.boundariesMatching} onChange={e => set("boundaryDetails", "boundariesMatching", e.target.value)}><option value="">-- Select --</option><option>YES</option><option>NO</option></select></div>
                                 <div style={s.field}><label style={s.label}>Approach Road Size</label><select style={s.select} value={BD.approachRoadSize} onChange={e => set("boundaryDetails", "approachRoadSize", e.target.value)}><option value="">-- Select --</option><option>LESS THAN 10FT</option><option>10-15FT</option><option>MORE THAN 15FT</option></select></div>
                             </div>
@@ -761,15 +761,15 @@ export default function BajajHousingForm() {
                                 </div>
                             </div>
 
-                            <div style={s.grid2} style={{ marginTop: 24 }}>
+                            <div style={{ ...s.grid2, marginTop: 24 }}>
                                 <div style={s.field}><label style={s.label}>Carpet Area as per Document (Sq.Ft)</label><input style={s.input} value={TD.carpetAreaAsPerDocument} onChange={e => set("technicalDetails", "carpetAreaAsPerDocument", e.target.value)} /></div>
                                 <div style={s.field}><label style={s.label}>Actual Construction SBUA (Sq.Ft)</label><input style={s.input} value={TD.actualConstructionSBUA} onChange={e => set("technicalDetails", "actualConstructionSBUA", e.target.value)} /></div>
                             </div>
-                            <div style={s.grid2} style={{ marginTop: 24 }}>
+                            <div style={{ ...s.grid2, marginTop: 24 }}>
                                 <div style={s.field}><label style={s.label}>Status of Property</label><select style={s.select} value={TD.statusOfProperty} onChange={e => set("technicalDetails", "statusOfProperty", e.target.value)}><option value="">-- Select --</option><option>COMPLETE</option><option>UNDER CONSTRUCTION</option></select></div>
                                 <div style={s.field}><label style={s.label}>% Completed</label><input style={s.input} value={TD.percentCompleted} onChange={e => set("technicalDetails", "percentCompleted", e.target.value)} /></div>
                             </div>
-                            <div style={s.grid2} style={{ marginTop: 24 }}>
+                            <div style={{ ...s.grid2, marginTop: 24 }}>
                                 <div style={s.field}><label style={s.label}>Current Age of Property (Years)</label><input style={s.input} value={TD.currentAgeOfProperty} onChange={e => set("technicalDetails", "currentAgeOfProperty", e.target.value)} /></div>
                                 <div style={s.field}><label style={s.label}>Residual Age (Years)</label><input style={s.input} value={TD.residualAge} onChange={e => set("technicalDetails", "residualAge", e.target.value)} /></div>
                             </div>
@@ -872,7 +872,7 @@ export default function BajajHousingForm() {
                                 <div style={s.field}><label style={s.label}>Any Demolition Threat</label><select style={s.select} value={ID.anyDemolitionThreat} onChange={e => set("infrastructureDetails", "anyDemolitionThreat", e.target.value)}><option value="">-- Select --</option><option>YES</option><option>NO</option></select></div>
                             </div>
 
-                            <div style={s.field} style={{ marginTop: 16 }}>
+                            <div style={{ ...s.field, marginTop: 16 }}>
                                 <label style={s.label}>Declaration</label>
                                 <textarea style={s.textarea} rows={3} value={ID.declaration} onChange={e => set("infrastructureDetails", "declaration", e.target.value)} placeholder="I hereby declare that the above information is true and correct..." />
                             </div>

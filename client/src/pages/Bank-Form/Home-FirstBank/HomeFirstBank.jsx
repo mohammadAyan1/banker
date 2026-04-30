@@ -14,6 +14,7 @@ import {
   updateDetails,
 } from "../../../redux/features/Banks/HFBank/HFBankThunk";
 import AutoFillForm from "../../AutoFillForm";
+import { finalUpdate } from "../../../redux/features/case/caseThunks";
 
 const AccordionPanel = ({ id, label, component, isOpen, onToggle, isLast }) => (
   <div className="flex" style={{ gap: 0 }}>
@@ -95,12 +96,11 @@ const HomeFirstBank = () => {
   const [isEdit, setIsEdit] = useState({});
   const [extractedData, setExtractedData] = useState({});
   const sectionSubmittersRef = useRef({});
-
-
-
-  const [createdDate, setCreatedDate] = useState(null)
+  const [createdDate, setCreatedDate] = useState(null);
+  const [finalSubmitting, setFinalSubmitting] = useState(false);
 
   const isFieldOfficer = user?.role === "FieldOfficer";
+  const canFinalSubmit = id && (user?.role === "Admin" || user?.role === "SuperAdmin");
 
   const primaryActionLabel = isFieldOfficer
     ? "Submit"
@@ -274,12 +274,9 @@ const HomeFirstBank = () => {
     return latestData;
   };
 
-  const handlePrimaryAction = async () => {
+  const handlePrimaryAction = async (finalSubmit) => {
     try {
       const latestSections = await collectSectionData();
-
-
-
 
       const finalData = buildFinalData(latestSections);
       let finalPayload = { ...finalData, city: savedCity };
@@ -288,13 +285,15 @@ const HomeFirstBank = () => {
         finalPayload = { ...finalData, createdAt: createdDate };
       }
 
+      if (finalSubmit == "final") {
+        finalPayload = { ...finalData, status: "FinalSubmitted" };
+
+      }
+
       if (isFieldOfficer) {
         if (id) {
           await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
         } else {
-
-
-
           await dispatch(createHFBanks(finalPayload)).unwrap();
         }
 
@@ -323,10 +322,43 @@ const HomeFirstBank = () => {
     }
   };
 
+  // Final Submit Handler
+  const handleFinalSubmit = async () => {
+    if (!id || !canFinalSubmit) {
+      toast.error("Cannot perform final submit");
+      return;
+    }
+
+    setFinalSubmitting(true);
+    try {
+      const latestSections = await collectSectionData();
+      const finalData = buildFinalData(latestSections);
+      let finalPayload = { ...finalData, city: savedCity };
+
+      if (createdDate) {
+        finalPayload = { ...finalData, createdAt: createdDate };
+      }
+
+      // First update the report
+      await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
+
+      // Then perform final update on the case
+      await dispatch(
+        finalUpdate({ id, bankName: "HomeFirstBank", updateData: finalPayload })
+      ).unwrap();
+
+      toast.success("Case final submitted successfully!");
+      navigate("/");
+    } catch (error) {
+      console.error("Final submission failed:", error);
+      toast.error(error?.message || "Final submission failed");
+    } finally {
+      setFinalSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
-
-      <input type="date" onChange={(e) => setCreatedDate(e.target.value)} />
 
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30 px-4 sm:px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
@@ -346,6 +378,16 @@ const HomeFirstBank = () => {
         </div>
       </header>
 
+      <div className="w-full flex justify-end p-1">
+        <div className="bg-[#fff4f4] border border-[#B5121B] px-3 py-2 rounded-lg shadow-sm">
+          <input
+            type="datetime-local"
+            onChange={(e) => setCreatedDate(e.target.value)}
+            className="outline-none bg-transparent text-xs text-[#B5121B] font-medium text-right"
+          />
+        </div>
+      </div>
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-4 sm:px-6 py-4">
           {sections.map((section, index) => (
@@ -361,7 +403,9 @@ const HomeFirstBank = () => {
           ))}
         </div>
 
-        <div className="mt-6 flex justify-end">
+        {/* TWO BUTTONS - Submit and Final Submit */}
+        <div className="mt-6 flex justify-end gap-4">
+          {/* Normal Submit/Update Button */}
           <button
             type="button"
             onClick={handlePrimaryAction}
@@ -373,6 +417,35 @@ const HomeFirstBank = () => {
           >
             {loading ? "Processing..." : primaryActionLabel}
           </button>
+
+
+
+          <button
+            type="button"
+            onClick={() => handlePrimaryAction("final")}
+            disabled={loading}
+            className={`rounded-lg px-6 py-3 text-sm font-semibold text-white transition ${loading
+              ? "cursor-not-allowed bg-gray-400"
+              : "bg-blue-600 hover:bg-blue-700"
+              }`}
+          >
+            {loading ? "Processing..." : "Final Submit"}
+          </button>
+
+          {/* Final Submit Button - Only for Admin/SuperAdmin in Edit Mode */}
+          {canFinalSubmit && (
+            <button
+              type="button"
+              onClick={handleFinalSubmit}
+              disabled={finalSubmitting || loading}
+              className={`rounded-lg px-6 py-3 text-sm font-semibold text-white transition ${finalSubmitting || loading
+                ? "cursor-not-allowed bg-gray-400"
+                : "bg-red-600 hover:bg-red-700"
+                }`}
+            >
+              {finalSubmitting ? "Finalizing..." : "Final Submit"}
+            </button>
+          )}
         </div>
 
         {loading && (

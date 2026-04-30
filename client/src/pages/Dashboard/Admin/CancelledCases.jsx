@@ -13,11 +13,19 @@ import {
 const { Search } = Input;
 const { Option } = Select;
 
-const CancelledCases = () => {
+const isSameMonth = (date, monthValue) => {
+  if (!date || !monthValue) return true;
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return false;
+
+  const yyyyMm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return yyyyMm === monthValue;
+};
+
+const CancelledCases = ({ selectedMonth }) => {
   const dispatch = useDispatch();
   const {
     cancelledCases,
-    cancelledPagination,
     cancelledFilterOptions,
     loading,
     error,
@@ -39,14 +47,14 @@ const CancelledCases = () => {
 
   const queryParams = useMemo(
     () => ({
-      page: currentPage,
-      limit: pageSize,
+      page: 1,
+      limit: 1000,
       city: selectedZone || undefined,
       search: debouncedSearch || undefined,
       bankName: bankFilter || undefined,
       status: statusFilter || undefined,
     }),
-    [bankFilter, currentPage, debouncedSearch, pageSize, selectedZone, statusFilter]
+    [bankFilter, debouncedSearch, selectedZone, statusFilter]
   );
 
   const fetchCancelledList = useCallback(async () => {
@@ -67,7 +75,22 @@ const CancelledCases = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedZone]);
+  }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
+
+  const monthFilteredCancelledCases = useMemo(() => {
+    return (cancelledCases || []).filter((item) =>
+      isSameMonth(
+        item.createdAt ||
+          item.createdDate ||
+          item.submissionDate ||
+          item.dateOfVisit ||
+          item.dateOfReport ||
+          item.basicDetails?.createdAt ||
+          item.header?.createdAt,
+        selectedMonth
+      )
+    );
+  }, [cancelledCases, selectedMonth]);
 
   const columns = [
     {
@@ -107,7 +130,9 @@ const CancelledCases = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">All Cancelled Cases</h2>
+      <h2 className="text-xl font-bold mb-4">
+        All Cancelled Cases ({monthFilteredCancelledCases.length})
+      </h2>
 
       <div className="flex flex-wrap gap-4 mb-4">
         <Select
@@ -166,14 +191,14 @@ const CancelledCases = () => {
         <div className="text-red-600">There are no records to display</div>
       ) : (
         <Table
-          dataSource={cancelledCases}
+          dataSource={monthFilteredCancelledCases}
           columns={columns}
           rowKey="_id"
           bordered
           pagination={{
-            current: cancelledPagination?.page || currentPage,
-            pageSize: cancelledPagination?.limit || pageSize,
-            total: cancelledPagination?.total || 0,
+            current: currentPage,
+            pageSize,
+            total: monthFilteredCancelledCases.length,
             showSizeChanger: true,
           }}
           onChange={(pagination) => {

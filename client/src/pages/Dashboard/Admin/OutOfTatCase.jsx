@@ -14,12 +14,34 @@ import {
 
 const { Option } = Select;
 
-const OutOfTATCase = () => {
+const getCaseDate = (item) =>
+  item.createdAt ||
+  item.createdDate ||
+  item.submissionDate ||
+  item.dateOfVisit ||
+  item.dateOfReport ||
+  item.basicDetails?.createdAt ||
+  item.header?.createdAt ||
+  "";
+
+const isSameMonth = (date, monthValue) => {
+  if (!date || !monthValue) return false;
+
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return false;
+
+  return (
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` ===
+    monthValue
+  );
+};
+
+const OutOfTATCase = ({ selectedMonth }) => {
   const dispatch = useDispatch();
+
   const {
     loading,
     outOfTatCases,
-    outOfTatPagination,
     outOfTatFilterOptions,
     selectedZone,
   } = useSelector((state) => state.assignedCases);
@@ -39,14 +61,14 @@ const OutOfTATCase = () => {
 
   const queryParams = useMemo(
     () => ({
-      page: currentPage,
-      limit: pageSize,
+      page: 1,
+      limit: 1000,
       city: selectedZone || undefined,
       search: debouncedSearch || undefined,
       bankName: bankFilter || undefined,
       status: statusFilter || undefined,
     }),
-    [bankFilter, currentPage, debouncedSearch, pageSize, selectedZone, statusFilter]
+    [bankFilter, debouncedSearch, selectedZone, statusFilter]
   );
 
   const fetchOutOfTatList = useCallback(async () => {
@@ -67,7 +89,13 @@ const OutOfTATCase = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedZone]);
+  }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
+
+  const monthFilteredOutOfTatCases = useMemo(() => {
+    return (outOfTatCases || []).filter((item) =>
+      isSameMonth(getCaseDate(item), selectedMonth)
+    );
+  }, [outOfTatCases, selectedMonth]);
 
   const columns = [
     {
@@ -94,15 +122,20 @@ const OutOfTATCase = () => {
     },
     {
       title: "Created At",
-      dataIndex: "createdAt",
-      render: (createdAt) =>
-        new Date(createdAt).toLocaleString("en-IN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+      key: "createdAt",
+      render: (_, record) => {
+        const date = getCaseDate(record);
+
+        return date
+          ? new Date(date).toLocaleString("en-IN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "N/A";
+      },
     },
     {
       title: "Status",
@@ -117,7 +150,9 @@ const OutOfTATCase = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">⏰ Out of TAT Cases</h2>
+      <h2 className="text-xl font-bold mb-4">
+        Out of TAT Cases ({monthFilteredOutOfTatCases.length})
+      </h2>
 
       <div className="flex flex-wrap gap-4 mb-4">
         <Select
@@ -174,14 +209,14 @@ const OutOfTATCase = () => {
         <Spinner />
       ) : (
         <Table
-          dataSource={outOfTatCases}
+          dataSource={monthFilteredOutOfTatCases}
           columns={columns}
           rowKey="_id"
           bordered
           pagination={{
-            current: outOfTatPagination?.page || currentPage,
-            pageSize: outOfTatPagination?.limit || pageSize,
-            total: outOfTatPagination?.total || 0,
+            current: currentPage,
+            pageSize,
+            total: monthFilteredOutOfTatCases.length,
             showSizeChanger: true,
           }}
           onChange={(pagination) => {

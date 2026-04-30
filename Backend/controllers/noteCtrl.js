@@ -1,16 +1,39 @@
 const Note = require("../model/noteModel");
+const modelMap = require("./modelMap");
 
 exports.addNote = async (req, res) => {
   try {
     const { caseId, message } = req.body;
+    
+    // Save the note
     const note = await Note.create({
       caseId,
       message,
       addedBy: req.user._id,
       role: req.user.role,
     });
+
+    // Update the case with the remark
+    if (caseId && message) {
+      const bankRegistry = modelMap.bankRegistry;
+      
+      for (const bankConfig of bankRegistry) {
+        const { model: Model } = bankConfig;
+        const caseData = await Model.findByIdAndUpdate(
+          caseId,
+          { remarks: message },
+          { new: true }
+        );
+        
+        if (caseData) {
+          break; // Found and updated the case
+        }
+      }
+    }
+
     res.status(201).json(note);
   } catch (err) {
+    console.error("Error in addNote:", err);
     res.status(500).json({ error: "Failed to add note" });
   }
 };

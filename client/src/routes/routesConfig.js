@@ -273,6 +273,13 @@ export const routesConfig = [
     path: "/bank/bajaj/edit/:id",
     element: lazy(() => import("../pages/Banks/BajajHousing/BajajHousingForm.jsx")),
   },
+
+  // bank/bajaj-housing/edit/:id
+  {
+    path: "/bank/bajaj-housing/edit/:id",
+    element: lazy(() => import("../pages/Banks/BajajHousing/BajajHousingForm.jsx")),
+  },
+
   {
     path: "/bank/bajaj/view/:id",
     element: lazy(() => import("../pages/Banks/BajajHousing/BajajHousingView.jsx")),
