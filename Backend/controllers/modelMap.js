@@ -27,6 +27,7 @@ const modelMap = {
   Homefirst: HomeFirst,
   Piramal: Piramal,
   Icici: ICICI_BANK,
+  Icicihfc: ICICIHFC,
   Aditya: Aditya,
   Manappuram: Manappuram,
 };

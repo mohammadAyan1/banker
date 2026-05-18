@@ -2,7 +2,7 @@
 import React, { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import Login from "../pages/auth/Login";
-import ProtectedLayout from "./ProtectedLayout ";
+import ProtectedLayout from "./ProtectedLayout";
 import { routesConfig } from "./routesConfig";
 import ValuationForm from "../components/BankForm/ValuationForm";
 

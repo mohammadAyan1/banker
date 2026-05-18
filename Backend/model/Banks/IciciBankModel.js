@@ -196,6 +196,11 @@ const IciciBankSchema = new mongoose.Schema({
       "Reviewed",
       "Approved",
       "Rejected",
+      "Query Raised",
+      "cancelled",
+      "Work in Progress",
+      "Work in Progress",
+      "FinalSubmitted",
     ],
     default: "Pending",
   },
@@ -374,6 +379,6 @@ const IciciBankSchema = new mongoose.Schema({
   //   default: "External",
   // },
   visitDate: { type: String },
-});
+}, { timestamps: true }); // ← createdAt & updatedAt auto-add hoga
 
 module.exports = mongoose.model("ICICI_BANK", IciciBankSchema);

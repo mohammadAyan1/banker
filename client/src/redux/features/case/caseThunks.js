@@ -100,13 +100,13 @@ export const finalUpdate = createAsyncThunk(
   async ({ id, bankName, updateData }, { rejectWithValue }) => {
     // console.log(id, bankName, updateData, "RES");
     try {
-      const data = await axios.put(`${API_URL}/final-update/${id}`, {
+      const { data } = await axios.put(`${API_URL}/final-update/${id}`, {
         bankName,
         updateData,
       });
 
       console.log(data, "FINAL THUNKS");
-      // return data;
+      return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }

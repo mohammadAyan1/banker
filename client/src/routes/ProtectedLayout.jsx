@@ -32,7 +32,7 @@ import Header from "../components/Navbar";
 import SideBar from "../layouts/sidebar/SideBar";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
-import { setZone } from "../redux/features/assignedCase/assignedCasesSlice.js.js";
+import { setZone } from "../redux/features/assignedCase/assignedCasesSlice.js";
 
 const ProtectedLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);

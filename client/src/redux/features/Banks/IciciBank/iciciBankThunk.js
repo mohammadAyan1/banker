@@ -50,12 +50,25 @@ export const getIciciBankById = createAsyncThunk(
   }
 );
 
-// UPDATE
+// UPDATE (Save / Save & Next)
 export const updateIciciBank = createAsyncThunk(
   "iciciBank/update",
   async ({ id, formData }, { rejectWithValue }) => {
     try {
       const response = await axios.put(`${API_URL}/${id}`, formData);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+// SUBMIT (Save Report: sets isReportSubmitted=true and status=Submitted)
+export const submitIciciBank = createAsyncThunk(
+  "iciciBank/submit",
+  async ({ id, formData }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/submit`, formData);
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);

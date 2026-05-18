@@ -38,8 +38,10 @@ const enrichCasesWithBankMeta = (cases, modelKey) => {
     ...caseItem.toObject(),
     bankName: displayName,
     bankSlug: route,
+     route: route, // Add route field for easier access in frontend
   }));
 };
+
 
 const readCasePathValue = (record, path) =>
   String(path)
@@ -135,11 +137,14 @@ const getCaseDisplayCity = (record) =>
 const buildRoleAwareQuery = (user, baseQuery = {}) => {
   const query = { ...baseQuery };
 
-  if (user.role === "Coordinator" || user.role === "Admin") {
-    query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
-  } else if (user.role === "FieldOfficer") {
+  if (user.role === "FieldOfficer") {
+    // Field Officers only see cases assigned to them
     query.assignedTo = user._id;
+  } else if (user.role === "Coordinator") {
+    // Coordinators see cases they created OR cases assigned to them
+    query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
   }
+  // Admin & SuperAdmin: no ownership filter — they see ALL cases across all banks
 
   return query;
 };
@@ -357,7 +362,18 @@ exports.assignCase = async (req, res) => {
   console.log(route, "LKJHGFDSA")
 
   try {
-    const bankName = route.split("/")[2]; // e.g., "home-first"
+    // Robust extraction: handles URL-style routes like "/bank/icici/edit/{caseId}"
+    // and simple slugs like "icici"
+    const routeParts = (route || "").split("/").filter(Boolean);
+
+    // Filter out MongoDB ObjectIds (24 hex chars), "edit", and "bank" keywords
+    // so we're left with just the bank slug
+    const filteredParts = routeParts.filter(
+      (p) =>
+        !/^[0-9a-f]{24}$/i.test(p) &&
+        !["edit", "bank"].includes(p.toLowerCase())
+    );
+    const bankName = filteredParts.length > 0 ? filteredParts[filteredParts.length - 1] : (routeParts[0] || route);
 
     console.log(bankName, "this is the bank model name")
     // const modelKey = toPascalCase(bankName); // "HomeFirst"
@@ -758,7 +774,7 @@ exports.finalUpdate = async (req, res) => {
   console.log(bankName, "zero")
 
   const modelKey = toPascalCaseSmart(bankName);
-  
+
   // Case-insensitive lookup in modelMap
   let Model = null;
   const modelMapKey = Object.keys(modelMap).find(
@@ -789,12 +805,34 @@ exports.finalUpdate = async (req, res) => {
   console.log('====================================');
 
   try {
+    const updateFields = {
+      ...sanitizedUpdateData,
+      bankName: sanitizedUpdateData.bankName || bankName,
+      route: sanitizedUpdateData.route || getBankMeta(modelMapKey || modelKey).route,
+      isReportSubmitted: true,
+      approvalStatus: "FinalSubmitted",
+      status: "FinalSubmitted", // lock status
+    };
+
+    // Sanitize populated objects — sirf _id chahiye, object nahi
+    if (updateFields.createdBy && typeof updateFields.createdBy === "object") {
+      updateFields.createdBy = updateFields.createdBy._id;
+    }
+    if (!updateFields.createdBy && req.user?._id) {
+      updateFields.createdBy = req.user._id;
+    }
+
+    if (updateFields.assignedTo && typeof updateFields.assignedTo === "object") {
+      updateFields.assignedTo = updateFields.assignedTo._id;
+    }
+    if (req.user?.role === "FieldOfficer" && !updateFields.assignedTo) {
+      updateFields.assignedTo = req.user._id;
+    }
+
     const updatedCase = await Model.findByIdAndUpdate(
       id,
       {
-        ...sanitizedUpdateData,
-        isReportSubmitted: true,
-        status: "FinalSubmitted", // lock status
+        ...updateFields,
         $push: {
           timeline: {
             status: "FinalSubmitted",
@@ -862,22 +900,23 @@ exports.getCancelledCases = async (req, res) => {
 exports.getOutOfTATCases = async (req, res) => {
   const user = req.user;
   const now = new Date();
-  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
 
   try {
     const outOfTatCases = await fetchCasesAcrossBanks({
       user,
       baseQuery: {
-      createdAt: { $lte: twentyFourHoursAgo },
-      $expr: { $eq: ["$createdAt", "$updatedAt"] },
-      status: {
-        $nin: [
-          "cancelled",
-          "completed",
-          ...WORK_IN_PROGRESS_STATUSES,
-          "FinalSubmitted",
-        ],
-      },
+        createdAt: { $lte: fortyEightHoursAgo },
+        $expr: { $eq: ["$createdAt", "$updatedAt"] },
+        status: {
+          $nin: [
+            "cancelled",
+            "completed",
+            ...WORK_IN_PROGRESS_STATUSES,
+            "FinalSubmitted",
+            "Submitted",
+          ],
+        },
       },
       populate: "assignedTo createdBy",
     });
@@ -907,7 +946,31 @@ exports.getSummaryData = async (req, res) => {
     const outOfTat = [];
     const user = req.user;
     const now = new Date();
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+    // Month filtering
+    let monthFilter = {};
+    if (req.query.month) {
+      const [year, month] = req.query.month.split('-').map(Number);
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 1);
+      monthFilter = {
+        $or: [
+          { createdAt: { $gte: startDate, $lt: endDate } },
+          { uploadDate: { $gte: startDate, $lt: endDate } }
+        ]
+      };
+    }
+
+    // Bank filtering
+    let bankFilter = {};
+    if (req.query.bank) {
+      const bankRegistry = modelMap.bankRegistry || [];
+      const bankConfig = bankRegistry.find(b => b.displayName === req.query.bank || b.key.toLowerCase() === req.query.bank.toLowerCase());
+      if (bankConfig) {
+        bankFilter = { _model: bankConfig.model.modelName };
+      }
+    }
 
     const bankRegistry =
       modelMap.bankRegistry ||
@@ -917,7 +980,16 @@ exports.getSummaryData = async (req, res) => {
         model,
       }));
 
-    for (const bankConfig of bankRegistry) {
+    // Filter bank registry if bank is specified
+    let filteredBankRegistry = bankRegistry;
+    if (req.query.bank) {
+      filteredBankRegistry = bankRegistry.filter(b => 
+        b.displayName.toLowerCase() === req.query.bank.toLowerCase() ||
+        b.key.toLowerCase() === req.query.bank.toLowerCase()
+      );
+    }
+
+    for (const bankConfig of filteredBankRegistry) {
       const { key: modelKey, displayName, model: Model } = bankConfig;
 
       // Base query for role-based ownership
@@ -933,22 +1005,27 @@ exports.getSummaryData = async (req, res) => {
         outOfTatCases,
       ] =
         await Promise.all([
-          Model.find({ ...baseQuery, status: "Pending" }),
-          Model.find({ ...baseQuery, status: { $in: WORK_IN_PROGRESS_STATUSES } }),
-          Model.find(baseQuery),
-          Model.find({ ...baseQuery, status: "FinalSubmitted" }),
-          Model.find({ ...baseQuery, status: "Query Raised" }),
-          Model.find({ ...baseQuery, status: "cancelled" }),
+          Model.find({ ...baseQuery, ...monthFilter, status: "Pending" }),
+          Model.find({ ...baseQuery, ...monthFilter, status: { $in: WORK_IN_PROGRESS_STATUSES } }),
+          Model.find({ ...baseQuery, ...monthFilter }),
+          Model.find({ ...baseQuery, ...monthFilter, status: "FinalSubmitted" }),
+          Model.find({ ...baseQuery, ...monthFilter, status: "Query Raised" }),
+          Model.find({ ...baseQuery, ...monthFilter, status: "cancelled" }),
           Model.find({
             ...baseQuery,
-            createdAt: { $lte: twentyFourHoursAgo },
-            $expr: { $eq: ["$createdAt", "$updatedAt"] },
+            ...monthFilter,
+            // createdAt ya uploadDate dono check karo (ICICI mein uploadDate hota hai)
+            $or: [
+              { createdAt: { $lte: fortyEightHoursAgo } },
+              { uploadDate: { $lte: fortyEightHoursAgo } },
+            ],
             status: {
               $nin: [
                 "cancelled",
                 "completed",
                 ...WORK_IN_PROGRESS_STATUSES,
                 "FinalSubmitted",
+                "Submitted",
               ],
             },
           }),
@@ -961,11 +1038,16 @@ exports.getSummaryData = async (req, res) => {
         .replace(/^-/, "");
 
       const enrich = (cases) =>
-        cases.map((c) => ({
-          ...c.toObject(),
-          bankName,
-          bankSlug,
-        }));
+        cases.map((c) => {
+          const obj = c.toObject();
+          return {
+            ...obj,
+            bankName,
+            bankSlug,
+            // Purane ICICI records ka uploadDate ko createdAt ke roop mein use karo
+            createdAt: obj.createdAt || obj.uploadDate || null,
+          };
+        });
 
       pending.push(...enrich(pendingCases));
       working.push(...enrich(workingCases));
@@ -1091,37 +1173,117 @@ exports.deleteImageFromCase = async (req, res) => {
 
 exports.changeAssign = async (req, res) => {
   try {
-    const { caseId, officerId, bankName } = req.body
+    const { caseId, officerId, bankName, route } = req.body;
 
-    console.log(bankName, "WERTYUIOP")
+    console.log("=== CHANGE ASSIGN REQUEST ===");
+    console.log("caseId:", caseId);
+    console.log("officerId:", officerId);
+    console.log("bankName:", bankName);
+    console.log("route:", route);
 
-    // const bankName = route.split("/")[2]; // e.g., "home-first"
-    const modelKey = toPascalCaseSmart(bankName); // e.g., "HomeFirst"
-    // HomeFirstTrench
-    console.log(modelKey, "DFGHJ")
-    const Model = modelMap[modelKey];
-
-    if (!Model) {
-      return res
-        .status(400)
-        .json({ message: `Invalid model for route: ${modelKey}` });
+    if (!caseId || !officerId) {
+      return res.status(400).json({ 
+        message: "caseId and officerId are required" 
+      });
     }
 
-    const updatedDoc = await Model.findByIdAndUpdate(
-      caseId,
-      { $set: { assignedTo: officerId } },
-      { new: true }
-    );
+    let updatedDoc = null;
+    let foundModel = null;
+
+    // FIRST: Search across all models to find the case (most reliable method)
+    for (const modelKey in modelMap) {
+      const Model = modelMap[modelKey];
+      try {
+        const doc = await Model.findById(caseId);
+        if (doc) {
+          console.log(`Found case in model: ${modelKey}`);
+          updatedDoc = await Model.findByIdAndUpdate(
+            caseId,
+            { $set: { assignedTo: officerId } },
+            { new: true }
+          );
+          foundModel = modelKey;
+          break;
+        }
+      } catch (modelError) {
+        // Continue to next model
+        continue;
+      }
+    }
+
+    // FALLBACK: Try using bankName if not found in first pass
+    if (!updatedDoc && bankName) {
+      try {
+        const modelKey = toPascalCaseSmart(bankName);
+        const Model = modelMap[modelKey];
+        
+        if (Model) {
+          console.log(`Trying bankName-derived key: ${modelKey}`);
+          updatedDoc = await Model.findByIdAndUpdate(
+            caseId,
+            { $set: { assignedTo: officerId } },
+            { new: true }
+          );
+          
+          if (updatedDoc) {
+            foundModel = modelKey;
+            console.log(`Successfully updated via bankName: ${modelKey}`);
+          }
+        }
+      } catch (e) {
+        console.error("Error with bankName conversion:", e.message);
+      }
+    }
+
+    // FALLBACK: Try using route if not found
+    if (!updatedDoc && route) {
+      try {
+        const routeParts = (route || "").split("/").filter(Boolean);
+        const bankSlug = routeParts.length > 0 ? routeParts[routeParts.length - 1] : null;
+        
+        if (bankSlug) {
+          const modelKey = toPascalCaseSmart(bankSlug);
+          const Model = modelMap[modelKey];
+          
+          if (Model) {
+            console.log(`Trying route-derived key: ${modelKey}`);
+            updatedDoc = await Model.findByIdAndUpdate(
+              caseId,
+              { $set: { assignedTo: officerId } },
+              { new: true }
+            );
+            
+            if (updatedDoc) {
+              foundModel = modelKey;
+              console.log(`Successfully updated via route: ${modelKey}`);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error with route extraction:", e.message);
+      }
+    }
+
+    if (!updatedDoc) {
+      console.error(`Case not found - caseId: ${caseId}`);
+      return res.status(404).json({ 
+        message: "Case not found in any bank model",
+        caseId,
+        bankName,
+        route
+      });
+    }
 
     res.status(200).json({
-      message: "Field officer change",
-      success: true
+      message: "Field officer assignment updated successfully",
+      success: true,
+      data: updatedDoc
     });
 
   } catch (error) {
-    console.error(" error while Update field officer:", error);
+    console.error("Error updating field officer assignment:", error);
     res.status(500).json({
-      message: "Error while deleting image",
+      message: "Error while updating assignment",
       error: error.message,
     });
   }

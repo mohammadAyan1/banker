@@ -5,7 +5,7 @@ import { MdAdminPanelSettings } from "react-icons/md";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutThunk } from "../../redux/features/auth/authThunks";
-import { setZone, setSavedCity } from "../../redux/features/assignedCase/assignedCasesSlice.js.js";
+import { setZone, setSavedCity } from "../../redux/features/assignedCase/assignedCasesSlice.js";
 import { useState, useEffect } from "react";
 
 const { Option } = Select;

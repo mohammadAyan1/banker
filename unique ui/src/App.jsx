@@ -4152,14 +4152,18 @@ export default function App() {
     fetch(API_URL, { credentials: "include" })
       .then(r => r.json())
       .then(data => {
+        // Include ALL case types so every card shows the correct count.
+        // Specific-status arrays come first so their status wins on dedup (first-seen wins).
         const all = [
           ...(data.pending || []).map(c => normalizeCase(c, "Pending")),
           ...(data.working || []).map(c => normalizeCase(c, "Work in Progress")),
-          ...(data.totalSubmissions || []).map(c => normalizeCase(c, "FinalSubmitted")),
           ...(data.queryRaised || []).map(c => normalizeCase(c, "Query Raised")),
+          ...(data.cancelled || []).map(c => normalizeCase(c, "cancelled")),
+          ...(data.finalSubmitted || []).map(c => normalizeCase(c, "FinalSubmitted")),
+          ...(data.totalSubmissions || []).map(c => normalizeCase(c, c.status || "Submitted")),
         ];
         const seen = new Set();
-        setCases(all.filter(c => { if (seen.has(c._id)) return false; seen.add(c._id); return true; }));
+        setCases(all.filter(c => { if (seen.has(String(c._id))) return false; seen.add(String(c._id)); return true; }));
         setLoading(false);
       })
       .catch(e => { setError("Could not connect to API: " + e.message); setLoading(false); });

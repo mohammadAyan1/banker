@@ -18,6 +18,7 @@ const { Option } = Select;
 
 const getCaseDate = (item) =>
   item.createdAt ||
+  item.uploadDate ||
   item.createdDate ||
   item.submissionDate ||
   item.dateOfVisit ||
@@ -62,16 +63,17 @@ const FinalSubmittedCases = ({ selectedMonth }) => {
   );
 
   const queryParams = useMemo(
-    () => ({
-      page: 1,
-      limit: 1000,
-      city: selectedZone || undefined,
-      search: debouncedSearch || undefined,
-      bankName: bankFilter || undefined,
-      status: statusFilter || undefined,
-    }),
-    [bankFilter, debouncedSearch, selectedZone, statusFilter]
-  );
+  () => ({
+    page: 1,
+    limit: 1000,
+    city: selectedZone || undefined,
+    month: selectedMonth || undefined,
+    search: debouncedSearch || undefined,
+    bankName: bankFilter || undefined,
+    status: statusFilter || undefined,
+  }),
+  [bankFilter, debouncedSearch, selectedZone, selectedMonth, statusFilter]
+);
 
   const fetchFinalList = useCallback(async () => {
     await dispatch(fetchTotalSubmitCase(queryParams));

@@ -20,10 +20,35 @@ import {
 const { Search } = Input;
 const { Option } = Select;
 
-const AssignedCase = () => {
+const getCaseDate = (item) =>
+  item.createdAt ||
+  item.uploadDate ||
+  item.createdDate ||
+  item.submissionDate ||
+  item.dateOfVisit ||
+  item.dateOfReport ||
+  item.basicDetails?.createdAt ||
+  item.header?.createdAt ||
+  "";
+
+const isSameMonth = (date, monthValue) => {
+  if (!date || !monthValue) return true;
+
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return false;
+
+  return (
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` ===
+    monthValue
+  );
+};
+
+const AssignedCase = ({ selectedMonth }) => {
   const dispatch = useDispatch();
+
   const { user } = useSelector((state) => state.auth);
   const fieldOfficers = useSelector(selectFieldOfficers);
+
   const {
     data: cases,
     assignedPagination,
@@ -37,13 +62,16 @@ const AssignedCase = () => {
   const [selectedBanks, setSelectedBanks] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(1000);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [selectedOfficer, setSelectedOfficer] = useState(null);
   const [selectedBankName, setSelectedBankName] = useState(null);
+  const [selectedRoute, setSelectedRoute] = useState(null);
 
   const bankFilter = useMemo(() => selectedBanks.join(","), [selectedBanks]);
+
   const statusFilter = useMemo(
     () => selectedStatuses.join(","),
     [selectedStatuses]
@@ -51,14 +79,15 @@ const AssignedCase = () => {
 
   const queryParams = useMemo(
     () => ({
-      page: currentPage,
-      limit: pageSize,
+      page: 1,
+      limit: 1000,
       city: selectedZone || undefined,
+      month: selectedMonth || undefined,
       search: debouncedSearch || undefined,
       bankName: bankFilter || undefined,
       status: statusFilter || undefined,
     }),
-    [bankFilter, currentPage, debouncedSearch, pageSize, selectedZone, statusFilter]
+    [bankFilter, debouncedSearch, selectedMonth, selectedZone, statusFilter]
   );
 
   const fetchAssignedList = useCallback(async () => {
@@ -88,7 +117,13 @@ const AssignedCase = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedZone]);
+  }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
+
+  const monthFilteredAssignedCases = useMemo(() => {
+    return (cases || []).filter((item) =>
+      isSameMonth(getCaseDate(item), selectedMonth)
+    );
+  }, [cases, selectedMonth]);
 
   const handleRemoveAssignment = async (recordId) => {
     try {
@@ -112,15 +147,20 @@ const AssignedCase = () => {
         caseId: selectedCaseId,
         officerId: selectedOfficer,
         bankName: selectedBankName,
+        route: selectedRoute,
       });
 
-      toast.success("Assignment updated");
+      toast.success("Assignment updated successfully!");
       setIsModalOpen(false);
       setSelectedOfficer(null);
+      setSelectedBankName(null);
+      setSelectedRoute(null);
+      setSelectedCaseId(null);
+
       await fetchAssignedList();
     } catch (error) {
-      toast.error("Failed to update assignment");
-      console.error(error);
+      console.error("Assignment error:", error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Failed to update assignment");
     }
   };
 
@@ -202,6 +242,7 @@ const AssignedCase = () => {
           onClick={() => {
             setSelectedCaseId(record._id);
             setSelectedBankName(record?.bankName);
+            setSelectedRoute(record?.route || record?.bankSlug);
             setIsModalOpen(true);
           }}
         >
@@ -216,6 +257,7 @@ const AssignedCase = () => {
           <Link to={`/bank/${getBankRoute(record)}/edit/${record._id}`}>
             <Edit3 size={18} />
           </Link>
+
           <Button
             danger
             onClick={async () => {
@@ -233,7 +275,9 @@ const AssignedCase = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Assigned Cases</h2>
+      <h2 className="text-xl font-bold mb-4">
+        Assigned Cases ({monthFilteredAssignedCases.length})
+      </h2>
 
       <div className="flex gap-4 mb-4 flex-wrap">
         <Select
@@ -291,14 +335,14 @@ const AssignedCase = () => {
         <Spinner />
       ) : (
         <Table
-          dataSource={cases}
+          dataSource={monthFilteredAssignedCases}
           columns={columns}
           rowKey="_id"
           bordered
           pagination={{
-            current: assignedPagination?.page || currentPage,
-            pageSize: assignedPagination?.limit || pageSize,
-            total: assignedPagination?.total || 0,
+            current: currentPage,
+            pageSize,
+            total: monthFilteredAssignedCases.length,
             showSizeChanger: true,
           }}
           onChange={(pagination) => {
