@@ -1,0 +1,54 @@
+{
+  "timestamp": "2026-06-11T17:49:35.638Z",
+  "body": {
+    "_id": "6a2aa1b51188d7cb8cf151be",
+    "status": "Work in Progress",
+    "AttachDocuments": [],
+    "atsDocuments": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/Pooja_Z-alUt4Kj.pdf",
+        "fileId": "6a2aa1b05c7cd75eb8c1e4a1",
+        "name": "Pooja_Z-alUt4Kj.pdf"
+      }
+    ],
+    "createdBy": "683070c765ba61b559c1ecc1",
+    "bankName": "HomeFirst",
+    "city": "",
+    "approvalStatus": "Accepted",
+    "isReportSubmitted": true,
+    "refNo": "N/A",
+    "dateOfReport": null,
+    "dateOfVisit": null,
+    "vendorName": "",
+    "clContractNo": "",
+    "latitude": "23.192918",
+    "longitude": "77.479707",
+    "imageUrls": [],
+    "valuationRemarks": [],
+    "timeline": [
+      {
+        "status": "submitted-by-fo",
+        "updatedAt": "2026-06-11T17:23:57.009Z",
+        "updatedBy": "6a2a4ed58ddfdbd661279b46",
+        "note": "Updated by field officer",
+        "_id": "6a2aef2dee584ed3342881b2"
+      }
+    ],
+    "documents": [],
+    "createdAt": "2026-06-11T11:53:25.575Z",
+    "updatedAt": "2026-06-11T11:53:25.592Z",
+    "__v": 0,
+    "assignedTo": "6a2a4ed58ddfdbd661279b46",
+    "route": "/bank/home-first/edit/6a2aa1b51188d7cb8cf151be",
+    "propertyCategory": "INDIVIDUAL",
+    "unitType": "OPEN PLOT",
+    "typeOfLoan": "P+C",
+    "propertyLocation": "",
+    "populationCensus2011": "Btw 10000 to 1.0 Lac",
+    "ruralUrban": "",
+    "zone": "Residential",
+    "propertyAreaLimits": "",
+    "eraApplicable": "NA",
+    "projectName": ""
+  }
+}
